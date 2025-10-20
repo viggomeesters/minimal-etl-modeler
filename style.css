@@ -294,3 +294,12 @@ table td {
 table tr:hover {
     background: #fafafa;
 }
+
+/* Mapping specific styles */
+#applyMapping:hover {
+    background: #3a7bc8;
+}
+
+#applyMapping:active {
+    background: #2d6aa8;
+}

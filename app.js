@@ -81,6 +81,10 @@ function renderBlock(block) {
         icon = '📤';
         title = 'Output Format';
         content = 'Klik om template te laden';
+    } else if (block.type === 'mapping') {
+        icon = '🔗';
+        title = 'Mapping';
+        content = 'Klik om kolommen te mappen';
     }
     
     blockEl.innerHTML = `
@@ -307,6 +311,8 @@ function openBlockModal(block) {
     } else if (block.type === 'output') {
         document.getElementById('outputModal').style.display = 'block';
         selectedBlock = block;
+    } else if (block.type === 'mapping') {
+        openMappingModal(block);
     }
 }
 
@@ -481,3 +487,197 @@ function displayData(block) {
         document.getElementById('viewModal').style.display = 'block';
     }
 }
+
+// Mapping functionality
+function openMappingModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('mappingInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Data Input block met deze Mapping block.</p>';
+        document.getElementById('mappingModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Get output template if connected
+    const outputConnection = connections.find(c => c.from === block.id);
+    let outputHeaders = [];
+    if (outputConnection && dataStore[outputConnection.to] && dataStore[outputConnection.to].isTemplate) {
+        outputHeaders = dataStore[outputConnection.to].headers || [];
+    }
+    
+    // Load existing mappings if any
+    const existingMappings = block.mappings || {};
+    
+    // Build mapping interface
+    let html = '<div style="display: flex; gap: 30px;">';
+    
+    // Input columns
+    html += '<div style="flex: 1;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Input Kolommen</h3>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    inputHeaders.forEach(header => {
+        html += `<div style="padding: 8px; margin-bottom: 5px; background: white; border-radius: 3px; border: 1px solid #e0e0e0;">${header}</div>`;
+    });
+    html += '</div></div>';
+    
+    // Mapping interface
+    html += '<div style="flex: 2;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Kolom Mappings</h3>';
+    html += '<div id="mappingList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white;">';
+    
+    if (outputHeaders.length > 0) {
+        // If we have an output template, show mappings for each output column
+        outputHeaders.forEach((outHeader, idx) => {
+            html += '<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">';
+            html += `<span style="flex: 1; font-weight: 500;">${outHeader}</span>`;
+            html += '<span style="color: #666;">←</span>';
+            html += `<select class="mapping-select" data-output="${outHeader}" style="flex: 2; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+            html += '<option value="">-- Selecteer input kolom --</option>';
+            inputHeaders.forEach(inHeader => {
+                const selected = existingMappings[outHeader] === inHeader ? 'selected' : '';
+                html += `<option value="${inHeader}" ${selected}>${inHeader}</option>`;
+            });
+            html += '</select>';
+            html += '</div>';
+        });
+    } else {
+        // No output template, allow free-form mapping
+        html += '<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Creëer mappings van input naar output kolommen.</p>';
+        
+        // Show existing mappings
+        const mappingCount = Object.keys(existingMappings).length;
+        if (mappingCount > 0) {
+            Object.keys(existingMappings).forEach((outCol, idx) => {
+                html += createMappingRow(outCol, existingMappings[outCol], inputHeaders, idx);
+            });
+        } else {
+            html += createMappingRow('', '', inputHeaders, 0);
+        }
+        
+        html += '<button id="addMappingRow" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg mapping toe</button>';
+    }
+    
+    html += '</div></div></div>';
+    
+    document.getElementById('mappingInterface').innerHTML = html;
+    document.getElementById('mappingModal').style.display = 'block';
+    
+    // Add event listener for adding new mapping rows (free-form mode)
+    const addButton = document.getElementById('addMappingRow');
+    if (addButton) {
+        addButton.addEventListener('click', () => {
+            const mappingList = document.getElementById('mappingList');
+            const rowCount = mappingList.querySelectorAll('.mapping-row').length;
+            const newRow = createMappingRow('', '', inputHeaders, rowCount);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newRow;
+            addButton.parentNode.insertBefore(tempDiv.firstChild, addButton);
+        });
+    }
+    
+    // Apply mapping button
+    document.getElementById('applyMapping').onclick = () => {
+        applyMapping(block, inputHeaders, outputHeaders);
+    };
+}
+
+function createMappingRow(outputCol, inputCol, inputHeaders, index) {
+    let html = '<div class="mapping-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">';
+    html += `<input type="text" class="output-column" value="${outputCol}" placeholder="Output kolom" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+    html += '<span style="color: #666;">←</span>';
+    html += `<select class="input-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+    html += '<option value="">-- Selecteer --</option>';
+    inputHeaders.forEach(header => {
+        const selected = header === inputCol ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select>';
+    html += `<button class="remove-mapping" style="padding: 6px 10px; background: #fee; color: #e44; border: 1px solid #fcc; border-radius: 3px; cursor: pointer; font-size: 12px;">×</button>`;
+    html += '</div>';
+    return html;
+}
+
+function applyMapping(block, inputHeaders, outputHeaders) {
+    // Collect mappings from UI
+    const mappings = {};
+    
+    if (outputHeaders.length > 0) {
+        // Template-based mapping
+        const selects = document.querySelectorAll('.mapping-select');
+        selects.forEach(select => {
+            const outputCol = select.dataset.output;
+            const inputCol = select.value;
+            if (inputCol) {
+                mappings[outputCol] = inputCol;
+            }
+        });
+    } else {
+        // Free-form mapping
+        const rows = document.querySelectorAll('.mapping-row');
+        rows.forEach(row => {
+            const outputCol = row.querySelector('.output-column').value.trim();
+            const inputCol = row.querySelector('.input-column').value;
+            if (outputCol && inputCol) {
+                mappings[outputCol] = inputCol;
+            }
+        });
+    }
+    
+    // Store mappings in block
+    block.mappings = mappings;
+    
+    // Execute the mapping transformation
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (inputConnection && dataStore[inputConnection.from]) {
+        const inputData = dataStore[inputConnection.from];
+        const mappedData = applyMappingTransformation(inputData, mappings);
+        
+        // Store mapped data
+        dataStore[block.id] = mappedData;
+        
+        // Update block content
+        const mappingCount = Object.keys(mappings).length;
+        updateBlockContent(block.id, `${mappingCount} mapping(s) actief`);
+        
+        // Propagate data to connected blocks
+        propagateData(block.id);
+    }
+    
+    // Close modal
+    document.getElementById('mappingModal').style.display = 'none';
+}
+
+function applyMappingTransformation(inputData, mappings) {
+    const inputRows = inputData.data || [];
+    const inputHeaders = inputData.headers || [];
+    
+    // Create new headers based on mappings
+    const outputHeaders = Object.keys(mappings);
+    
+    // Transform each row
+    const outputRows = inputRows.map(row => {
+        const newRow = {};
+        outputHeaders.forEach(outputCol => {
+            const inputCol = mappings[outputCol];
+            newRow[outputCol] = row[inputCol] || '';
+        });
+        return newRow;
+    });
+    
+    return {
+        data: outputRows,
+        headers: outputHeaders
+    };
+}
+
+// Add click handlers for remove buttons (using event delegation)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-mapping')) {
+        e.target.closest('.mapping-row').remove();
+    }
+});
