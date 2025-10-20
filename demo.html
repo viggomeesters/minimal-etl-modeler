@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ETL Modeler Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 0; }
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .instructions {
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4a90e2;
+            margin: 15px 0;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Minimal ETL Modeler - Demo</h1>
+    
+    <div class="demo-section">
+        <h2>Overview</h2>
+        <p>Een lightweight ETL modeler voor SAP data transformatie met een minimalistische interface.</p>
+        <img src="screenshot-initial.png" class="screenshot" alt="Initial State">
+    </div>
+    
+    <div class="demo-section">
+        <h2>Hoe te gebruiken</h2>
+        <div class="instructions">
+            <ol>
+                <li>Open <code>index.html</code> in je browser</li>
+                <li>Sleep een <strong>Data Input</strong> block (📥) van de toolbox naar het canvas</li>
+                <li>Dubbelklik op het Data Input block</li>
+                <li>Upload een CSV bestand (bijv. <code>sample-data.csv</code>)</li>
+                <li>Sleep een <strong>Data View</strong> block (👁️) naar het canvas</li>
+                <li>Verbind de blocks door te klikken op de onderste connector van Data Input en sleep naar de bovenste connector van Data View</li>
+                <li>Dubbelklik op Data View om je data te bekijken</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Features</h2>
+        <ul>
+            <li>✅ Drag-and-drop interface voor ETL componenten</li>
+            <li>✅ CSV data inladen (SAP compatible)</li>
+            <li>✅ Visuele data weergave in tabel formaat</li>
+            <li>✅ Connecties tussen blocks voor data flow</li>
+            <li>✅ Minimalistisch design zonder clutter</li>
+            <li>✅ Pure vanilla JavaScript - geen dependencies</li>
+        </ul>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Sample Data</h2>
+        <p>Er is een voorbeeld CSV bestand meegeleverd met SAP materiaal data:</p>
+        <ul>
+            <li><code>sample-data.csv</code> - 10 SAP materialen met plant en storage locatie informatie</li>
+        </ul>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Design Filosofie</h2>
+        <ul>
+            <li><strong>Lightweight:</strong> Geen externe libraries of frameworks</li>
+            <li><strong>Scalable:</strong> Modulaire code structuur voor uitbreidingen</li>
+            <li><strong>Minimalistic:</strong> Alleen de essentiële features</li>
+            <li><strong>0 Clutter:</strong> Clean UI met focus op functionaliteit</li>
+        </ul>
+    </div>
+</body>
+</html>

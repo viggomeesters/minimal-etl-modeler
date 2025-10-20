@@ -1,0 +1,296 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: white;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+.workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.toolbox {
+    width: 200px;
+    background: white;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.toolbox h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tool-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.tool-item:hover {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.tool-item:active {
+    cursor: grabbing;
+}
+
+.tool-item .icon {
+    font-size: 20px;
+}
+
+.tool-item span:last-child {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.canvas {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    padding: 30px;
+}
+
+.hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+}
+
+.block {
+    position: absolute;
+    min-width: 180px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: move;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+}
+
+.block:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.block.selected {
+    border-color: #4a90e2;
+}
+
+.block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.block-icon {
+    font-size: 20px;
+}
+
+.block-title {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.block-delete {
+    cursor: pointer;
+    color: #999;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.block-delete:hover {
+    background: #fee;
+    color: #e44;
+}
+
+.block-content {
+    font-size: 12px;
+    color: #666;
+    min-height: 20px;
+}
+
+.block-status {
+    margin-top: 8px;
+    padding: 6px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #666;
+}
+
+.block-status.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.block-connector {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid #4a90e2;
+    border-radius: 50%;
+    cursor: crosshair;
+}
+
+.connector-out {
+    bottom: -6px;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.connector-in {
+    top: -6px;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.connection-line {
+    position: absolute;
+    stroke: #4a90e2;
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-content.large {
+    width: 80%;
+    max-width: 900px;
+}
+
+.close {
+    color: #999;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 20px;
+}
+
+.close:hover {
+    color: #333;
+}
+
+.modal h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+#fileInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 2px dashed #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#fileInfo {
+    font-size: 13px;
+    color: #666;
+}
+
+#dataDisplay {
+    overflow-x: auto;
+    max-height: 500px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+table th {
+    background: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+}
+
+table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+table tr:hover {
+    background: #fafafa;
+}

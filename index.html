@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal ETL Modeler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Minimal ETL Modeler</h1>
+            <p class="subtitle">Lightweight • Scalable • Minimalistic</p>
+        </header>
+        
+        <div class="workspace">
+            <!-- Toolbox with draggable components -->
+            <aside class="toolbox">
+                <h3>Components</h3>
+                <div class="tool-item" draggable="true" data-type="input">
+                    <span class="icon">📥</span>
+                    <span>Data Input</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="view">
+                    <span class="icon">👁️</span>
+                    <span>Data View</span>
+                </div>
+            </aside>
+            
+            <!-- Canvas for building ETL flow -->
+            <main class="canvas" id="canvas">
+                <p class="hint">Sleep componenten naar hier om te beginnen</p>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modal for Data Input -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Data Input</h2>
+            <input type="file" id="fileInput" accept=".csv" />
+            <div id="fileInfo"></div>
+        </div>
+    </div>
+    
+    <!-- Modal for Data View -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Data View</h2>
+            <div id="dataDisplay"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

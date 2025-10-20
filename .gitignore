@@ -1,0 +1,26 @@
+# Screenshots (keep demo screenshots but not test ones)
+/tmp/
+screenshot-test*.png
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules if we add them later
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+dist/
+build/
+
+# Test coverage
+coverage/
