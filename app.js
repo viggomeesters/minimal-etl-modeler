@@ -317,13 +317,16 @@ function handleFileSelect(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
         const csvData = event.target.result;
-        const parsedData = parseCSV(csvData);
+        const parsed = parseCSV(csvData);
         
-        // Store data
-        dataStore[selectedBlock.id] = parsedData;
+        // Store data with headers
+        dataStore[selectedBlock.id] = {
+            data: parsed.data,
+            headers: parsed.headers
+        };
         
         // Update block UI
-        updateBlockContent(selectedBlock.id, `${file.name} (${parsedData.length} rijen)`);
+        updateBlockContent(selectedBlock.id, `${file.name} (${parsed.data.length} rijen)`);
         
         // Close modal
         document.getElementById('inputModal').style.display = 'none';
@@ -334,8 +337,8 @@ function handleFileSelect(e) {
         // Show info
         document.getElementById('fileInfo').innerHTML = `
             <strong>Geladen:</strong> ${file.name}<br>
-            <strong>Rijen:</strong> ${parsedData.length}<br>
-            <strong>Kolommen:</strong> ${parsedData[0] ? Object.keys(parsedData[0]).length : 0}
+            <strong>Rijen:</strong> ${parsed.data.length}<br>
+            <strong>Kolommen:</strong> ${parsed.headers.length}
         `;
     };
     reader.readAsText(file);
@@ -347,25 +350,23 @@ function handleTemplateSelect(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
         const csvData = event.target.result;
-        const lines = csvData.trim().split('\n');
-        const headers = lines.length > 0 ? lines[0].split(',').map(h => h.trim()) : [];
-        const parsedTemplate = parseCSV(csvData);
+        const parsed = parseCSV(csvData);
         // Store template data
         dataStore[selectedBlock.id] = {
-            template: parsedTemplate,
-            headers: headers,
+            data: parsed.data,
+            headers: parsed.headers,
             isTemplate: true,
             fileName: file.name
         };
         // Update block UI
-        updateBlockContent(selectedBlock.id, `${file.name} (${parsedTemplate.length} rijen)`);
+        updateBlockContent(selectedBlock.id, `${file.name} (${parsed.data.length} rijen)`);
         // Close modal
         document.getElementById('outputModal').style.display = 'none';
         // Show info
         document.getElementById('templateInfo').innerHTML = `
             <strong>Geladen:</strong> ${file.name}<br>
-            <strong>Template rijen:</strong> ${parsedTemplate.length}<br>
-            <strong>Kolommen:</strong> ${headers.length}
+            <strong>Template rijen:</strong> ${parsed.data.length}<br>
+            <strong>Kolommen:</strong> ${parsed.headers.length}
         `;
     };
     reader.readAsText(file);
@@ -373,7 +374,7 @@ function handleTemplateSelect(e) {
 
 function parseCSV(csv) {
     const lines = csv.trim().split('\n');
-    if (lines.length === 0) return [];
+    if (lines.length === 0) return { data: [], headers: [] };
     
     const headers = lines[0].split(',').map(h => h.trim());
     const data = [];
@@ -387,7 +388,7 @@ function parseCSV(csv) {
         data.push(row);
     }
     
-    return data;
+    return { data: data, headers: headers };
 }
 
 function updateBlockContent(blockId, content) {
@@ -419,10 +420,11 @@ function transferData(fromId, toId) {
         dataStore[toId] = dataStore[fromId];
         const toBlock = blocks.find(b => b.id === toId);
         let rowCount = 0;
-        if (Array.isArray(dataStore[toId])) {
+        if (dataStore[toId].data && Array.isArray(dataStore[toId].data)) {
+            rowCount = dataStore[toId].data.length;
+        } else if (Array.isArray(dataStore[toId])) {
+            // Legacy support for old format
             rowCount = dataStore[toId].length;
-        } else if (dataStore[toId] && dataStore[toId].isTemplate && Array.isArray(dataStore[toId].template)) {
-            rowCount = dataStore[toId].template.length;
         }
         if (toBlock && toBlock.type === 'view') {
             updateBlockContent(toId, `Data beschikbaar (${rowCount} rijen)`);
@@ -431,23 +433,23 @@ function transferData(fromId, toId) {
 }
 
 function displayData(block) {
-    let data = dataStore[block.id];
+    let blockData = dataStore[block.id];
     let headers = [];
     let rows = [];
-    // Detect template object
-    if (data && data.isTemplate && Array.isArray(data.template)) {
-        if (data.template.length > 0) {
-            headers = Object.keys(data.template[0]);
-            rows = data.template;
-        } else if (Array.isArray(data.headers) && data.headers.length > 0) {
-            headers = data.headers;
-            rows = [];
+    
+    // Handle new data structure with headers and data properties
+    if (blockData && blockData.headers && Array.isArray(blockData.headers)) {
+        headers = blockData.headers;
+        rows = blockData.data || [];
+    } else if (Array.isArray(blockData)) {
+        // Legacy support: old format where data was stored as array
+        if (blockData.length > 0) {
+            headers = Object.keys(blockData[0]);
+            rows = blockData;
         }
-    } else if (Array.isArray(data) && data.length > 0) {
-        headers = Object.keys(data[0]);
-        rows = data;
     }
-    // Als er headers zijn, toon ze altijd
+    
+    // Display table if we have headers
     if (headers.length > 0) {
         let html = '<table>';
         html += '<thead><tr>';
@@ -460,7 +462,7 @@ function displayData(block) {
             rows.slice(0, 100).forEach(row => {
                 html += '<tr>';
                 headers.forEach(header => {
-                    html += `<td>${row[header]}</td>`;
+                    html += `<td>${row[header] || ''}</td>`;
                 });
                 html += '</tr>';
             });
