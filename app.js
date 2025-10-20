@@ -68,8 +68,20 @@ function renderBlock(block) {
     blockEl.style.left = `${block.x}px`;
     blockEl.style.top = `${block.y}px`;
     
-    const icon = block.type === 'input' ? '📥' : '👁️';
-    const title = block.type === 'input' ? 'Data Input' : 'Data View';
+    let icon, title, content;
+    if (block.type === 'input') {
+        icon = '📥';
+        title = 'Data Input';
+        content = 'Klik om data te laden';
+    } else if (block.type === 'view') {
+        icon = '👁️';
+        title = 'Data View';
+        content = 'Klik om data te bekijken';
+    } else if (block.type === 'output') {
+        icon = '📤';
+        title = 'Output Format';
+        content = 'Klik om template te laden';
+    }
     
     blockEl.innerHTML = `
         <div class="block-header">
@@ -78,7 +90,7 @@ function renderBlock(block) {
             <span class="block-delete" onclick="deleteBlock('${block.id}')">✕</span>
         </div>
         <div class="block-content" id="${block.id}-content">
-            ${block.type === 'input' ? 'Klik om data te laden' : 'Klik om data te bekijken'}
+            ${content}
         </div>
         <div class="block-connector connector-out" data-block="${block.id}" data-type="out"></div>
         <div class="block-connector connector-in" data-block="${block.id}" data-type="in"></div>
@@ -281,6 +293,9 @@ function initModals() {
     
     // File input handler
     document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+    
+    // Template input handler
+    document.getElementById('templateInput').addEventListener('change', handleTemplateSelect);
 }
 
 function openBlockModal(block) {
@@ -289,6 +304,9 @@ function openBlockModal(block) {
         selectedBlock = block;
     } else if (block.type === 'view') {
         displayData(block);
+    } else if (block.type === 'output') {
+        document.getElementById('outputModal').style.display = 'block';
+        selectedBlock = block;
     }
 }
 
@@ -318,6 +336,38 @@ function handleFileSelect(e) {
             <strong>Geladen:</strong> ${file.name}<br>
             <strong>Rijen:</strong> ${parsedData.length}<br>
             <strong>Kolommen:</strong> ${parsedData[0] ? Object.keys(parsedData[0]).length : 0}
+        `;
+    };
+    reader.readAsText(file);
+}
+
+function handleTemplateSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const csvData = event.target.result;
+        const parsedTemplate = parseCSV(csvData);
+        
+        // Store template data
+        dataStore[selectedBlock.id] = {
+            template: parsedTemplate,
+            isTemplate: true,
+            fileName: file.name
+        };
+        
+        // Update block UI
+        updateBlockContent(selectedBlock.id, `${file.name} (${parsedTemplate.length} rijen)`);
+        
+        // Close modal
+        document.getElementById('outputModal').style.display = 'none';
+        
+        // Show info
+        document.getElementById('templateInfo').innerHTML = `
+            <strong>Geladen:</strong> ${file.name}<br>
+            <strong>Template rijen:</strong> ${parsedTemplate.length}<br>
+            <strong>Kolommen:</strong> ${parsedTemplate[0] ? Object.keys(parsedTemplate[0]).length : 0}
         `;
     };
     reader.readAsText(file);

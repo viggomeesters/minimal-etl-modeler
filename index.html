@@ -25,6 +25,10 @@
                     <span class="icon">👁️</span>
                     <span>Data View</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="output">
+                    <span class="icon">📤</span>
+                    <span>Output Format</span>
+                </div>
             </aside>
             
             <!-- Canvas for building ETL flow -->
@@ -50,6 +54,16 @@
             <span class="close">&times;</span>
             <h2>Data View</h2>
             <div id="dataDisplay"></div>
+        </div>
+    </div>
+    
+    <!-- Modal for Output Format -->
+    <div id="outputModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Output Format Template</h2>
+            <input type="file" id="templateInput" accept=".csv" />
+            <div id="templateInfo"></div>
         </div>
     </div>
     
