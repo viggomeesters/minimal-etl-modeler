@@ -8,6 +8,8 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
 - 👁️ **Data View**: Bekijk en verifieer je data
+- 🔗 **Mapping**: Map kolommen tussen input en output formaten
+- ⚙️ **Transform**: Transformeer data en exporteer naar CSV
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
 
@@ -54,6 +56,12 @@ minimal-etl-modeler/
 - Sticky headers voor gemakkelijk scrollen
 - Limiet van 100 rijen voor performance
 
+### Transform Block
+- Map input kolommen naar output kolommen
+- Transformeer data volgens mapping regels
+- Exporteer getransformeerde data als CSV
+- Download functionaliteit voor output bestanden
+
 ### Connecties
 - Sleep van output (onderste connector) naar input (bovenste connector)
 - Data wordt automatisch doorgegeven via connecties
@@ -61,8 +69,7 @@ minimal-etl-modeler/
 
 ## 📝 Toekomstige Uitbreidingen
 
-- Filter/Transform blocks
-- Export functionaliteit
-- Meer SAP-specifieke transformaties
+- Meer transformatie opties (filters, aggregaties)
 - Save/Load ETL flows
 - Real-time data preview
+- Meer SAP-specifieke transformaties

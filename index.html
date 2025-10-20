@@ -33,6 +33,10 @@
                     <span class="icon">🔗</span>
                     <span>Mapping</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="transform">
+                    <span class="icon">⚙️</span>
+                    <span>Transform</span>
+                </div>
             </aside>
             
             <!-- Canvas for building ETL flow -->
@@ -79,6 +83,20 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Map input columns to output columns</p>
             <div id="mappingInterface"></div>
             <button id="applyMapping" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Mapping</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Transform -->
+    <div id="transformModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Transform & Export</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Configure transformation and generate CSV output</p>
+            <div id="transformInterface"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="applyTransform" style="flex: 1; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Transform</button>
+                <button id="exportCSV" style="flex: 1; padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Export CSV</button>
+            </div>
         </div>
     </div>
     
