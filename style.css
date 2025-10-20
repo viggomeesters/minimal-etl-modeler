@@ -303,3 +303,24 @@ table tr:hover {
 #applyMapping:active {
     background: #2d6aa8;
 }
+
+/* Automapper specific styles */
+#applyAutomapper:hover {
+    background: #3a7bc8;
+}
+
+#applyAutomapper:active {
+    background: #2d6aa8;
+}
+
+#sendToMapping {
+    background: #2ecc71;
+}
+
+#sendToMapping:hover {
+    background: #27ae60;
+}
+
+#sendToMapping:active {
+    background: #229954;
+}
