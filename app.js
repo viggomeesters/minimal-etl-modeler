@@ -344,30 +344,28 @@ function handleFileSelect(e) {
 function handleTemplateSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
-    
     const reader = new FileReader();
     reader.onload = (event) => {
         const csvData = event.target.result;
+        const lines = csvData.trim().split('\n');
+        const headers = lines.length > 0 ? lines[0].split(',').map(h => h.trim()) : [];
         const parsedTemplate = parseCSV(csvData);
-        
         // Store template data
         dataStore[selectedBlock.id] = {
             template: parsedTemplate,
+            headers: headers,
             isTemplate: true,
             fileName: file.name
         };
-        
         // Update block UI
         updateBlockContent(selectedBlock.id, `${file.name} (${parsedTemplate.length} rijen)`);
-        
         // Close modal
         document.getElementById('outputModal').style.display = 'none';
-        
         // Show info
         document.getElementById('templateInfo').innerHTML = `
             <strong>Geladen:</strong> ${file.name}<br>
             <strong>Template rijen:</strong> ${parsedTemplate.length}<br>
-            <strong>Kolommen:</strong> ${parsedTemplate[0] ? Object.keys(parsedTemplate[0]).length : 0}
+            <strong>Kolommen:</strong> ${headers.length}
         `;
     };
     reader.readAsText(file);
@@ -420,48 +418,64 @@ function transferData(fromId, toId) {
     if (dataStore[fromId]) {
         dataStore[toId] = dataStore[fromId];
         const toBlock = blocks.find(b => b.id === toId);
+        let rowCount = 0;
+        if (Array.isArray(dataStore[toId])) {
+            rowCount = dataStore[toId].length;
+        } else if (dataStore[toId] && dataStore[toId].isTemplate && Array.isArray(dataStore[toId].template)) {
+            rowCount = dataStore[toId].template.length;
+        }
         if (toBlock && toBlock.type === 'view') {
-            updateBlockContent(toId, `Data beschikbaar (${dataStore[toId].length} rijen)`);
+            updateBlockContent(toId, `Data beschikbaar (${rowCount} rijen)`);
         }
     }
 }
 
 function displayData(block) {
-    const data = dataStore[block.id];
-    
-    if (!data || data.length === 0) {
+    let data = dataStore[block.id];
+    let headers = [];
+    let rows = [];
+    // Detect template object
+    if (data && data.isTemplate && Array.isArray(data.template)) {
+        if (data.template.length > 0) {
+            headers = Object.keys(data.template[0]);
+            rows = data.template;
+        } else if (Array.isArray(data.headers) && data.headers.length > 0) {
+            headers = data.headers;
+            rows = [];
+        }
+    } else if (Array.isArray(data) && data.length > 0) {
+        headers = Object.keys(data[0]);
+        rows = data;
+    }
+    // Als er headers zijn, toon ze altijd
+    if (headers.length > 0) {
+        let html = '<table>';
+        html += '<thead><tr>';
+        headers.forEach(header => {
+            html += `<th>${header}</th>`;
+        });
+        html += '</tr></thead>';
+        html += '<tbody>';
+        if (rows.length > 0) {
+            rows.slice(0, 100).forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${row[header]}</td>`;
+                });
+                html += '</tr>';
+            });
+        } else {
+            html += '<tr><td colspan="' + headers.length + '" style="text-align:center; color:#888;">Geen data, alleen kolommen</td></tr>';
+        }
+        html += '</tbody>';
+        html += '</table>';
+        if (rows.length > 100) {
+            html += `<p style="margin-top: 15px; color: #666; font-size: 12px;">Toon eerste 100 van ${rows.length} rijen</p>`;
+        }
+        document.getElementById('dataDisplay').innerHTML = html;
+        document.getElementById('viewModal').style.display = 'block';
+    } else {
         document.getElementById('dataDisplay').innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
         document.getElementById('viewModal').style.display = 'block';
-        return;
     }
-    
-    const headers = Object.keys(data[0]);
-    let html = '<table>';
-    
-    // Headers
-    html += '<thead><tr>';
-    headers.forEach(header => {
-        html += `<th>${header}</th>`;
-    });
-    html += '</tr></thead>';
-    
-    // Rows (limit to first 100 for performance)
-    html += '<tbody>';
-    data.slice(0, 100).forEach(row => {
-        html += '<tr>';
-        headers.forEach(header => {
-            html += `<td>${row[header]}</td>`;
-        });
-        html += '</tr>';
-    });
-    html += '</tbody>';
-    
-    html += '</table>';
-    
-    if (data.length > 100) {
-        html += `<p style="margin-top: 15px; color: #666; font-size: 12px;">Toon eerste 100 van ${data.length} rijen</p>`;
-    }
-    
-    document.getElementById('dataDisplay').innerHTML = html;
-    document.getElementById('viewModal').style.display = 'block';
 }
