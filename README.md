@@ -2,6 +2,8 @@
 
 Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alteryx Designer, speciaal voor SAP data transformatie.
 
+![Example ETL Flow](screenshot-example-flow.png)
+
 ## ✨ Features
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
