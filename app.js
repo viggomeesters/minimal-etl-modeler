@@ -85,6 +85,10 @@ function renderBlock(block) {
         icon = '🔗';
         title = 'Mapping';
         content = 'Klik om kolommen te mappen';
+    } else if (block.type === 'transform') {
+        icon = '⚙️';
+        title = 'Transform';
+        content = 'Klik om te transformeren';
     }
     
     blockEl.innerHTML = `
@@ -313,6 +317,8 @@ function openBlockModal(block) {
         selectedBlock = block;
     } else if (block.type === 'mapping') {
         openMappingModal(block);
+    } else if (block.type === 'transform') {
+        openTransformModal(block);
     }
 }
 
@@ -675,9 +681,214 @@ function applyMappingTransformation(inputData, mappings) {
     };
 }
 
+// Transform functionality
+function openTransformModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('transformInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Data Input of Mapping block met deze Transform block.</p>';
+        document.getElementById('transformModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    const inputRows = inputData.data || [];
+    
+    // Load existing mappings if any
+    const existingMappings = block.mappings || {};
+    
+    // Build transform interface
+    let html = '<div style="display: flex; gap: 30px;">';
+    
+    // Input columns
+    html += '<div style="flex: 1;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Input Kolommen</h3>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    inputHeaders.forEach(header => {
+        html += `<div style="padding: 8px; margin-bottom: 5px; background: white; border-radius: 3px; border: 1px solid #e0e0e0;">${header}</div>`;
+    });
+    html += '</div></div>';
+    
+    // Mapping interface
+    html += '<div style="flex: 2;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Output Kolom Mappings</h3>';
+    html += '<div id="transformMappingList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white;">';
+    
+    html += '<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Definieer welke kolommen in de output moeten komen.</p>';
+    
+    // Show existing mappings
+    const mappingCount = Object.keys(existingMappings).length;
+    if (mappingCount > 0) {
+        Object.keys(existingMappings).forEach((outCol, idx) => {
+            html += createTransformMappingRow(outCol, existingMappings[outCol], inputHeaders, idx);
+        });
+    } else {
+        html += createTransformMappingRow('', '', inputHeaders, 0);
+    }
+    
+    html += '<button id="addTransformMappingRow" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg mapping toe</button>';
+    
+    html += '</div></div></div>';
+    
+    // Show data preview
+    html += '<div style="margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 20px;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Data Preview</h3>';
+    html += `<p style="color: #666; font-size: 13px;">Input heeft ${inputRows.length} rijen en ${inputHeaders.length} kolommen</p>`;
+    html += '</div>';
+    
+    document.getElementById('transformInterface').innerHTML = html;
+    document.getElementById('transformModal').style.display = 'block';
+    
+    // Add event listener for adding new mapping rows
+    const addButton = document.getElementById('addTransformMappingRow');
+    if (addButton) {
+        addButton.addEventListener('click', () => {
+            const mappingList = document.getElementById('transformMappingList');
+            const rowCount = mappingList.querySelectorAll('.transform-mapping-row').length;
+            const newRow = createTransformMappingRow('', '', inputHeaders, rowCount);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newRow;
+            addButton.parentNode.insertBefore(tempDiv.firstChild, addButton);
+        });
+    }
+    
+    // Apply transform button
+    document.getElementById('applyTransform').onclick = () => {
+        applyTransform(block, inputHeaders);
+    };
+    
+    // Export CSV button
+    document.getElementById('exportCSV').onclick = () => {
+        exportTransformedCSV(block);
+    };
+}
+
+function createTransformMappingRow(outputCol, inputCol, inputHeaders, index) {
+    let html = '<div class="transform-mapping-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">';
+    html += `<input type="text" class="transform-output-column" value="${outputCol}" placeholder="Output kolom naam" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+    html += '<span style="color: #666;">←</span>';
+    html += `<select class="transform-input-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+    html += '<option value="">-- Selecteer input kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = header === inputCol ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select>';
+    html += `<button class="remove-transform-mapping" style="padding: 6px 10px; background: #fee; color: #e44; border: 1px solid #fcc; border-radius: 3px; cursor: pointer; font-size: 12px;">×</button>`;
+    html += '</div>';
+    return html;
+}
+
+function applyTransform(block, inputHeaders) {
+    // Collect mappings from UI
+    const mappings = {};
+    const rows = document.querySelectorAll('.transform-mapping-row');
+    rows.forEach(row => {
+        const outputCol = row.querySelector('.transform-output-column').value.trim();
+        const inputCol = row.querySelector('.transform-input-column').value;
+        if (outputCol && inputCol) {
+            mappings[outputCol] = inputCol;
+        }
+    });
+    
+    // Store mappings in block
+    block.mappings = mappings;
+    
+    // Execute the transformation
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (inputConnection && dataStore[inputConnection.from]) {
+        const inputData = dataStore[inputConnection.from];
+        const transformedData = applyTransformationLogic(inputData, mappings);
+        
+        // Store transformed data
+        dataStore[block.id] = transformedData;
+        
+        // Update block content
+        const mappingCount = Object.keys(mappings).length;
+        updateBlockContent(block.id, `${mappingCount} kolom(men) getransformeerd`);
+        
+        // Propagate data to connected blocks
+        propagateData(block.id);
+    }
+    
+    // Close modal
+    document.getElementById('transformModal').style.display = 'none';
+}
+
+function applyTransformationLogic(inputData, mappings) {
+    const inputRows = inputData.data || [];
+    const inputHeaders = inputData.headers || [];
+    
+    // Create new headers based on mappings
+    const outputHeaders = Object.keys(mappings);
+    
+    // Transform each row
+    const outputRows = inputRows.map(row => {
+        const newRow = {};
+        outputHeaders.forEach(outputCol => {
+            const inputCol = mappings[outputCol];
+            newRow[outputCol] = row[inputCol] || '';
+        });
+        return newRow;
+    });
+    
+    return {
+        data: outputRows,
+        headers: outputHeaders
+    };
+}
+
+function exportTransformedCSV(block) {
+    // Get the transformed data
+    const transformedData = dataStore[block.id];
+    
+    if (!transformedData || !transformedData.headers || !transformedData.data) {
+        alert('Geen getransformeerde data beschikbaar. Pas eerst een transformatie toe.');
+        return;
+    }
+    
+    // Generate CSV content
+    const headers = transformedData.headers;
+    const rows = transformedData.data;
+    
+    let csvContent = headers.join(',') + '\n';
+    rows.forEach(row => {
+        const values = headers.map(header => {
+            const value = row[header] || '';
+            // Escape values with commas or quotes
+            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        });
+        csvContent += values.join(',') + '\n';
+    });
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'transformed-output.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show success message
+    alert(`CSV geëxporteerd met ${rows.length} rijen en ${headers.length} kolommen.`);
+}
+
 // Add click handlers for remove buttons (using event delegation)
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('remove-mapping')) {
         e.target.closest('.mapping-row').remove();
+    }
+    if (e.target.classList.contains('remove-transform-mapping')) {
+        e.target.closest('.transform-mapping-row').remove();
     }
 });
