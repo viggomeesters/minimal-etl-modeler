@@ -187,15 +187,15 @@ header h1 {
 }
 
 .connector-out {
-    bottom: -6px;
-    right: 50%;
-    transform: translateX(50%);
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .connector-in {
-    top: -6px;
-    right: 50%;
-    transform: translateX(50%);
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .connection-line {

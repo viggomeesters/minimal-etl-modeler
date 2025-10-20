@@ -71,7 +71,7 @@ function renderBlock(block) {
     let icon, title, content;
     if (block.type === 'input') {
         icon = '📥';
-        title = 'Data Input';
+        title = 'Input Source Data';
         content = 'Klik om data te laden';
     } else if (block.type === 'view') {
         icon = '👁️';
@@ -79,7 +79,7 @@ function renderBlock(block) {
         content = 'Klik om data te bekijken';
     } else if (block.type === 'output') {
         icon = '📤';
-        title = 'Output Format';
+        title = 'Target Structure';
         content = 'Klik om template te laden';
     } else if (block.type === 'mapping') {
         icon = '🔗';
@@ -89,6 +89,10 @@ function renderBlock(block) {
         icon = '⚙️';
         title = 'Transform';
         content = 'Klik om te transformeren';
+    } else if (block.type === 'outputdata') {
+        icon = '💾';
+        title = 'Output Data';
+        content = 'Klik om data te exporteren';
     }
     
     blockEl.innerHTML = `
@@ -272,7 +276,7 @@ function renderConnections() {
         const y2 = toRect.top - canvasRect.top + toRect.height / 2;
         
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const d = `M ${x1} ${y1} C ${x1} ${y1 + 50}, ${x2} ${y2 - 50}, ${x2} ${y2}`;
+        const d = `M ${x1} ${y1} C ${x1 + 50} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
         path.setAttribute('d', d);
         path.classList.add('connection-line');
         
@@ -319,6 +323,8 @@ function openBlockModal(block) {
         openMappingModal(block);
     } else if (block.type === 'transform') {
         openTransformModal(block);
+    } else if (block.type === 'outputdata') {
+        openOutputDataModal(block);
     }
 }
 
@@ -759,11 +765,6 @@ function openTransformModal(block) {
     document.getElementById('applyTransform').onclick = () => {
         applyTransform(block, inputHeaders);
     };
-    
-    // Export CSV button
-    document.getElementById('exportCSV').onclick = () => {
-        exportTransformedCSV(block);
-    };
 }
 
 function createTransformMappingRow(outputCol, inputCol, inputHeaders, index) {
@@ -881,6 +882,68 @@ function exportTransformedCSV(block) {
     
     // Show success message
     alert(`CSV geëxporteerd met ${rows.length} rijen en ${headers.length} kolommen.`);
+}
+
+// Output Data functionality
+function openOutputDataModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('outputDataInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Transform block met deze Output Data block.</p>';
+        document.getElementById('outputDataModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    const inputRows = inputData.data || [];
+    
+    // Build output data interface
+    let html = '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px; background: #f9f9f9;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Data Overview</h3>';
+    html += `<p style="color: #666; font-size: 13px; margin-bottom: 10px;">Klaar om te exporteren: ${inputRows.length} rijen en ${inputHeaders.length} kolommen</p>`;
+    
+    // Show column names
+    html += '<div style="margin-top: 15px;">';
+    html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Kolommen:</h4>';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+    inputHeaders.forEach(header => {
+        html += `<span style="padding: 6px 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">${header}</span>`;
+    });
+    html += '</div></div>';
+    
+    // Show preview of first few rows
+    if (inputRows.length > 0) {
+        html += '<div style="margin-top: 15px;">';
+        html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Preview (eerste 3 rijen):</h4>';
+        html += '<table style="width: 100%; border-collapse: collapse; background: white; font-size: 12px;">';
+        html += '<thead><tr>';
+        inputHeaders.forEach(header => {
+            html += `<th style="padding: 8px; border: 1px solid #e0e0e0; background: #f5f5f5; text-align: left;">${header}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        inputRows.slice(0, 3).forEach(row => {
+            html += '<tr>';
+            inputHeaders.forEach(header => {
+                html += `<td style="padding: 8px; border: 1px solid #e0e0e0;">${row[header] || ''}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    document.getElementById('outputDataInterface').innerHTML = html;
+    document.getElementById('outputDataModal').style.display = 'block';
+    
+    // Export button
+    document.getElementById('exportOutputData').onclick = () => {
+        exportTransformedCSV(block);
+    };
 }
 
 // Add click handlers for remove buttons (using event delegation)

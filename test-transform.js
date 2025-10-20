@@ -42,17 +42,25 @@ test('Transform modal exists in HTML', () => {
         throw new Error('Transform modal not found');
     }
     
-    if (!html.includes('Transform & Export')) {
+    if (!html.includes('Transform')) {
         throw new Error('Transform modal title not found');
     }
 });
 
-// Test 3: Check if export button exists
-test('Export CSV button exists in transform modal', () => {
+// Test 3: Check if output data block and modal exist
+test('Output Data block and modal exist', () => {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
     
-    if (!html.includes('exportCSV')) {
-        throw new Error('Export CSV button not found');
+    if (!html.includes('data-type="outputdata"')) {
+        throw new Error('Output Data block not found in toolbox');
+    }
+    
+    if (!html.includes('outputDataModal')) {
+        throw new Error('Output Data modal not found');
+    }
+    
+    if (!html.includes('exportOutputData')) {
+        throw new Error('Export button not found in Output Data modal');
     }
 });
 
