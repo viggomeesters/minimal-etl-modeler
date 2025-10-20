@@ -123,7 +123,7 @@ test('sample-data.csv has valid format', () => {
 test('CSV parsing function works correctly', () => {
     function parseCSV(csv) {
         const lines = csv.trim().split('\n');
-        if (lines.length === 0) return [];
+        if (lines.length === 0) return { data: [], headers: [] };
         
         const headers = lines[0].split(',').map(h => h.trim());
         const data = [];
@@ -137,18 +137,59 @@ test('CSV parsing function works correctly', () => {
             data.push(row);
         }
         
-        return data;
+        return { data: data, headers: headers };
     }
     
     const testCSV = 'Name,Age\nJohn,30\nJane,25';
     const result = parseCSV(testCSV);
     
-    if (result.length !== 2) {
-        throw new Error(`Expected 2 rows, got ${result.length}`);
+    if (result.data.length !== 2) {
+        throw new Error(`Expected 2 rows, got ${result.data.length}`);
     }
     
-    if (result[0].Name !== 'John' || result[0].Age !== '30') {
+    if (result.data[0].Name !== 'John' || result.data[0].Age !== '30') {
         throw new Error('CSV parsing incorrect');
+    }
+    
+    if (result.headers.length !== 2 || result.headers[0] !== 'Name' || result.headers[1] !== 'Age') {
+        throw new Error('CSV headers parsing incorrect');
+    }
+});
+
+// Test 6b: Validate CSV parsing with empty data (only headers)
+test('CSV parsing handles empty data correctly', () => {
+    function parseCSV(csv) {
+        const lines = csv.trim().split('\n');
+        if (lines.length === 0) return { data: [], headers: [] };
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const data = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            data.push(row);
+        }
+        
+        return { data: data, headers: headers };
+    }
+    
+    const testCSV = 'MaterialNumber,MaterialDescription,Plant';
+    const result = parseCSV(testCSV);
+    
+    if (result.data.length !== 0) {
+        throw new Error(`Expected 0 rows, got ${result.data.length}`);
+    }
+    
+    if (result.headers.length !== 3) {
+        throw new Error(`Expected 3 headers, got ${result.headers.length}`);
+    }
+    
+    if (result.headers[0] !== 'MaterialNumber' || result.headers[1] !== 'MaterialDescription' || result.headers[2] !== 'Plant') {
+        throw new Error('CSV headers parsing incorrect for empty data');
     }
 });
 
