@@ -1,0 +1,22 @@
+{
+  "name": "minimal-etl-modeler",
+  "version": "1.0.0",
+  "description": "Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alteryx Designer, speciaal voor SAP data transformatie.",
+  "main": "app.js",
+  "scripts": {
+    "type-check": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "build": "tsc && tsc -p tsconfig.test.json",
+    "lint": "eslint app.ts test-*.ts",
+    "test": "node test-integration.js && node test-csv-parser.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "eslint": "^9.38.0",
+    "typescript": "^5.9.3"
+  }
+}

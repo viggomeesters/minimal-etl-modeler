@@ -59,6 +59,38 @@ minimal-etl-modeler/
 - Data wordt automatisch doorgegeven via connecties
 - Visuele curved lines tonen data flow
 
+## 🔧 TypeScript Migration
+
+This project has been migrated to TypeScript for improved type safety and developer experience.
+
+### Development Scripts
+
+```bash
+# Type-check all TypeScript files
+npm run type-check
+
+# Build TypeScript to JavaScript
+npm run build
+
+# Run tests
+npm test
+```
+
+### Migration Details
+
+- **Incremental Approach**: Uses `allowJs: true` and `checkJs: false` for gradual migration
+- **Source Files**: All `.ts` files are the source of truth
+- **Compiled Output**: JavaScript files are generated from TypeScript and committed for browser compatibility
+- **Type Checking**: Run `npm run type-check` before committing changes
+
+### Next Steps for TypeScript Enhancement
+
+- Enable strict mode (`"strict": true`)
+- Add proper type definitions for all functions
+- Replace `any` types with specific interfaces
+- Add types for external dependencies
+- Consider using a bundler (Vite/webpack) for better development experience
+
 ## 📝 Toekomstige Uitbreidingen
 
 - Filter/Transform blocks

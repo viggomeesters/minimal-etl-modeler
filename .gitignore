@@ -21,6 +21,15 @@ yarn-error.log
 # Build artifacts
 dist/
 build/
+*.tsbuildinfo
 
 # Test coverage
 coverage/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+# Note: We keep *.js files committed since they're needed for browser execution
+# Only ignore declaration maps and source maps
+*.d.ts
+*.js.map
+*.d.ts.map
