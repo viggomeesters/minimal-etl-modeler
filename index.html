@@ -29,6 +29,10 @@
                     <span class="icon">📤</span>
                     <span>Output Format</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="mapping">
+                    <span class="icon">🔗</span>
+                    <span>Mapping</span>
+                </div>
             </aside>
             
             <!-- Canvas for building ETL flow -->
@@ -64,6 +68,17 @@
             <h2>Output Format Template</h2>
             <input type="file" id="templateInput" accept=".csv" />
             <div id="templateInfo"></div>
+        </div>
+    </div>
+    
+    <!-- Modal for Mapping -->
+    <div id="mappingModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Column Mapping</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Map input columns to output columns</p>
+            <div id="mappingInterface"></div>
+            <button id="applyMapping" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Mapping</button>
         </div>
     </div>
     
