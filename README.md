@@ -24,11 +24,15 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 
 ```
 minimal-etl-modeler/
-├── index.html          # Hoofd HTML bestand
-├── style.css           # Minimalistisch styling
-├── app.js              # Core functionaliteit
-├── sample-data.csv     # Voorbeeld SAP data
-└── README.md           # Deze file
+├── index.html                    # Hoofd HTML bestand
+├── style.css                     # Minimalistisch styling
+├── app.js                        # Core functionaliteit
+├── sample-data.csv               # Voorbeeld SAP data
+├── README.md                     # Deze file
+├── QUICKSTART.md                 # Snelle start gids
+├── GEBRUIKERSHANDLEIDING.md      # Uitgebreide handleiding
+├── ARCHITECTURE.md               # Technische architectuur
+└── demo.html                     # Demo pagina
 ```
 
 ## 🎨 Design Filosofie
