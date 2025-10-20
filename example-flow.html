@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal ETL Modeler - Example Flow</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Override for demo */
+        .canvas .hint { display: none !important; }
+        .demo-note {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .demo-note h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        .demo-note p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Minimal ETL Modeler</h1>
+            <p class="subtitle">Lightweight • Scalable • Minimalistic</p>
+        </header>
+        
+        <div class="workspace">
+            <!-- Toolbox with draggable components -->
+            <aside class="toolbox">
+                <h3>Components</h3>
+                <div class="tool-item" draggable="true" data-type="input">
+                    <span class="icon">📥</span>
+                    <span>Data Input</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="view">
+                    <span class="icon">👁️</span>
+                    <span>Data View</span>
+                </div>
+            </aside>
+            
+            <!-- Canvas for building ETL flow -->
+            <main class="canvas" id="canvas">
+                <!-- Pre-placed blocks for demo -->
+                <div class="block" id="demo-block-1" style="left: 100px; top: 100px;">
+                    <div class="block-header">
+                        <span class="block-icon">📥</span>
+                        <span class="block-title">Data Input</span>
+                        <span class="block-delete">✕</span>
+                    </div>
+                    <div class="block-content">sample-data.csv (10 rijen)</div>
+                    <div class="block-status success">✓ Gereed</div>
+                    <div class="block-connector connector-out"></div>
+                    <div class="block-connector connector-in"></div>
+                </div>
+                
+                <div class="block" id="demo-block-2" style="left: 400px; top: 100px;">
+                    <div class="block-header">
+                        <span class="block-icon">👁️</span>
+                        <span class="block-title">Data View</span>
+                        <span class="block-delete">✕</span>
+                    </div>
+                    <div class="block-content">Data beschikbaar (10 rijen)</div>
+                    <div class="block-status success">✓ Gereed</div>
+                    <div class="block-connector connector-out"></div>
+                    <div class="block-connector connector-in"></div>
+                </div>
+                
+                <!-- Connection line -->
+                <svg id="connections-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+                    <path d="M 190 145 C 190 195, 490 95, 490 145" class="connection-line"></path>
+                </svg>
+            </main>
+        </div>
+    </div>
+    
+    <div class="demo-note">
+        <h3>📋 Voorbeeld Flow</h3>
+        <p><strong>Data Input</strong> block laadt CSV data</p>
+        <p><strong>→</strong> Data wordt doorgegeven via connectie</p>
+        <p><strong>Data View</strong> block toont de data</p>
+        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ffc107;">
+            💡 Sleep nieuwe blocks vanuit de toolbox!
+        </p>
+    </div>
+    
+    <!-- Modal for Data Input -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Data Input</h2>
+            <input type="file" id="fileInput" accept=".csv" />
+            <div id="fileInfo"></div>
+        </div>
+    </div>
+    
+    <!-- Modal for Data View -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Data View</h2>
+            <div id="dataDisplay"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

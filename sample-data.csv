@@ -1,0 +1,11 @@
+MaterialNumber,MaterialDescription,Plant,StorageLocation,Quantity,UnitOfMeasure
+10001234,SAP Basis Module License,1000,0001,100,EA
+10001235,SAP HANA Database,1000,0001,5,EA
+10001236,SAP Fiori Launchpad,2000,0002,50,EA
+10001237,SAP Analytics Cloud,2000,0002,25,EA
+10001238,SAP Business Warehouse,1000,0001,10,EA
+10001239,SAP S/4HANA Finance,3000,0003,15,EA
+10001240,SAP SuccessFactors,3000,0003,200,EA
+10001241,SAP Ariba Procurement,1000,0001,30,EA
+10001242,SAP Concur Expense,2000,0002,75,EA
+10001243,SAP Customer Experience,1000,0001,40,EA
