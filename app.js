@@ -1240,3 +1240,152 @@ document.addEventListener('click', (e) => {
         e.target.closest('.transform-mapping-row').remove();
     }
 });
+
+// ===== Flow Save/Load Functionality =====
+
+// Initialize save/load handlers
+document.addEventListener('DOMContentLoaded', () => {
+    const saveBtn = document.getElementById('saveFlowBtn');
+    const loadBtn = document.getElementById('loadFlowBtn');
+    const loadInput = document.getElementById('loadFlowInput');
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveFlow);
+    }
+    
+    if (loadBtn) {
+        loadBtn.addEventListener('click', () => {
+            loadInput.click();
+        });
+    }
+    
+    if (loadInput) {
+        loadInput.addEventListener('change', loadFlow);
+    }
+});
+
+// Save current flow to JSON file
+function saveFlow() {
+    const flowData = {
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        blocks: blocks.map(block => ({
+            id: block.id,
+            type: block.type,
+            x: block.x,
+            y: block.y,
+            data: block.data
+        })),
+        connections: connections.map(conn => ({
+            from: conn.from,
+            to: conn.to
+        })),
+        dataStore: dataStore,
+        blockCounter: blockCounter
+    };
+    
+    const json = JSON.stringify(flowData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `etl-flow-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('Flow saved successfully');
+}
+
+// Load flow from JSON file
+function loadFlow(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const flowData = JSON.parse(e.target.result);
+            
+            // Validate flow data structure
+            if (!flowData.blocks || !flowData.connections) {
+                alert('Ongeldig flow bestand');
+                return;
+            }
+            
+            // Clear current canvas
+            clearCanvas();
+            
+            // Restore global state
+            blocks = flowData.blocks || [];
+            connections = flowData.connections || [];
+            dataStore = flowData.dataStore || {};
+            blockCounter = flowData.blockCounter || blocks.length;
+            
+            // Render all blocks
+            blocks.forEach(block => {
+                renderBlock(block);
+                
+                // Update block content if data exists
+                if (dataStore[block.id]) {
+                    let content = '';
+                    const blockData = dataStore[block.id];
+                    
+                    if (blockData.headers && blockData.data) {
+                        content = `Data geladen (${blockData.data.length} rijen)`;
+                    } else if (blockData.isTemplate && blockData.fileName) {
+                        content = `${blockData.fileName} (${blockData.data.length} rijen)`;
+                    } else if (Array.isArray(blockData)) {
+                        content = `Data beschikbaar (${blockData.length} rijen)`;
+                    }
+                    
+                    if (content) {
+                        updateBlockContent(block.id, content);
+                    }
+                }
+            });
+            
+            // Render all connections
+            renderConnections();
+            
+            // Hide hint if there are blocks
+            if (blocks.length > 0) {
+                const hint = document.querySelector('.hint');
+                if (hint) hint.style.display = 'none';
+            }
+            
+            console.log('Flow loaded successfully');
+        } catch (error) {
+            console.error('Error loading flow:', error);
+            alert('Fout bij het laden van flow: ' + error.message);
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+// Clear canvas and reset state
+function clearCanvas() {
+    // Remove all blocks from DOM
+    const canvas = document.getElementById('canvas');
+    const blockElements = canvas.querySelectorAll('.block');
+    blockElements.forEach(el => el.remove());
+    
+    // Remove connections SVG
+    const svg = document.getElementById('connections-svg');
+    if (svg) svg.remove();
+    
+    // Reset arrays
+    blocks = [];
+    connections = [];
+    dataStore = {};
+    
+    // Show hint again
+    const hint = document.querySelector('.hint');
+    if (hint) hint.style.display = 'block';
+}
