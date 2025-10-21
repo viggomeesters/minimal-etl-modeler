@@ -8,7 +8,8 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
 - 👁️ **Data View**: Bekijk en verifieer je data
-- 🔗 **Mapping**: Map kolommen tussen input en output formaten
+- 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
+- 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
 - ⚙️ **Transform**: Transformeer data en exporteer naar CSV
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
@@ -56,6 +57,25 @@ minimal-etl-modeler/
 - Sticky headers voor gemakkelijk scrollen
 - Limiet van 100 rijen voor performance
 
+### Automapper Block ✨ NEW
+- Automatische kolom mapping tussen input en output templates
+- Smart matching algoritme met 3 niveaus:
+  - **Exact match**: Identieke kolomnamen (na normalisatie)
+  - **Partial match**: Gedeeltelijke overeenkomst (bijv. "Material" ↔ "MaterialNumber")
+  - **Fuzzy match**: Vergelijkbare kolomnamen op basis van karakterovereenkomst
+- Visuele confidence indicators per mapping
+- Preview van voorgestelde mappings met highlighting van niet-gematchte kolommen
+- Twee actiemogelijkheden:
+  - **Apply Auto-Mappings**: Direct toepassen voor snelle transformatie
+  - **Send to Mapping Block**: Overdragen naar Mapping block voor handmatige aanpassingen
+- Normalisatie: automatisch lowercase, verwijderen van underscores/spaties/hyphens
+
+### Mapping Block
+- Handmatige kolom mapping
+- Kan mappings ontvangen van Automapper block
+- Ondersteunt zowel template-based als free-form mapping
+- Toepassen van mapping transformaties
+
 ### Transform Block
 - Map input kolommen naar output kolommen
 - Transformeer data volgens mapping regels
@@ -73,3 +93,29 @@ minimal-etl-modeler/
 - Save/Load ETL flows
 - Real-time data preview
 - Meer SAP-specifieke transformaties
+
+## 🧪 Tests
+
+Het project bevat uitgebreide tests voor alle functionaliteiten:
+
+```bash
+node test-mapping.js                  # Test mapping functionaliteit (9 tests)
+node test-automapper.js               # Test automapper functionaliteit (12 tests)
+node test-automapper-integration.js   # Test complete data flow (10 tests)
+```
+
+## 🔄 Aanbevolen Workflow
+
+**Snelle mapping met Automapper:**
+1. Data Input → Laad bron CSV
+2. Target Structure → Laad template CSV
+3. Automapper → Verbind met beide, genereer mappings
+4. Optie A: Apply direct voor snelle transformatie
+5. Optie B: Send to Mapping → handmatige aanpassingen → Transform
+6. Output Data → Exporteer resultaat
+
+**Handmatige mapping:**
+1. Data Input → Laad bron CSV
+2. Mapping → Handmatig kolommen mappen
+3. Transform → Transformeer en exporteer
+4. Output Data → Exporteer resultaat

@@ -81,6 +81,10 @@ function renderBlock(block) {
         icon = '📤';
         title = 'Target Structure';
         content = 'Klik om template te laden';
+    } else if (block.type === 'automapper') {
+        icon = '🤖';
+        title = 'Automapper';
+        content = 'Klik om automatische mappings te genereren';
     } else if (block.type === 'mapping') {
         icon = '🔗';
         title = 'Mapping';
@@ -319,6 +323,8 @@ function openBlockModal(block) {
     } else if (block.type === 'output') {
         document.getElementById('outputModal').style.display = 'block';
         selectedBlock = block;
+    } else if (block.type === 'automapper') {
+        openAutomapperModal(block);
     } else if (block.type === 'mapping') {
         openMappingModal(block);
     } else if (block.type === 'transform') {
@@ -498,6 +504,285 @@ function displayData(block) {
         document.getElementById('dataDisplay').innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
         document.getElementById('viewModal').style.display = 'block';
     }
+}
+
+// Automapper functionality
+function autoGenerateMappings(inputHeaders, outputHeaders) {
+    const mappings = {};
+    const matchedInputs = new Set();
+    const matchConfidence = {};
+    
+    // Normalize function for column matching
+    function normalize(str) {
+        return str.toLowerCase()
+            .replace(/[_\s-]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+    }
+    
+    outputHeaders.forEach(outHeader => {
+        let bestMatch = null;
+        let bestScore = 0;
+        
+        inputHeaders.forEach(inHeader => {
+            if (matchedInputs.has(inHeader)) {
+                return; // Skip already matched columns
+            }
+            
+            const outNorm = normalize(outHeader);
+            const inNorm = normalize(inHeader);
+            
+            // Exact match after normalization
+            if (outNorm === inNorm) {
+                bestMatch = inHeader;
+                bestScore = 1.0;
+                matchConfidence[outHeader] = 'exact';
+            }
+            // Partial match - output contains input or vice versa
+            else if (bestScore < 0.8 && (outNorm.includes(inNorm) || inNorm.includes(outNorm))) {
+                bestMatch = inHeader;
+                bestScore = 0.8;
+                matchConfidence[outHeader] = 'partial';
+            }
+            // Similarity match using simple character overlap
+            else if (bestScore < 0.5) {
+                const similarity = calculateSimilarity(outNorm, inNorm);
+                if (similarity > 0.5 && similarity > bestScore) {
+                    bestMatch = inHeader;
+                    bestScore = similarity;
+                    matchConfidence[outHeader] = 'fuzzy';
+                }
+            }
+        });
+        
+        if (bestMatch) {
+            mappings[outHeader] = bestMatch;
+            matchedInputs.add(bestMatch);
+        } else {
+            matchConfidence[outHeader] = 'unmatched';
+        }
+    });
+    
+    return { mappings, matchConfidence };
+}
+
+function calculateSimilarity(str1, str2) {
+    const len1 = str1.length;
+    const len2 = str2.length;
+    const maxLen = Math.max(len1, len2);
+    
+    if (maxLen === 0) return 1.0;
+    
+    // Count matching characters at same positions
+    let matches = 0;
+    const minLen = Math.min(len1, len2);
+    for (let i = 0; i < minLen; i++) {
+        if (str1[i] === str2[i]) {
+            matches++;
+        }
+    }
+    
+    // Also count common characters regardless of position
+    const chars1 = new Set(str1);
+    const chars2 = new Set(str2);
+    let commonChars = 0;
+    chars1.forEach(char => {
+        if (chars2.has(char)) {
+            commonChars++;
+        }
+    });
+    
+    // Weighted score: position matches count more
+    return (matches * 2 + commonChars) / (maxLen * 2 + Math.max(chars1.size, chars2.size));
+}
+
+function openAutomapperModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('automapperInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Data Input block met deze Automapper block.</p>';
+        document.getElementById('automapperModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Get output template from second input or look for output block
+    let outputHeaders = [];
+    let templateFound = false;
+    
+    // Check all connections to this block for a template
+    const allInputConnections = connections.filter(c => c.to === block.id);
+    allInputConnections.forEach(conn => {
+        if (dataStore[conn.from] && dataStore[conn.from].isTemplate) {
+            outputHeaders = dataStore[conn.from].headers || [];
+            templateFound = true;
+        }
+    });
+    
+    // If no template found as input, check for connected output blocks
+    if (!templateFound) {
+        const outputConnection = connections.find(c => c.from === block.id);
+        if (outputConnection && dataStore[outputConnection.to] && dataStore[outputConnection.to].isTemplate) {
+            outputHeaders = dataStore[outputConnection.to].headers || [];
+            templateFound = true;
+        }
+    }
+    
+    if (!templateFound || outputHeaders.length === 0) {
+        document.getElementById('automapperInterface').innerHTML = '<p style="color: #e44;">Verbind ook een Target Structure block om automatische mappings te genereren.</p>';
+        document.getElementById('automapperModal').style.display = 'block';
+        return;
+    }
+    
+    // Generate automatic mappings
+    const { mappings, matchConfidence } = autoGenerateMappings(inputHeaders, outputHeaders);
+    
+    // Store the auto-generated mappings
+    block.autoMappings = mappings;
+    block.matchConfidence = matchConfidence;
+    
+    // Build display interface
+    let html = '<div style="margin-bottom: 20px;">';
+    html += `<div style="background: #f0f8ff; padding: 12px; border-radius: 4px; border-left: 4px solid #4a90e2; margin-bottom: 15px;">`;
+    html += `<strong>Automatisch gegenereerd:</strong> ${Object.keys(mappings).length} van ${outputHeaders.length} kolommen gematcht`;
+    html += '</div>';
+    
+    html += '<div style="display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 15px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-weight: 600; font-size: 13px;">';
+    html += '<div>Output Kolom</div>';
+    html += '<div></div>';
+    html += '<div>Input Kolom</div>';
+    html += '<div>Match</div>';
+    html += '</div>';
+    
+    outputHeaders.forEach(outHeader => {
+        const inputCol = mappings[outHeader];
+        const confidence = matchConfidence[outHeader];
+        
+        let confidenceColor = '#aaa';
+        let confidenceIcon = '❓';
+        let confidenceText = 'Niet gematcht';
+        
+        if (confidence === 'exact') {
+            confidenceColor = '#2ecc71';
+            confidenceIcon = '✓';
+            confidenceText = 'Exact';
+        } else if (confidence === 'partial') {
+            confidenceColor = '#f39c12';
+            confidenceIcon = '≈';
+            confidenceText = 'Gedeeltelijk';
+        } else if (confidence === 'fuzzy') {
+            confidenceColor = '#e67e22';
+            confidenceIcon = '~';
+            confidenceText = 'Vergelijkbaar';
+        }
+        
+        html += '<div style="display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 15px; align-items: center; padding: 12px; background: white; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 8px;">';
+        html += `<div style="font-weight: 500;">${outHeader}</div>`;
+        html += '<div style="color: #666; font-size: 18px;">→</div>';
+        html += `<div style="color: ${inputCol ? '#333' : '#999'}; ${!inputCol ? 'font-style: italic;' : ''}">${inputCol || 'Geen match'}</div>`;
+        html += `<div style="display: flex; align-items: center; gap: 5px;">`;
+        html += `<span style="color: ${confidenceColor}; font-size: 16px;">${confidenceIcon}</span>`;
+        html += `<span style="font-size: 11px; color: ${confidenceColor}; font-weight: 500;">${confidenceText}</span>`;
+        html += `</div>`;
+        html += '</div>';
+    });
+    
+    html += '</div>';
+    
+    // Show unmapped input columns
+    const unmappedInputs = inputHeaders.filter(h => !Object.values(mappings).includes(h));
+    if (unmappedInputs.length > 0) {
+        html += '<div style="margin-top: 20px; padding: 12px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">';
+        html += `<strong>Niet gemapte input kolommen (${unmappedInputs.length}):</strong><br>`;
+        html += '<div style="margin-top: 8px; font-size: 12px;">';
+        html += unmappedInputs.map(h => `<span style="display: inline-block; padding: 4px 8px; background: white; border-radius: 3px; margin-right: 5px; margin-bottom: 5px;">${h}</span>`).join('');
+        html += '</div>';
+        html += '</div>';
+    }
+    
+    document.getElementById('automapperInterface').innerHTML = html;
+    document.getElementById('automapperModal').style.display = 'block';
+    
+    // Apply automapper button
+    document.getElementById('applyAutomapper').onclick = () => {
+        applyAutomapper(block, inputHeaders);
+    };
+    
+    // Send to mapping button
+    document.getElementById('sendToMapping').onclick = () => {
+        sendToMappingBlock(block);
+    };
+}
+
+function applyAutomapper(block, inputHeaders) {
+    const mappings = block.autoMappings || {};
+    
+    // Execute the mapping transformation
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (inputConnection && dataStore[inputConnection.from]) {
+        const inputData = dataStore[inputConnection.from];
+        const mappedData = applyMappingTransformation(inputData, mappings);
+        
+        // Store mapped data
+        dataStore[block.id] = mappedData;
+        
+        // Update block content
+        const mappingCount = Object.keys(mappings).length;
+        updateBlockContent(block.id, `${mappingCount} auto-mapping(s) actief`);
+        
+        // Propagate data to connected blocks
+        propagateData(block.id);
+    }
+    
+    // Close modal
+    document.getElementById('automapperModal').style.display = 'none';
+}
+
+function sendToMappingBlock(block) {
+    // Find or create a connected mapping block
+    const outputConnection = connections.find(c => c.from === block.id);
+    let mappingBlock = null;
+    
+    if (outputConnection) {
+        const connectedBlock = blocks.find(b => b.id === outputConnection.to);
+        if (connectedBlock && connectedBlock.type === 'mapping') {
+            mappingBlock = connectedBlock;
+        }
+    }
+    
+    if (!mappingBlock) {
+        // Create a new mapping block connected to automapper
+        const automapperEl = document.getElementById(block.id);
+        const rect = automapperEl.getBoundingClientRect();
+        const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+        
+        // Position it to the right
+        const x = block.x + 250;
+        const y = block.y;
+        
+        createBlock('mapping', x, y);
+        mappingBlock = blocks[blocks.length - 1];
+        
+        // Connect automapper to mapping block
+        addConnection(block.id, mappingBlock.id);
+    }
+    
+    // Transfer auto-mappings to mapping block
+    mappingBlock.mappings = block.autoMappings || {};
+    mappingBlock.fromAutomapper = true;
+    
+    // Update mapping block content
+    const mappingCount = Object.keys(mappingBlock.mappings).length;
+    updateBlockContent(mappingBlock.id, `${mappingCount} mapping(s) van Automapper`);
+    
+    // Close automapper modal
+    document.getElementById('automapperModal').style.display = 'none';
+    
+    // Notify user
+    alert(`Auto-mappings succesvol overgedragen naar Mapping block!\n\nJe kunt nu het Mapping block openen om aanpassingen te maken.`);
 }
 
 // Mapping functionality
