@@ -41,6 +41,10 @@
                     <span class="icon">⚙️</span>
                     <span>Transform</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="validation">
+                    <span class="icon">✓</span>
+                    <span>Validation</span>
+                </div>
                 <div class="tool-item" draggable="true" data-type="outputdata">
                     <span class="icon">💾</span>
                     <span>Output Data</span>
@@ -134,6 +138,17 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Export transformed data to CSV file</p>
             <div id="outputDataInterface"></div>
             <button id="exportOutputData" style="margin-top: 20px; padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Export CSV</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Validation -->
+    <div id="validationModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Validation</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Configure validation rules for data columns</p>
+            <div id="validationInterface"></div>
+            <button id="applyValidation" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Validation</button>
         </div>
     </div>
     
