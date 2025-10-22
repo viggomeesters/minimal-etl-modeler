@@ -279,8 +279,23 @@ function renderConnections() {
         const x2 = toRect.left - canvasRect.left + toRect.width / 2;
         const y2 = toRect.top - canvasRect.top + toRect.height / 2;
         
+        // Create orthogonal path (right-angle lines) for clean left-to-right flow
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const d = `M ${x1} ${y1} C ${x1 + 50} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
+        
+        // Calculate midpoint for the horizontal segment with minimum spacing
+        const minSpacing = 30;
+        let midX = (x1 + x2) / 2;
+        
+        // Ensure minimum horizontal spacing from the blocks
+        if (x2 > x1) {
+            midX = Math.max(midX, x1 + minSpacing);
+            midX = Math.min(midX, x2 - minSpacing);
+        }
+        
+        // Create path with horizontal and vertical segments
+        // Simple 3-segment path: horizontal -> vertical -> horizontal
+        const d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+        
         path.setAttribute('d', d);
         path.classList.add('connection-line');
         
