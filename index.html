@@ -50,6 +50,13 @@
             <!-- Canvas for building ETL flow -->
             <main class="canvas" id="canvas">
                 <p class="hint">Sleep componenten naar hier om te beginnen</p>
+                
+                <!-- Save/Load Flow Controls -->
+                <div class="flow-controls">
+                    <button id="saveFlowBtn" class="flow-btn" title="Opslaan Flow">💾</button>
+                    <button id="loadFlowBtn" class="flow-btn" title="Openen Flow">📂</button>
+                    <input type="file" id="loadFlowInput" accept=".json" style="display: none;" />
+                </div>
             </main>
         </div>
     </div>

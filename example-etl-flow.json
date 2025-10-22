@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "timestamp": "2025-10-21T07:30:00.000Z",
+  "blocks": [
+    {
+      "id": "block-0",
+      "type": "input",
+      "x": 100,
+      "y": 100,
+      "data": null
+    },
+    {
+      "id": "block-1",
+      "type": "automapper",
+      "x": 350,
+      "y": 100,
+      "data": null
+    },
+    {
+      "id": "block-2",
+      "type": "mapping",
+      "x": 600,
+      "y": 100,
+      "data": null
+    },
+    {
+      "id": "block-3",
+      "type": "transform",
+      "x": 350,
+      "y": 250,
+      "data": null
+    },
+    {
+      "id": "block-4",
+      "type": "outputdata",
+      "x": 600,
+      "y": 250,
+      "data": null
+    }
+  ],
+  "connections": [
+    {
+      "from": "block-0",
+      "to": "block-1"
+    },
+    {
+      "from": "block-1",
+      "to": "block-2"
+    },
+    {
+      "from": "block-2",
+      "to": "block-3"
+    },
+    {
+      "from": "block-3",
+      "to": "block-4"
+    }
+  ],
+  "dataStore": {},
+  "blockCounter": 5
+}
