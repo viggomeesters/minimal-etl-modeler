@@ -97,6 +97,10 @@ function renderBlock(block) {
         icon = '💾';
         title = 'Output Data';
         content = 'Klik om data te exporteren';
+    } else if (block.type === 'validation') {
+        icon = '✓';
+        title = 'Validation';
+        content = block.content || 'Klik om validatie te configureren';
     }
     
     blockEl.innerHTML = `
@@ -346,6 +350,8 @@ function openBlockModal(block) {
         openTransformModal(block);
     } else if (block.type === 'outputdata') {
         openOutputDataModal(block);
+    } else if (block.type === 'validation') {
+        openValidationModal(block);
     }
 }
 
@@ -1254,7 +1260,326 @@ document.addEventListener('click', (e) => {
     if (e.target.classList.contains('remove-transform-mapping')) {
         e.target.closest('.transform-mapping-row').remove();
     }
+    if (e.target.classList.contains('remove-validation-rule')) {
+        e.target.closest('.validation-rule-row').remove();
+    }
 });
+
+// Add change handler for validation rule type selector to show/hide value input
+document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('validation-rule-type')) {
+        const row = e.target.closest('.validation-rule-row');
+        const valueInput = row.querySelector('.validation-rule-value');
+        const ruleType = e.target.value;
+        
+        // Show value input only for certain rule types
+        if (['type', 'regex', 'min', 'max'].includes(ruleType)) {
+            valueInput.style.display = 'flex';
+            // Set placeholder based on type
+            if (ruleType === 'type') {
+                valueInput.placeholder = 'string, number, of date';
+            } else if (ruleType === 'regex') {
+                valueInput.placeholder = 'Regex patroon';
+            } else if (ruleType === 'min') {
+                valueInput.placeholder = 'Minimum waarde/lengte';
+            } else if (ruleType === 'max') {
+                valueInput.placeholder = 'Maximum waarde/lengte';
+            }
+        } else {
+            valueInput.style.display = 'none';
+        }
+    }
+});
+
+// ===== Validation Functionality =====
+
+function openValidationModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('validationInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Data Input, Mapping of Transform block met deze Validation block.</p>';
+        document.getElementById('validationModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Load existing validations if any
+    const existingValidations = block.validations || {};
+    
+    // Build validation interface
+    let html = '<div style="display: flex; gap: 30px;">';
+    
+    // Available columns
+    html += '<div style="flex: 1;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Kolommen</h3>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9; max-height: 400px; overflow-y: auto;">';
+    inputHeaders.forEach(header => {
+        const ruleCount = existingValidations[header] ? existingValidations[header].length : 0;
+        const badge = ruleCount > 0 ? `<span style="background: #4a90e2; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 5px;">${ruleCount}</span>` : '';
+        html += `<div style="padding: 8px; margin-bottom: 5px; background: white; border-radius: 3px; border: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+            <span>${header}</span>${badge}
+        </div>`;
+    });
+    html += '</div></div>';
+    
+    // Validation rules interface
+    html += '<div style="flex: 2;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Validatie Regels</h3>';
+    html += '<div id="validationRulesList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: white; max-height: 400px; overflow-y: auto;">';
+    
+    html += '<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Configureer validatie regels per kolom</p>';
+    
+    // Show existing validation rules
+    const columns = Object.keys(existingValidations);
+    if (columns.length > 0) {
+        columns.forEach(column => {
+            const rules = existingValidations[column];
+            rules.forEach((rule, idx) => {
+                html += createValidationRow(column, rule, inputHeaders, `${column}-${idx}`);
+            });
+        });
+    } else {
+        // Add one empty rule to start
+        html += createValidationRow('', { type: 'required' }, inputHeaders, '0');
+    }
+    
+    html += '<button id="addValidationRule" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg regel toe</button>';
+    html += '</div></div></div>';
+    
+    document.getElementById('validationInterface').innerHTML = html;
+    document.getElementById('validationModal').style.display = 'block';
+    
+    // Add event listener for adding new validation rules
+    const addButton = document.getElementById('addValidationRule');
+    if (addButton) {
+        addButton.addEventListener('click', () => {
+            const rulesList = document.getElementById('validationRulesList');
+            const rowCount = rulesList.querySelectorAll('.validation-rule-row').length;
+            const newRow = createValidationRow('', { type: 'required' }, inputHeaders, rowCount.toString());
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newRow;
+            addButton.parentNode.insertBefore(tempDiv.firstChild, addButton);
+        });
+    }
+    
+    // Apply validation button
+    document.getElementById('applyValidation').onclick = () => {
+        applyValidationConfig(block, inputHeaders);
+    };
+}
+
+function createValidationRow(column, rule, inputHeaders, index) {
+    const ruleType = rule.type || 'required';
+    const ruleValue = rule.value || '';
+    
+    let html = '<div class="validation-rule-row" style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #4a90e2;">';
+    
+    // Column selector
+    html += `<select class="validation-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = header === column ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select>';
+    
+    // Rule type selector
+    html += `<select class="validation-rule-type" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+    html += `<option value="required" ${ruleType === 'required' ? 'selected' : ''}>Required</option>`;
+    html += `<option value="type" ${ruleType === 'type' ? 'selected' : ''}>Type Check</option>`;
+    html += `<option value="regex" ${ruleType === 'regex' ? 'selected' : ''}>Regex Pattern</option>`;
+    html += `<option value="min" ${ruleType === 'min' ? 'selected' : ''}>Min Value/Length</option>`;
+    html += `<option value="max" ${ruleType === 'max' ? 'selected' : ''}>Max Value/Length</option>`;
+    html += '</select>';
+    
+    // Rule value input (conditionally shown based on rule type)
+    const needsValue = ['type', 'regex', 'min', 'max'].includes(ruleType);
+    const valueDisplay = needsValue ? 'flex' : 'none';
+    
+    html += `<input type="text" class="validation-rule-value" value="${ruleValue}" placeholder="Waarde" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px; display: ${valueDisplay};" />`;
+    
+    // Remove button
+    html += `<button class="remove-validation-rule" style="padding: 6px 10px; background: #fee; color: #e44; border: 1px solid #fcc; border-radius: 3px; cursor: pointer; font-size: 12px;">×</button>`;
+    html += '</div>';
+    
+    return html;
+}
+
+function applyValidationConfig(block, inputHeaders) {
+    // Collect validation rules from UI
+    const validations = {};
+    const rows = document.querySelectorAll('.validation-rule-row');
+    
+    rows.forEach(row => {
+        const column = row.querySelector('.validation-column').value.trim();
+        const ruleType = row.querySelector('.validation-rule-type').value;
+        const ruleValue = row.querySelector('.validation-rule-value').value.trim();
+        
+        if (column) {
+            if (!validations[column]) {
+                validations[column] = [];
+            }
+            
+            const rule = { type: ruleType };
+            if (['type', 'regex', 'min', 'max'].includes(ruleType) && ruleValue) {
+                rule.value = ruleValue;
+            }
+            
+            validations[column].push(rule);
+        }
+    });
+    
+    // Store validations in block
+    block.validations = validations;
+    
+    // Execute the validation
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (inputConnection && dataStore[inputConnection.from]) {
+        const validationResult = applyValidation(block, dataStore[inputConnection.from]);
+        
+        // Store validation result in dataStore
+        dataStore[block.id] = validationResult;
+        
+        // Update block content with validation summary
+        const { validCount, invalidCount } = validationResult.validation;
+        if (invalidCount === 0) {
+            updateBlockContent(block.id, `✓ Valid (${validCount} rijen)`);
+        } else {
+            block.content = `⚠ ${invalidCount} error(s), ${validCount} valid`;
+            updateBlockContent(block.id, `⚠ ${invalidCount} error(s), ${validCount} valid`);
+        }
+        
+        // Propagate data to connected blocks
+        propagateData(block.id);
+    }
+    
+    // Close modal
+    document.getElementById('validationModal').style.display = 'none';
+}
+
+function applyValidation(block, inputData) {
+    const validations = block.validations || {};
+    const headers = inputData.headers || [];
+    const rows = inputData.data || [];
+    
+    const rowErrors = [];
+    let validCount = 0;
+    let invalidCount = 0;
+    
+    // Validate each row
+    rows.forEach((row, rowIndex) => {
+        const errors = [];
+        
+        // Check each column that has validation rules
+        Object.keys(validations).forEach(column => {
+            const rules = validations[column];
+            const value = row[column];
+            
+            rules.forEach(rule => {
+                const error = validateValue(value, rule, column);
+                if (error) {
+                    errors.push(error);
+                }
+            });
+        });
+        
+        if (errors.length > 0) {
+            rowErrors.push({ rowIndex, errors });
+            invalidCount++;
+        } else {
+            validCount++;
+        }
+    });
+    
+    return {
+        data: rows,
+        headers: headers,
+        validation: {
+            rowErrors,
+            validCount,
+            invalidCount
+        }
+    };
+}
+
+function validateValue(value, rule, column) {
+    const { type, value: ruleValue } = rule;
+    
+    // Required check
+    if (type === 'required') {
+        if (value === null || value === undefined || value === '') {
+            return { col: column, message: `${column} is required` };
+        }
+    }
+    
+    // Type check
+    if (type === 'type' && ruleValue) {
+        if (ruleValue === 'number') {
+            if (isNaN(value) || value === '') {
+                return { col: column, message: `${column} must be a number` };
+            }
+        } else if (ruleValue === 'string') {
+            if (typeof value !== 'string') {
+                return { col: column, message: `${column} must be a string` };
+            }
+        } else if (ruleValue === 'date') {
+            const date = new Date(value);
+            if (isNaN(date.getTime())) {
+                return { col: column, message: `${column} must be a valid date` };
+            }
+        }
+    }
+    
+    // Regex check
+    if (type === 'regex' && ruleValue) {
+        try {
+            const regex = new RegExp(ruleValue);
+            if (!regex.test(value)) {
+                return { col: column, message: `${column} does not match pattern` };
+            }
+        } catch (e) {
+            return { col: column, message: `Invalid regex pattern` };
+        }
+    }
+    
+    // Min check (for numbers and string length)
+    if (type === 'min' && ruleValue) {
+        const minVal = parseFloat(ruleValue);
+        if (!isNaN(parseFloat(value))) {
+            // Numeric comparison
+            if (parseFloat(value) < minVal) {
+                return { col: column, message: `${column} must be >= ${minVal}` };
+            }
+        } else if (typeof value === 'string') {
+            // Length comparison
+            if (value.length < minVal) {
+                return { col: column, message: `${column} length must be >= ${minVal}` };
+            }
+        }
+    }
+    
+    // Max check (for numbers and string length)
+    if (type === 'max' && ruleValue) {
+        const maxVal = parseFloat(ruleValue);
+        if (!isNaN(parseFloat(value))) {
+            // Numeric comparison
+            if (parseFloat(value) > maxVal) {
+                return { col: column, message: `${column} must be <= ${maxVal}` };
+            }
+        } else if (typeof value === 'string') {
+            // Length comparison
+            if (value.length > maxVal) {
+                return { col: column, message: `${column} length must be <= ${maxVal}` };
+            }
+        }
+    }
+    
+    return null; // No error
+}
 
 // ===== Flow Save/Load Functionality =====
 
