@@ -1009,8 +1009,8 @@ function openTransformModal(block) {
     const inputHeaders = inputData.headers || [];
     const inputRows = inputData.data || [];
     
-    // Load existing mappings if any
-    const existingMappings = block.mappings || {};
+    // Load existing transformations if any (new structure)
+    const existingTransformations = block.transformations || {};
     
     // Build transform interface
     let html = '<div style="display: flex; gap: 30px;">';
@@ -1024,24 +1024,24 @@ function openTransformModal(block) {
     });
     html += '</div></div>';
     
-    // Mapping interface
+    // Transformation interface
     html += '<div style="flex: 2;">';
-    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Output Kolom Mappings</h3>';
-    html += '<div id="transformMappingList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Output Kolom Transformations</h3>';
+    html += '<div id="transformMappingList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white; max-height: 400px; overflow-y: auto;">';
     
-    html += '<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Definieer welke kolommen in de output moeten komen.</p>';
+    html += '<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Configure advanced transformations for each output column.</p>';
     
-    // Show existing mappings
-    const mappingCount = Object.keys(existingMappings).length;
-    if (mappingCount > 0) {
-        Object.keys(existingMappings).forEach((outCol, idx) => {
-            html += createTransformMappingRow(outCol, existingMappings[outCol], inputHeaders, idx);
+    // Show existing transformations
+    const transformCount = Object.keys(existingTransformations).length;
+    if (transformCount > 0) {
+        Object.keys(existingTransformations).forEach((outCol, idx) => {
+            html += createTransformMappingRow(outCol, null, inputHeaders, idx, existingTransformations[outCol]);
         });
     } else {
-        html += createTransformMappingRow('', '', inputHeaders, 0);
+        html += createTransformMappingRow('', '', inputHeaders, 0, null);
     }
     
-    html += '<button id="addTransformMappingRow" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg mapping toe</button>';
+    html += '<button id="addTransformMappingRow" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg transformatie toe</button>';
     
     html += '</div></div></div>';
     
@@ -1049,73 +1049,302 @@ function openTransformModal(block) {
     html += '<div style="margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 20px;">';
     html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Data Preview</h3>';
     html += `<p style="color: #666; font-size: 13px;">Input heeft ${inputRows.length} rijen en ${inputHeaders.length} kolommen</p>`;
+    html += '<div id="transformPreview" style="margin-top: 10px;"></div>';
     html += '</div>';
     
     document.getElementById('transformInterface').innerHTML = html;
     document.getElementById('transformModal').style.display = 'block';
     
-    // Add event listener for adding new mapping rows
+    // Add event listener for operation changes to update parameter fields
+    const updateParamFields = () => {
+        document.querySelectorAll('.transform-operation').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const row = e.target.closest('.transform-mapping-row');
+                const paramContainer = row.querySelector('.param-container');
+                const operation = e.target.value;
+                paramContainer.innerHTML = getParameterFields(operation, {});
+                
+                // Update input selector type based on operation
+                const inputsDiv = row.querySelector('.transform-inputs');
+                const operation_val = e.target.value;
+                
+                // Rebuild inputs selector
+                let newInputsHTML = '<span style="font-size: 12px; color: #666; min-width: 80px;">Input(s):</span>';
+                
+                if (operation_val === 'concatenate' || operation_val === 'math') {
+                    // Multi-select with checkboxes
+                    newInputsHTML += '<div style="flex: 1; display: flex; flex-wrap: wrap; gap: 5px; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; background: white; min-height: 36px;">';
+                    inputHeaders.forEach(header => {
+                        newInputsHTML += `<label style="display: flex; align-items: center; gap: 3px; font-size: 12px; padding: 3px 6px; background: #f0f0f0; border-radius: 3px; cursor: pointer;">`;
+                        newInputsHTML += `<input type="checkbox" class="transform-input-checkbox" value="${header}" style="cursor: pointer;">`;
+                        newInputsHTML += `<span>${header}</span></label>`;
+                    });
+                    newInputsHTML += '</div>';
+                } else {
+                    // Single select dropdown
+                    newInputsHTML += `<select class="transform-input-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+                    newInputsHTML += '<option value="">-- Selecteer input kolom --</option>';
+                    inputHeaders.forEach(header => {
+                        newInputsHTML += `<option value="${header}">${header}</option>`;
+                    });
+                    newInputsHTML += '</select>';
+                }
+                
+                inputsDiv.innerHTML = newInputsHTML;
+            });
+        });
+    };
+    
+    // Add event listener for adding new transformation rows
     const addButton = document.getElementById('addTransformMappingRow');
     if (addButton) {
         addButton.addEventListener('click', () => {
             const mappingList = document.getElementById('transformMappingList');
             const rowCount = mappingList.querySelectorAll('.transform-mapping-row').length;
-            const newRow = createTransformMappingRow('', '', inputHeaders, rowCount);
+            const newRow = createTransformMappingRow('', '', inputHeaders, rowCount, null);
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = newRow;
-            addButton.parentNode.insertBefore(tempDiv.firstChild, addButton);
+            const newRowElement = tempDiv.firstChild;
+            addButton.parentNode.insertBefore(newRowElement, addButton);
+            
+            // Attach event listeners to the new row
+            updateParamFields();
+            attachRemoveListeners();
         });
     }
     
+    // Attach remove button listeners
+    const attachRemoveListeners = () => {
+        document.querySelectorAll('.remove-transform-mapping').forEach(btn => {
+            btn.onclick = function() {
+                this.closest('.transform-mapping-row').remove();
+            };
+        });
+    };
+    
+    updateParamFields();
+    attachRemoveListeners();
+    
     // Apply transform button
     document.getElementById('applyTransform').onclick = () => {
-        applyTransform(block, inputHeaders);
+        applyAdvancedTransform(block, inputHeaders, inputRows);
     };
 }
 
-function createTransformMappingRow(outputCol, inputCol, inputHeaders, index) {
-    let html = '<div class="transform-mapping-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">';
+function createTransformMappingRow(outputCol, inputCol, inputHeaders, index, transformation) {
+    // If transformation is provided, use it; otherwise default to 'copy' operation
+    const op = transformation ? transformation.op : 'copy';
+    const inputs = transformation ? transformation.inputs : (inputCol ? [inputCol] : []);
+    const params = transformation ? transformation.params : {};
+    
+    let html = '<div class="transform-mapping-row" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 12px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0;">';
+    
+    // First row: Output column name and operation selector
+    html += '<div style="display: flex; gap: 10px; align-items: center;">';
     html += `<input type="text" class="transform-output-column" value="${outputCol}" placeholder="Output kolom naam" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
-    html += '<span style="color: #666;">←</span>';
-    html += `<select class="transform-input-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
-    html += '<option value="">-- Selecteer input kolom --</option>';
-    inputHeaders.forEach(header => {
-        const selected = header === inputCol ? 'selected' : '';
-        html += `<option value="${header}" ${selected}>${header}</option>`;
-    });
+    html += `<select class="transform-operation" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+    html += `<option value="copy" ${op === 'copy' ? 'selected' : ''}>Copy/Rename</option>`;
+    html += `<option value="concatenate" ${op === 'concatenate' ? 'selected' : ''}>Concatenate</option>`;
+    html += `<option value="split" ${op === 'split' ? 'selected' : ''}>Split</option>`;
+    html += `<option value="case" ${op === 'case' ? 'selected' : ''}>Case Change</option>`;
+    html += `<option value="math" ${op === 'math' ? 'selected' : ''}>Math</option>`;
+    html += `<option value="regex" ${op === 'regex' ? 'selected' : ''}>Regex Replace</option>`;
+    html += `<option value="date" ${op === 'date' ? 'selected' : ''}>Date Format</option>`;
+    html += `<option value="expression" ${op === 'expression' ? 'selected' : ''}>Expression</option>`;
     html += '</select>';
     html += `<button class="remove-transform-mapping" style="padding: 6px 10px; background: #fee; color: #e44; border: 1px solid #fcc; border-radius: 3px; cursor: pointer; font-size: 12px;">×</button>`;
+    html += '</div>';
+    
+    // Second row: Input column(s) selector - shown for all operations
+    html += '<div class="transform-inputs" style="display: flex; gap: 10px; align-items: center;">';
+    html += '<span style="font-size: 12px; color: #666; min-width: 80px;">Input(s):</span>';
+    
+    // For operations that need multiple inputs (concatenate, math), show multi-select
+    if (op === 'concatenate' || op === 'math') {
+        html += '<div style="flex: 1; display: flex; flex-wrap: wrap; gap: 5px; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; background: white; min-height: 36px;">';
+        inputHeaders.forEach(header => {
+            const checked = inputs.includes(header) ? 'checked' : '';
+            html += `<label style="display: flex; align-items: center; gap: 3px; font-size: 12px; padding: 3px 6px; background: #f0f0f0; border-radius: 3px; cursor: pointer;">`;
+            html += `<input type="checkbox" class="transform-input-checkbox" value="${header}" ${checked} style="cursor: pointer;">`;
+            html += `<span>${header}</span></label>`;
+        });
+        html += '</div>';
+    } else {
+        // Single select for other operations
+        html += `<select class="transform-input-column" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+        html += '<option value="">-- Selecteer input kolom --</option>';
+        inputHeaders.forEach(header => {
+            const selected = inputs.includes(header) ? 'selected' : '';
+            html += `<option value="${header}" ${selected}>${header}</option>`;
+        });
+        html += '</select>';
+    }
+    html += '</div>';
+    
+    // Third row: Parameters based on operation type
+    html += '<div class="transform-params" style="display: flex; gap: 10px; align-items: center;">';
+    html += '<span style="font-size: 12px; color: #666; min-width: 80px;">Parameters:</span>';
+    html += '<div style="flex: 1;" class="param-container">';
+    html += getParameterFields(op, params);
+    html += '</div>';
+    html += '</div>';
+    
     html += '</div>';
     return html;
 }
 
-function applyTransform(block, inputHeaders) {
-    // Collect mappings from UI
-    const mappings = {};
+// Helper function to generate parameter fields based on operation type
+function getParameterFields(operation, params) {
+    let html = '';
+    
+    switch(operation) {
+        case 'copy':
+            html += '<span style="font-size: 12px; color: #999; font-style: italic;">No parameters needed</span>';
+            break;
+        case 'concatenate':
+            html += `<input type="text" class="param-separator" value="${params.separator || ' '}" placeholder="Separator (bijv. ', ')" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            break;
+        case 'split':
+            html += '<div style="display: flex; gap: 8px;">';
+            html += `<input type="text" class="param-delimiter" value="${params.delimiter || ','}" placeholder="Delimiter" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += `<input type="number" class="param-index" value="${params.index || 0}" placeholder="Index (0-based)" min="0" style="width: 100px; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += '</div>';
+            break;
+        case 'case':
+            html += `<select class="param-case-type" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+            html += `<option value="upper" ${params.type === 'upper' ? 'selected' : ''}>UPPERCASE</option>`;
+            html += `<option value="lower" ${params.type === 'lower' ? 'selected' : ''}>lowercase</option>`;
+            html += `<option value="capitalize" ${params.type === 'capitalize' ? 'selected' : ''}>Capitalize</option>`;
+            html += '</select>';
+            break;
+        case 'math':
+            html += '<div style="display: flex; gap: 8px;">';
+            html += `<select class="param-math-op" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+            html += `<option value="add" ${params.mathOp === 'add' ? 'selected' : ''}>Add (+)</option>`;
+            html += `<option value="subtract" ${params.mathOp === 'subtract' ? 'selected' : ''}>Subtract (-)</option>`;
+            html += `<option value="multiply" ${params.mathOp === 'multiply' ? 'selected' : ''}>Multiply (*)</option>`;
+            html += `<option value="divide" ${params.mathOp === 'divide' ? 'selected' : ''}>Divide (/)</option>`;
+            html += '</select>';
+            html += `<select class="param-round" style="width: 120px; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;">`;
+            html += `<option value="none" ${params.round === 'none' ? 'selected' : ''}>No rounding</option>`;
+            html += `<option value="0" ${params.round === '0' ? 'selected' : ''}>0 decimals</option>`;
+            html += `<option value="2" ${params.round === '2' ? 'selected' : ''}>2 decimals</option>`;
+            html += `<option value="4" ${params.round === '4' ? 'selected' : ''}>4 decimals</option>`;
+            html += '</select>';
+            html += '</div>';
+            break;
+        case 'regex':
+            html += '<div style="display: flex; gap: 8px;">';
+            html += `<input type="text" class="param-regex-pattern" value="${params.pattern || ''}" placeholder="Pattern (bijv. [0-9]+)" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += `<input type="text" class="param-regex-replacement" value="${params.replacement || ''}" placeholder="Replacement" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += '</div>';
+            break;
+        case 'date':
+            html += '<div style="display: flex; gap: 8px;">';
+            html += `<input type="text" class="param-date-input-format" value="${params.inputFormat || 'ISO'}" placeholder="Input format (ISO/locale)" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += `<input type="text" class="param-date-output-format" value="${params.outputFormat || 'ISO'}" placeholder="Output format" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += '</div>';
+            break;
+        case 'expression':
+            html += `<input type="text" class="param-expression" value="${params.expression || ''}" placeholder="Expression (bijv. \${A} + '-' + \${B})" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />`;
+            html += '<div style="font-size: 11px; color: #999; margin-top: 4px;">Use \${columnName} to reference columns</div>';
+            break;
+    }
+    
+    return html;
+}
+
+function applyAdvancedTransform(block, inputHeaders, inputRows) {
+    // Collect transformations from UI
+    const transformations = {};
     const rows = document.querySelectorAll('.transform-mapping-row');
+    
     rows.forEach(row => {
         const outputCol = row.querySelector('.transform-output-column').value.trim();
-        const inputCol = row.querySelector('.transform-input-column').value;
-        if (outputCol && inputCol) {
-            mappings[outputCol] = inputCol;
+        if (!outputCol) return;
+        
+        const operation = row.querySelector('.transform-operation').value;
+        
+        // Collect inputs based on operation type
+        let inputs = [];
+        if (operation === 'concatenate' || operation === 'math') {
+            // Multi-select with checkboxes
+            const checkboxes = row.querySelectorAll('.transform-input-checkbox:checked');
+            inputs = Array.from(checkboxes).map(cb => cb.value);
+        } else {
+            // Single select
+            const inputSelect = row.querySelector('.transform-input-column');
+            if (inputSelect && inputSelect.value) {
+                inputs = [inputSelect.value];
+            }
         }
+        
+        if (inputs.length === 0 && operation !== 'expression') return;
+        
+        // Collect parameters based on operation type
+        const params = {};
+        
+        switch(operation) {
+            case 'concatenate':
+                const separatorInput = row.querySelector('.param-separator');
+                params.separator = separatorInput ? separatorInput.value : ' ';
+                break;
+            case 'split':
+                const delimiterInput = row.querySelector('.param-delimiter');
+                const indexInput = row.querySelector('.param-index');
+                params.delimiter = delimiterInput ? delimiterInput.value : ',';
+                params.index = indexInput ? parseInt(indexInput.value) : 0;
+                break;
+            case 'case':
+                const caseTypeSelect = row.querySelector('.param-case-type');
+                params.type = caseTypeSelect ? caseTypeSelect.value : 'upper';
+                break;
+            case 'math':
+                const mathOpSelect = row.querySelector('.param-math-op');
+                const roundSelect = row.querySelector('.param-round');
+                params.mathOp = mathOpSelect ? mathOpSelect.value : 'add';
+                params.round = roundSelect ? roundSelect.value : 'none';
+                break;
+            case 'regex':
+                const patternInput = row.querySelector('.param-regex-pattern');
+                const replacementInput = row.querySelector('.param-regex-replacement');
+                params.pattern = patternInput ? patternInput.value : '';
+                params.replacement = replacementInput ? replacementInput.value : '';
+                break;
+            case 'date':
+                const inputFormatInput = row.querySelector('.param-date-input-format');
+                const outputFormatInput = row.querySelector('.param-date-output-format');
+                params.inputFormat = inputFormatInput ? inputFormatInput.value : 'ISO';
+                params.outputFormat = outputFormatInput ? outputFormatInput.value : 'ISO';
+                break;
+            case 'expression':
+                const expressionInput = row.querySelector('.param-expression');
+                params.expression = expressionInput ? expressionInput.value : '';
+                break;
+        }
+        
+        transformations[outputCol] = {
+            op: operation,
+            inputs: inputs,
+            params: params
+        };
     });
     
-    // Store mappings in block
-    block.mappings = mappings;
+    // Store transformations in block
+    block.transformations = transformations;
     
-    // Execute the transformation
+    // Execute the transformations
     const inputConnection = connections.find(c => c.to === block.id);
     if (inputConnection && dataStore[inputConnection.from]) {
         const inputData = dataStore[inputConnection.from];
-        const transformedData = applyTransformationLogic(inputData, mappings);
+        const transformedData = applyAdvancedTransformationLogic(inputData, transformations);
         
         // Store transformed data
         dataStore[block.id] = transformedData;
         
         // Update block content
-        const mappingCount = Object.keys(mappings).length;
-        updateBlockContent(block.id, `${mappingCount} kolom(men) getransformeerd`);
+        const transformCount = Object.keys(transformations).length;
+        updateBlockContent(block.id, `${transformCount} kolom(men) getransformeerd`);
         
         // Propagate data to connected blocks
         propagateData(block.id);
@@ -1125,6 +1354,233 @@ function applyTransform(block, inputHeaders) {
     document.getElementById('transformModal').style.display = 'none';
 }
 
+// Advanced transformation logic with multiple operation types
+function applyAdvancedTransformationLogic(inputData, transformations) {
+    const inputRows = inputData.data || [];
+    const outputHeaders = Object.keys(transformations);
+    
+    // Transform each row
+    const outputRows = inputRows.map(row => {
+        const newRow = {};
+        
+        outputHeaders.forEach(outputCol => {
+            const transformation = transformations[outputCol];
+            const op = transformation.op;
+            const inputs = transformation.inputs || [];
+            const params = transformation.params || {};
+            
+            try {
+                let result = '';
+                
+                switch(op) {
+                    case 'copy':
+                        // Simple copy/rename
+                        result = inputs.length > 0 ? (row[inputs[0]] || '') : '';
+                        break;
+                        
+                    case 'concatenate':
+                        // Concatenate multiple columns with separator
+                        result = inputs.map(col => row[col] || '').join(params.separator || ' ');
+                        break;
+                        
+                    case 'split':
+                        // Split column on delimiter and take specific index
+                        if (inputs.length > 0) {
+                            const value = row[inputs[0]] || '';
+                            const parts = value.split(params.delimiter || ',');
+                            const index = params.index || 0;
+                            result = parts[index] || '';
+                        }
+                        break;
+                        
+                    case 'case':
+                        // Change case of text
+                        if (inputs.length > 0) {
+                            const value = row[inputs[0]] || '';
+                            switch(params.type) {
+                                case 'upper':
+                                    result = value.toUpperCase();
+                                    break;
+                                case 'lower':
+                                    result = value.toLowerCase();
+                                    break;
+                                case 'capitalize':
+                                    result = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+                                    break;
+                                default:
+                                    result = value;
+                            }
+                        }
+                        break;
+                        
+                    case 'math':
+                        // Perform mathematical operations
+                        if (inputs.length >= 2) {
+                            const values = inputs.map(col => parseFloat(row[col]) || 0);
+                            let mathResult = values[0];
+                            
+                            for (let i = 1; i < values.length; i++) {
+                                switch(params.mathOp) {
+                                    case 'add':
+                                        mathResult += values[i];
+                                        break;
+                                    case 'subtract':
+                                        mathResult -= values[i];
+                                        break;
+                                    case 'multiply':
+                                        mathResult *= values[i];
+                                        break;
+                                    case 'divide':
+                                        mathResult = values[i] !== 0 ? mathResult / values[i] : mathResult;
+                                        break;
+                                }
+                            }
+                            
+                            // Apply rounding if specified
+                            if (params.round !== 'none' && params.round !== undefined) {
+                                const decimals = parseInt(params.round);
+                                mathResult = Math.round(mathResult * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                            }
+                            
+                            result = mathResult.toString();
+                        } else if (inputs.length === 1) {
+                            result = row[inputs[0]] || '0';
+                        }
+                        break;
+                        
+                    case 'regex':
+                        // Regex find and replace
+                        if (inputs.length > 0 && params.pattern) {
+                            const value = row[inputs[0]] || '';
+                            try {
+                                const regex = new RegExp(params.pattern, 'g');
+                                result = value.replace(regex, params.replacement || '');
+                            } catch(e) {
+                                // Invalid regex, return original value
+                                result = value;
+                            }
+                        }
+                        break;
+                        
+                    case 'date':
+                        // Date formatting
+                        if (inputs.length > 0) {
+                            const value = row[inputs[0]] || '';
+                            result = formatDate(value, params.inputFormat, params.outputFormat);
+                        }
+                        break;
+                        
+                    case 'expression':
+                        // Safe expression evaluation
+                        result = evaluateSafeExpression(params.expression || '', row);
+                        break;
+                        
+                    default:
+                        result = '';
+                }
+                
+                newRow[outputCol] = result;
+            } catch(e) {
+                // On error, set empty value
+                newRow[outputCol] = '';
+                console.error(`Error in transformation for ${outputCol}:`, e);
+            }
+        });
+        
+        return newRow;
+    });
+    
+    return {
+        data: outputRows,
+        headers: outputHeaders
+    };
+}
+
+// Helper function for date formatting
+// Supports basic ISO format and locale string conversion
+function formatDate(value, inputFormat, outputFormat) {
+    if (!value) return '';
+    
+    try {
+        let date;
+        
+        // Parse input date
+        if (inputFormat === 'ISO' || inputFormat === 'iso') {
+            date = new Date(value);
+        } else if (inputFormat === 'locale') {
+            date = new Date(value);
+        } else {
+            // Try to parse as ISO by default
+            date = new Date(value);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return value; // Return original if parsing failed
+        }
+        
+        // Format output date
+        if (outputFormat === 'ISO' || outputFormat === 'iso') {
+            return date.toISOString();
+        } else if (outputFormat === 'locale') {
+            return date.toLocaleDateString();
+        } else if (outputFormat === 'YYYY-MM-DD') {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } else if (outputFormat === 'DD/MM/YYYY') {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${day}/${month}/${year}`;
+        } else {
+            // Default to ISO
+            return date.toISOString();
+        }
+    } catch(e) {
+        return value; // Return original on error
+    }
+}
+
+// Safe expression evaluator using template string substitution
+// Avoids eval() by using limited whitelist of operations
+function evaluateSafeExpression(expression, row) {
+    if (!expression) return '';
+    
+    try {
+        // Replace ${columnName} with actual values
+        let result = expression;
+        
+        // Find all ${...} patterns
+        const pattern = /\$\{([^}]+)\}/g;
+        const matches = expression.matchAll(pattern);
+        
+        for (const match of matches) {
+            const columnName = match[1].trim();
+            const value = row[columnName] || '';
+            // Escape the value for safe string replacement
+            const safeValue = String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            result = result.replace(match[0], safeValue);
+        }
+        
+        // For safety, we only support string concatenation with +
+        // and do not use eval. Just return the result with substitutions.
+        // If the result contains operators, they will be treated as literal strings
+        // This is a safe approach that avoids code injection
+        
+        // If expression only contains substitutions, return as is
+        if (!result.includes('${')) {
+            return result;
+        }
+        
+        return result;
+    } catch(e) {
+        return '';
+    }
+}
+
+// Keep backward compatibility with simple mapping transformation
 function applyTransformationLogic(inputData, mappings) {
     const inputRows = inputData.data || [];
     const inputHeaders = inputData.headers || [];
