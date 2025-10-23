@@ -101,6 +101,10 @@ function renderBlock(block) {
         icon = '✓';
         title = 'Validation';
         content = block.content || 'Klik om validatie te configureren';
+    } else if (block.type === 'valuemapper') {
+        icon = '🔄';
+        title = 'Value Mapper';
+        content = block.content || 'Klik om value mappings te configureren';
     }
     
     blockEl.innerHTML = `
@@ -352,6 +356,8 @@ function openBlockModal(block) {
         openOutputDataModal(block);
     } else if (block.type === 'validation') {
         openValidationModal(block);
+    } else if (block.type === 'valuemapper') {
+        openValueMapperModal(block);
     }
 }
 
@@ -2037,6 +2043,274 @@ function validateValue(value, rule, column) {
     return null; // No error
 }
 
+// ===== Value Mapper Functionality =====
+
+function openValueMapperModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('valueMapperInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een Data Input of andere block met deze Value Mapper block.</p>';
+        document.getElementById('valueMapperModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    const inputRows = inputData.data || [];
+    
+    if (inputHeaders.length === 0) {
+        document.getElementById('valueMapperInterface').innerHTML = '<p style="color: #e44;">Geen kolommen gevonden in input data.</p>';
+        document.getElementById('valueMapperModal').style.display = 'block';
+        return;
+    }
+    
+    // Load existing value mappings if any
+    const existingValueMap = block.valueMap || {};
+    
+    // Build value mapper interface
+    let html = '<div style="display: flex; gap: 30px;">';
+    
+    // Column selector
+    html += '<div style="flex: 1;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Select Column</h3>';
+    html += '<select id="valueMapperColumnSelect" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;">';
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        html += `<option value="${header}">${header}</option>`;
+    });
+    html += '</select>';
+    html += '</div>';
+    
+    // Value mappings interface
+    html += '<div style="flex: 2;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Value Mappings</h3>';
+    html += '<div id="valueMappingList" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white; max-height: 300px; overflow-y: auto;">';
+    html += '<p id="valueMappingPlaceholder" style="color: #999; font-size: 13px; text-align: center;">Selecteer een kolom om value mappings te configureren</p>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    // Preview section
+    html += '<div style="margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 20px;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Preview (First 5 Rows)</h3>';
+    html += '<div id="valueMapperPreview" style="overflow-x: auto;"></div>';
+    html += '</div>';
+    
+    document.getElementById('valueMapperInterface').innerHTML = html;
+    document.getElementById('valueMapperModal').style.display = 'block';
+    
+    // Column selection handler
+    const columnSelect = document.getElementById('valueMapperColumnSelect');
+    columnSelect.addEventListener('change', (e) => {
+        const selectedColumn = e.target.value;
+        if (selectedColumn) {
+            showValueMappingsForColumn(selectedColumn, existingValueMap, inputRows);
+        } else {
+            document.getElementById('valueMappingList').innerHTML = '<p id="valueMappingPlaceholder" style="color: #999; font-size: 13px; text-align: center;">Selecteer een kolom om value mappings te configureren</p>';
+        }
+        updateValueMapperPreview(inputRows, inputHeaders, existingValueMap);
+    });
+    
+    // Apply button handler
+    document.getElementById('applyValueMapper').onclick = () => {
+        applyValueMapping(block);
+    };
+    
+    // Show initial preview
+    updateValueMapperPreview(inputRows.slice(0, 5), inputHeaders, existingValueMap);
+}
+
+function showValueMappingsForColumn(column, existingValueMap, inputRows) {
+    const mappingList = document.getElementById('valueMappingList');
+    const columnMappings = existingValueMap[column] || {};
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; font-weight: 600; font-size: 12px; color: #666;">';
+    html += '<div style="flex: 1;">From Value</div>';
+    html += '<div style="flex: 0 0 30px; text-align: center;">→</div>';
+    html += '<div style="flex: 1;">To Value</div>';
+    html += '<div style="flex: 0 0 40px;"></div>';
+    html += '</div>';
+    
+    // Show existing mappings for this column
+    if (Object.keys(columnMappings).length > 0) {
+        Object.keys(columnMappings).forEach((fromValue) => {
+            html += createValueMappingRow(column, fromValue, columnMappings[fromValue]);
+        });
+    } else {
+        // Show one empty row
+        html += createValueMappingRow(column, '', '');
+    }
+    
+    html += '<button id="addValueMappingRow" style="margin-top: 10px; padding: 8px 15px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Voeg mapping toe</button>';
+    html += '</div>';
+    
+    mappingList.innerHTML = html;
+    
+    // Add row button handler
+    document.getElementById('addValueMappingRow').addEventListener('click', () => {
+        const newRow = createValueMappingRow(column, '', '');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newRow;
+        document.getElementById('addValueMappingRow').parentNode.insertBefore(tempDiv.firstChild, document.getElementById('addValueMappingRow'));
+        attachRemoveValueMappingListeners();
+    });
+    
+    attachRemoveValueMappingListeners();
+}
+
+function createValueMappingRow(column, fromValue, toValue) {
+    let html = '<div class="value-mapping-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;" data-column="' + column + '">';
+    html += '<input type="text" class="value-mapping-from" value="' + fromValue + '" placeholder="From value" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />';
+    html += '<div style="flex: 0 0 30px; text-align: center; color: #666;">→</div>';
+    html += '<input type="text" class="value-mapping-to" value="' + toValue + '" placeholder="To value" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 13px;" />';
+    html += '<button class="remove-value-mapping" style="flex: 0 0 40px; padding: 6px 10px; background: #fee; color: #e44; border: 1px solid #fcc; border-radius: 3px; cursor: pointer; font-size: 12px;">×</button>';
+    html += '</div>';
+    return html;
+}
+
+function attachRemoveValueMappingListeners() {
+    document.querySelectorAll('.remove-value-mapping').forEach(btn => {
+        btn.onclick = function() {
+            this.closest('.value-mapping-row').remove();
+        };
+    });
+}
+
+function updateValueMapperPreview(rows, headers, valueMap) {
+    const previewDiv = document.getElementById('valueMapperPreview');
+    const previewRows = rows.slice(0, 5);
+    
+    if (previewRows.length === 0) {
+        previewDiv.innerHTML = '<p style="color: #999;">Geen data beschikbaar voor preview</p>';
+        return;
+    }
+    
+    let html = '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+    html += '<thead><tr>';
+    headers.forEach(header => {
+        html += `<th style="padding: 8px; text-align: left; border-bottom: 2px solid #e0e0e0; background: #f9f9f9;">${header}</th>`;
+    });
+    html += '</tr></thead>';
+    html += '<tbody>';
+    
+    previewRows.forEach(row => {
+        html += '<tr>';
+        headers.forEach(header => {
+            let value = row[header] || '';
+            // Apply value mapping if exists
+            if (valueMap[header] && valueMap[header][value]) {
+                value = valueMap[header][value];
+            }
+            html += `<td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    previewDiv.innerHTML = html;
+}
+
+function applyValueMapping(block) {
+    // Collect all value mappings from the UI
+    const valueMap = {};
+    const columnSelect = document.getElementById('valueMapperColumnSelect');
+    const selectedColumn = columnSelect.value;
+    
+    if (selectedColumn) {
+        const rows = document.querySelectorAll('.value-mapping-row');
+        const columnMappings = {};
+        
+        rows.forEach(row => {
+            const fromValue = row.querySelector('.value-mapping-from').value.trim();
+            const toValue = row.querySelector('.value-mapping-to').value.trim();
+            
+            if (fromValue) {
+                columnMappings[fromValue] = toValue;
+            }
+        });
+        
+        if (Object.keys(columnMappings).length > 0) {
+            valueMap[selectedColumn] = columnMappings;
+        }
+    }
+    
+    // Merge with existing mappings for other columns
+    const existingValueMap = block.valueMap || {};
+    Object.keys(existingValueMap).forEach(col => {
+        if (col !== selectedColumn) {
+            valueMap[col] = existingValueMap[col];
+        }
+    });
+    
+    // Store value map in block
+    block.valueMap = valueMap;
+    
+    // Execute the value mapping
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (inputConnection && dataStore[inputConnection.from]) {
+        const inputData = dataStore[inputConnection.from];
+        const mappedData = applyValueMappingTransformation(inputData, valueMap);
+        
+        // Store mapped data
+        dataStore[block.id] = mappedData;
+        
+        // Update block content
+        const totalMappings = Object.keys(valueMap).reduce((sum, col) => {
+            return sum + Object.keys(valueMap[col]).length;
+        }, 0);
+        const columnCount = Object.keys(valueMap).length;
+        updateBlockContent(block.id, `${totalMappings} mapping(s) op ${columnCount} kolom(men)`);
+        
+        // Propagate data to connected blocks
+        propagateData(block.id);
+    }
+    
+    // Close modal
+    document.getElementById('valueMapperModal').style.display = 'none';
+}
+
+function applyValueMappingTransformation(inputData, valueMap) {
+    const inputRows = inputData.data || [];
+    const inputHeaders = inputData.headers || [];
+    
+    // Create shallow clone of rows with value replacements
+    const outputRows = inputRows.map(row => {
+        const newRow = { ...row };
+        
+        // Apply value mappings for each column
+        Object.keys(valueMap).forEach(column => {
+            const columnMappings = valueMap[column];
+            const originalValue = newRow[column];
+            
+            // Replace value if mapping exists (exact match)
+            if (originalValue !== undefined && columnMappings[originalValue] !== undefined) {
+                newRow[column] = columnMappings[originalValue];
+            }
+        });
+        
+        return newRow;
+    });
+    
+    // Count applied mappings for metadata
+    let appliedMappings = 0;
+    Object.keys(valueMap).forEach(column => {
+        appliedMappings += Object.keys(valueMap[column]).length;
+    });
+    
+    return {
+        data: outputRows,
+        headers: inputHeaders,
+        valueMapping: {
+            mappings: valueMap,
+            appliedCount: appliedMappings
+        }
+    };
+}
+
 // ===== Flow Save/Load Functionality =====
 
 // Initialize save/load handlers
@@ -2070,7 +2344,15 @@ function saveFlow() {
             type: block.type,
             x: block.x,
             y: block.y,
-            data: block.data
+            data: block.data,
+            // Include all block-specific properties
+            mappings: block.mappings,
+            autoMappings: block.autoMappings,
+            transformations: block.transformations,
+            validations: block.validations,
+            valueMap: block.valueMap,
+            content: block.content,
+            fromAutomapper: block.fromAutomapper
         })),
         connections: connections.map(conn => ({
             from: conn.from,
