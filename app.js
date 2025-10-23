@@ -9,6 +9,7 @@ let dataStore = {};
 document.addEventListener('DOMContentLoaded', () => {
     initDragAndDrop();
     initModals();
+    initCanvasPanning();
 });
 
 // Drag and Drop functionality
@@ -44,6 +45,60 @@ function handleDrop(e) {
     // Remove hint if it exists
     const hint = document.querySelector('.hint');
     if (hint) hint.style.display = 'none';
+}
+
+// Canvas panning functionality
+function initCanvasPanning() {
+    const canvas = document.getElementById('canvas');
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollLeft = 0;
+    let scrollTop = 0;
+    
+    canvas.addEventListener('mousedown', (e) => {
+        // Enable panning with shift+drag or middle button
+        if (e.shiftKey || e.button === 1) {
+            isPanning = true;
+            startX = e.pageX;
+            startY = e.pageY;
+            scrollLeft = canvas.scrollLeft;
+            scrollTop = canvas.scrollTop;
+            canvas.classList.add('panning');
+            e.preventDefault();
+        }
+    });
+    
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        
+        const dx = e.pageX - startX;
+        const dy = e.pageY - startY;
+        
+        canvas.scrollLeft = scrollLeft - dx;
+        canvas.scrollTop = scrollTop - dy;
+    });
+    
+    canvas.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            canvas.classList.remove('panning');
+        }
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+        if (isPanning) {
+            isPanning = false;
+            canvas.classList.remove('panning');
+        }
+    });
+    
+    // Prevent context menu on middle button
+    canvas.addEventListener('contextmenu', (e) => {
+        if (e.button === 1) {
+            e.preventDefault();
+        }
+    });
 }
 
 function createBlock(type, x, y) {
@@ -1131,8 +1186,13 @@ function openTransformModal(block) {
     updateParamFields();
     attachRemoveListeners();
     
-    // Apply transform button
+    // Apply transform button (bottom)
     document.getElementById('applyTransform').onclick = () => {
+        applyAdvancedTransform(block, inputHeaders, inputRows);
+    };
+    
+    // Apply transform button (top right) - same handler
+    document.getElementById('applyTransformTop').onclick = () => {
         applyAdvancedTransform(block, inputHeaders, inputRows);
     };
 }
@@ -1361,14 +1421,32 @@ function applyAdvancedTransform(block, inputHeaders, inputRows) {
 }
 
 // Advanced transformation logic with multiple operation types
-function applyAdvancedTransformationLogic(inputData, transformations) {
+function applyAdvancedTransformationLogic(inputData, transformations, preserveUnmapped = true) {
     const inputRows = inputData.data || [];
+    const inputHeaders = inputData.headers || [];
     const outputHeaders = Object.keys(transformations);
     
     // Transform each row
     const outputRows = inputRows.map(row => {
         const newRow = {};
         
+        // If preserveUnmapped is true, first copy all unmapped input columns
+        if (preserveUnmapped) {
+            inputHeaders.forEach(inputCol => {
+                // Check if this input column is used in any transformation
+                const isUsedInTransformation = outputHeaders.some(outCol => {
+                    const transformation = transformations[outCol];
+                    return transformation.inputs && transformation.inputs.includes(inputCol);
+                });
+                
+                // If not used in any transformation, preserve it as-is
+                if (!isUsedInTransformation) {
+                    newRow[inputCol] = row[inputCol] || '';
+                }
+            });
+        }
+        
+        // Apply transformations to create/overwrite output columns
         outputHeaders.forEach(outputCol => {
             const transformation = transformations[outputCol];
             const op = transformation.op;
@@ -1496,9 +1574,23 @@ function applyAdvancedTransformationLogic(inputData, transformations) {
         return newRow;
     });
     
+    // Determine final headers: unmapped columns + transformed columns
+    let finalHeaders = outputHeaders;
+    if (preserveUnmapped) {
+        // Get unmapped input columns
+        const unmappedColumns = inputHeaders.filter(inputCol => {
+            return !outputHeaders.some(outCol => {
+                const transformation = transformations[outCol];
+                return transformation.inputs && transformation.inputs.includes(inputCol);
+            });
+        });
+        // Combine unmapped columns (first) with transformed columns
+        finalHeaders = [...unmappedColumns, ...outputHeaders];
+    }
+    
     return {
         data: outputRows,
-        headers: outputHeaders
+        headers: finalHeaders
     };
 }
 
@@ -1587,7 +1679,7 @@ function evaluateSafeExpression(expression, row) {
 }
 
 // Keep backward compatibility with simple mapping transformation
-function applyTransformationLogic(inputData, mappings) {
+function applyTransformationLogic(inputData, mappings, preserveUnmapped = true) {
     const inputRows = inputData.data || [];
     const inputHeaders = inputData.headers || [];
     
@@ -1597,6 +1689,21 @@ function applyTransformationLogic(inputData, mappings) {
     // Transform each row
     const outputRows = inputRows.map(row => {
         const newRow = {};
+        
+        // If preserveUnmapped is true, first copy all unmapped input columns
+        if (preserveUnmapped) {
+            inputHeaders.forEach(inputCol => {
+                // Check if this input column is mapped to any output
+                const isMapped = Object.values(mappings).includes(inputCol);
+                
+                // If not mapped, preserve it as-is
+                if (!isMapped) {
+                    newRow[inputCol] = row[inputCol] || '';
+                }
+            });
+        }
+        
+        // Apply mappings to create/overwrite output columns
         outputHeaders.forEach(outputCol => {
             const inputCol = mappings[outputCol];
             newRow[outputCol] = row[inputCol] || '';
@@ -1604,9 +1711,20 @@ function applyTransformationLogic(inputData, mappings) {
         return newRow;
     });
     
+    // Determine final headers: unmapped columns + mapped columns
+    let finalHeaders = outputHeaders;
+    if (preserveUnmapped) {
+        // Get unmapped input columns
+        const unmappedColumns = inputHeaders.filter(inputCol => {
+            return !Object.values(mappings).includes(inputCol);
+        });
+        // Combine unmapped columns (first) with mapped columns
+        finalHeaders = [...unmappedColumns, ...outputHeaders];
+    }
+    
     return {
         data: outputRows,
-        headers: outputHeaders
+        headers: finalHeaders
     };
 }
 

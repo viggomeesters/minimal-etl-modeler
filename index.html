@@ -126,11 +126,16 @@
     <!-- Modal for Transform -->
     <div id="transformModal" class="modal">
         <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Transform</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Configure data transformation</p>
-            <div id="transformInterface"></div>
-            <button id="applyTransform" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Transform</button>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Transform</h2>
+                <button id="applyTransformTop" class="modal-action-top" title="Apply Transform">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Configure data transformation</p>
+                <div id="transformInterface"></div>
+                <button id="applyTransform" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Transform</button>
+            </div>
         </div>
     </div>
     
