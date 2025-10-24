@@ -263,6 +263,8 @@ function stopDragBlock() {
 // Connectors for linking blocks
 let isConnecting = false;
 let connectFrom = null;
+let connectFromElement = null;
+let tempConnectionLine = null;
 
 function initConnectors(blockId) {
     const connectors = document.querySelectorAll(`#${blockId} .block-connector`);
@@ -273,10 +275,107 @@ function initConnectors(blockId) {
 
 function startConnection(e) {
     e.stopPropagation();
+    e.preventDefault(); // Prevent text selection
     if (e.target.dataset.type !== 'out') return;
     
     isConnecting = true;
     connectFrom = e.target.dataset.block;
+    connectFromElement = e.target;
+    
+    // Add active class to highlight the connector
+    connectFromElement.classList.add('active');
+    
+    // Create temporary connection line
+    createTempConnectionLine();
+    
+    // Add mousemove listener for visual feedback
+    document.addEventListener('mousemove', updateTempConnection);
+}
+
+function createTempConnectionLine() {
+    const canvas = document.getElementById('canvas');
+    
+    // Remove existing temp line if any
+    if (tempConnectionLine) {
+        tempConnectionLine.remove();
+    }
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'temp-connection-svg';
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.pointerEvents = 'none';
+    svg.style.zIndex = '1000';
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.id = 'temp-connection-path';
+    path.classList.add('temp-connection-line');
+    
+    svg.appendChild(path);
+    canvas.appendChild(svg);
+    
+    tempConnectionLine = svg;
+}
+
+function updateTempConnection(e) {
+    if (!isConnecting || !connectFromElement) return;
+    
+    const canvas = document.getElementById('canvas');
+    const canvasRect = canvas.getBoundingClientRect();
+    const fromRect = connectFromElement.getBoundingClientRect();
+    
+    const x1 = fromRect.left - canvasRect.left + fromRect.width / 2;
+    const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
+    const x2 = e.clientX - canvasRect.left;
+    const y2 = e.clientY - canvasRect.top;
+    
+    // Create a simple curved path
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const midX = x1 + dx / 2;
+    
+    const d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+    
+    const path = document.getElementById('temp-connection-path');
+    if (path) {
+        path.setAttribute('d', d);
+    }
+    
+    // Highlight potential target connectors
+    const target = e.target;
+    document.querySelectorAll('.block-connector.target').forEach(c => c.classList.remove('target'));
+    
+    if (target && target.classList && target.classList.contains('block-connector') && 
+        target.dataset.type === 'in' && 
+        target.dataset.block !== connectFrom) {
+        target.classList.add('target');
+    }
+}
+
+function cleanupConnection() {
+    // Remove temporary connection line
+    if (tempConnectionLine) {
+        tempConnectionLine.remove();
+        tempConnectionLine = null;
+    }
+    
+    // Remove active class
+    if (connectFromElement) {
+        connectFromElement.classList.remove('active');
+        connectFromElement = null;
+    }
+    
+    // Remove target highlights
+    document.querySelectorAll('.block-connector.target').forEach(c => c.classList.remove('target'));
+    
+    // Remove mousemove listener
+    document.removeEventListener('mousemove', updateTempConnection);
+    
+    isConnecting = false;
+    connectFrom = null;
 }
 
 document.addEventListener('mouseup', (e) => {
@@ -290,8 +389,7 @@ document.addEventListener('mouseup', (e) => {
         }
     }
     
-    isConnecting = false;
-    connectFrom = null;
+    cleanupConnection();
 });
 
 function addConnection(fromId, toId) {
