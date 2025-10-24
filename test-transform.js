@@ -82,15 +82,26 @@ test('Transform functions exist in app.js', () => {
     });
 });
 
-// Test 5: Test transformation logic
+// Test 5: Test transformation logic with preserved unmapped columns
 test('Transformation logic works correctly', () => {
-    // Simulate the transformation function
-    function applyTransformationLogic(inputData, mappings) {
+    // Simulate the transformation function with new behavior
+    function applyTransformationLogic(inputData, mappings, preserveUnmapped = true) {
         const inputRows = inputData.data || [];
+        const inputHeaders = inputData.headers || [];
         const outputHeaders = Object.keys(mappings);
         
         const outputRows = inputRows.map(row => {
             const newRow = {};
+            
+            if (preserveUnmapped) {
+                inputHeaders.forEach(inputCol => {
+                    const isMapped = Object.values(mappings).includes(inputCol);
+                    if (!isMapped) {
+                        newRow[inputCol] = row[inputCol] || '';
+                    }
+                });
+            }
+            
             outputHeaders.forEach(outputCol => {
                 const inputCol = mappings[outputCol];
                 newRow[outputCol] = row[inputCol] || '';
@@ -98,9 +109,17 @@ test('Transformation logic works correctly', () => {
             return newRow;
         });
         
+        let finalHeaders = outputHeaders;
+        if (preserveUnmapped) {
+            const unmappedColumns = inputHeaders.filter(inputCol => {
+                return !Object.values(mappings).includes(inputCol);
+            });
+            finalHeaders = [...unmappedColumns, ...outputHeaders];
+        }
+        
         return {
             data: outputRows,
-            headers: outputHeaders
+            headers: finalHeaders
         };
     }
     
@@ -121,13 +140,17 @@ test('Transformation logic works correctly', () => {
     
     const result = applyTransformationLogic(inputData, mappings);
     
-    // Validate result
-    if (result.headers.length !== 2) {
-        throw new Error(`Expected 2 output headers, got ${result.headers.length}`);
+    // Validate result - should have 3 headers: Plant (unmapped) + Material + Description
+    if (result.headers.length !== 3) {
+        throw new Error(`Expected 3 output headers (Plant + Material + Description), got ${result.headers.length}`);
     }
     
     if (!result.headers.includes('Material') || !result.headers.includes('Description')) {
         throw new Error('Output headers do not match mappings');
+    }
+    
+    if (!result.headers.includes('Plant')) {
+        throw new Error('Unmapped column "Plant" should be preserved');
     }
     
     if (result.data.length !== 2) {
@@ -140,6 +163,10 @@ test('Transformation logic works correctly', () => {
     
     if (result.data[0].Description !== 'SAP Module') {
         throw new Error('Transformation incorrect for Description column');
+    }
+    
+    if (result.data[0].Plant !== '1000') {
+        throw new Error('Unmapped column "Plant" value should be preserved');
     }
 });
 
@@ -222,20 +249,41 @@ test('Transform block type is rendered correctly', () => {
     }
 });
 
-// Test 9: Test empty transformation
-test('Empty transformation produces empty output', () => {
-    function applyTransformationLogic(inputData, mappings) {
+// Test 9: Test empty transformation with preserve unmapped (default behavior)
+test('Empty transformation preserves unmapped columns by default', () => {
+    function applyTransformationLogic(inputData, mappings, preserveUnmapped = true) {
         const inputRows = inputData.data || [];
+        const inputHeaders = inputData.headers || [];
         const outputHeaders = Object.keys(mappings);
+        
         const outputRows = inputRows.map(row => {
             const newRow = {};
+            
+            if (preserveUnmapped) {
+                inputHeaders.forEach(inputCol => {
+                    const isMapped = Object.values(mappings).includes(inputCol);
+                    if (!isMapped) {
+                        newRow[inputCol] = row[inputCol] || '';
+                    }
+                });
+            }
+            
             outputHeaders.forEach(outputCol => {
                 const inputCol = mappings[outputCol];
                 newRow[outputCol] = row[inputCol] || '';
             });
             return newRow;
         });
-        return { data: outputRows, headers: outputHeaders };
+        
+        let finalHeaders = outputHeaders;
+        if (preserveUnmapped) {
+            const unmappedColumns = inputHeaders.filter(inputCol => {
+                return !Object.values(mappings).includes(inputCol);
+            });
+            finalHeaders = [...unmappedColumns, ...outputHeaders];
+        }
+        
+        return { data: outputRows, headers: finalHeaders };
     }
     
     const inputData = {
@@ -243,14 +291,30 @@ test('Empty transformation produces empty output', () => {
         data: [{ Col1: 'A', Col2: 'B' }]
     };
     
+    // With default preserveUnmapped=true, unmapped columns should be preserved
     const result = applyTransformationLogic(inputData, {});
     
-    if (result.headers.length !== 0) {
-        throw new Error('Empty transformation should produce no headers');
+    if (result.headers.length !== 2) {
+        throw new Error('Empty transformation should preserve all input columns');
+    }
+    
+    if (!result.headers.includes('Col1') || !result.headers.includes('Col2')) {
+        throw new Error('Unmapped columns should be preserved');
     }
     
     if (result.data.length !== 1) {
         throw new Error('Should maintain same number of rows');
+    }
+    
+    if (result.data[0].Col1 !== 'A' || result.data[0].Col2 !== 'B') {
+        throw new Error('Unmapped column values should be preserved');
+    }
+    
+    // With preserveUnmapped=false, should produce empty output
+    const resultNoPreserve = applyTransformationLogic(inputData, {}, false);
+    
+    if (resultNoPreserve.headers.length !== 0) {
+        throw new Error('Empty transformation with preserveUnmapped=false should produce no headers');
     }
 });
 
