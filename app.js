@@ -11,6 +11,11 @@ const SIMILARITY_THRESHOLD = 0.5;
 const PARTIAL_MATCH_SCORE = 0.8;
 const EXACT_MATCH_SCORE = 1.0;
 
+// Canvas sizing constants
+const CANVAS_BLOCK_PADDING = 300; // Extra space around blocks for comfortable dragging
+const DEFAULT_BLOCK_WIDTH = 220; // Approximate block width including padding
+const DEFAULT_BLOCK_HEIGHT = 120; // Approximate block height including padding
+
 // Utility Functions
 /**
  * Escapes HTML special characters to prevent XSS attacks
@@ -249,6 +254,7 @@ let isDragging = false;
 let dragBlock = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let canvasSizeUpdateScheduled = false;
 
 function startDragBlock(e) {
     if (e.target.classList.contains('block-delete') || 
@@ -294,8 +300,14 @@ function dragBlockMove(e) {
         block.y = finalY;
     }
     
-    // Update canvas size to accommodate block position
-    updateCanvasSize();
+    // Throttle canvas size updates using requestAnimationFrame
+    if (!canvasSizeUpdateScheduled) {
+        canvasSizeUpdateScheduled = true;
+        requestAnimationFrame(() => {
+            updateCanvasSize();
+            canvasSizeUpdateScheduled = false;
+        });
+    }
     
     renderConnections();
 }
@@ -318,14 +330,11 @@ function updateCanvasSize() {
     // Calculate required canvas size based on block positions
     let maxX = 0;
     let maxY = 0;
-    const blockPadding = 300; // Extra space around blocks for comfortable dragging
-    const defaultBlockWidth = 220; // Approximate block width including padding
-    const defaultBlockHeight = 120; // Approximate block height including padding
     
     blocks.forEach(block => {
         const blockEl = document.getElementById(block.id);
-        const blockWidth = blockEl ? blockEl.offsetWidth : defaultBlockWidth;
-        const blockHeight = blockEl ? blockEl.offsetHeight : defaultBlockHeight;
+        const blockWidth = blockEl ? blockEl.offsetWidth : DEFAULT_BLOCK_WIDTH;
+        const blockHeight = blockEl ? blockEl.offsetHeight : DEFAULT_BLOCK_HEIGHT;
         
         maxX = Math.max(maxX, block.x + blockWidth);
         maxY = Math.max(maxY, block.y + blockHeight);
@@ -334,8 +343,8 @@ function updateCanvasSize() {
     // Set minimum canvas content size
     const minWidth = canvas.clientWidth;
     const minHeight = canvas.clientHeight;
-    const requiredWidth = Math.max(minWidth, maxX + blockPadding);
-    const requiredHeight = Math.max(minHeight, maxY + blockPadding);
+    const requiredWidth = Math.max(minWidth, maxX + CANVAS_BLOCK_PADDING);
+    const requiredHeight = Math.max(minHeight, maxY + CANVAS_BLOCK_PADDING);
     
     // Use CSS custom properties to control the ::after pseudo-element size
     canvas.style.setProperty('--canvas-width', `${requiredWidth}px`);
