@@ -5,6 +5,43 @@ let blockCounter = 0;
 let selectedBlock = null;
 let dataStore = {};
 
+// Constants
+const MAX_DISPLAY_ROWS = 100;
+const SIMILARITY_THRESHOLD = 0.5;
+const PARTIAL_MATCH_SCORE = 0.8;
+const EXACT_MATCH_SCORE = 1.0;
+
+// Utility Functions
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ * @param {string} text - Text to escape
+ * @returns {string} - Escaped text safe for HTML
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+/**
+ * Shows a modal by ID
+ * @param {string} modalId - The ID of the modal to show
+ */
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'block';
+}
+
+/**
+ * Hides a modal by ID
+ * @param {string} modalId - The ID of the modal to hide
+ */
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
+}
+
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {
     initDragAndDrop();
@@ -404,6 +441,10 @@ function addConnection(fromId, toId) {
     transferData(fromId, toId);
 }
 
+/**
+ * Renders all connections between blocks as SVG paths
+ * Optimized to cache canvas rect and use early returns
+ */
 function renderConnections() {
     // Remove existing SVG
     const existingSvg = document.getElementById('connections-svg');
@@ -412,15 +453,13 @@ function renderConnections() {
     if (connections.length === 0) return;
     
     const canvas = document.getElementById('canvas');
+    const canvasRect = canvas.getBoundingClientRect(); // Cache canvas rect
+    
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'connections-svg';
-    svg.style.position = 'absolute';
-    svg.style.top = '0';
-    svg.style.left = '0';
-    svg.style.width = '100%';
-    svg.style.height = '100%';
-    svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '1';
+    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1';
+    
+    const minSpacing = 30;
     
     connections.forEach(conn => {
         const fromBlock = document.getElementById(conn.from);
@@ -431,9 +470,10 @@ function renderConnections() {
         const fromConnector = fromBlock.querySelector('.connector-out');
         const toConnector = toBlock.querySelector('.connector-in');
         
+        if (!fromConnector || !toConnector) return;
+        
         const fromRect = fromConnector.getBoundingClientRect();
         const toRect = toConnector.getBoundingClientRect();
-        const canvasRect = canvas.getBoundingClientRect();
         
         const x1 = fromRect.left - canvasRect.left + fromRect.width / 2;
         const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
@@ -444,7 +484,6 @@ function renderConnections() {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         
         // Calculate midpoint for the horizontal segment with minimum spacing
-        const minSpacing = 30;
         let midX = (x1 + x2) / 2;
         
         // Ensure minimum horizontal spacing from the blocks
@@ -490,14 +529,18 @@ function initModals() {
     document.getElementById('templateInput').addEventListener('change', handleTemplateSelect);
 }
 
+/**
+ * Opens the appropriate modal for a block type
+ * @param {Object} block - The block to open modal for
+ */
 function openBlockModal(block) {
     if (block.type === 'input') {
-        document.getElementById('inputModal').style.display = 'block';
+        showModal('inputModal');
         selectedBlock = block;
     } else if (block.type === 'view') {
         displayData(block);
     } else if (block.type === 'output') {
-        document.getElementById('outputModal').style.display = 'block';
+        showModal('outputModal');
         selectedBlock = block;
     } else if (block.type === 'automapper') {
         openAutomapperModal(block);
@@ -514,6 +557,10 @@ function openBlockModal(block) {
     }
 }
 
+/**
+ * Handles file selection for data input
+ * @param {Event} e - File input change event
+ */
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -530,17 +577,17 @@ function handleFileSelect(e) {
         };
         
         // Update block UI
-        updateBlockContent(selectedBlock.id, `${file.name} (${parsed.data.length} rijen)`);
+        updateBlockContent(selectedBlock.id, `${escapeHtml(file.name)} (${parsed.data.length} rijen)`);
         
         // Close modal
-        document.getElementById('inputModal').style.display = 'none';
+        hideModal('inputModal');
         
         // Transfer to connected blocks
         propagateData(selectedBlock.id);
         
-        // Show info
+        // Show info (file name is sanitized above)
         document.getElementById('fileInfo').innerHTML = `
-            <strong>Geladen:</strong> ${file.name}<br>
+            <strong>Geladen:</strong> ${escapeHtml(file.name)}<br>
             <strong>Rijen:</strong> ${parsed.data.length}<br>
             <strong>Kolommen:</strong> ${parsed.headers.length}
         `;
@@ -548,6 +595,10 @@ function handleFileSelect(e) {
     reader.readAsText(file);
 }
 
+/**
+ * Handles template file selection for output structure
+ * @param {Event} e - File input change event
+ */
 function handleTemplateSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -563,12 +614,12 @@ function handleTemplateSelect(e) {
             fileName: file.name
         };
         // Update block UI
-        updateBlockContent(selectedBlock.id, `${file.name} (${parsed.data.length} rijen)`);
+        updateBlockContent(selectedBlock.id, `${escapeHtml(file.name)} (${parsed.data.length} rijen)`);
         // Close modal
-        document.getElementById('outputModal').style.display = 'none';
+        hideModal('outputModal');
         // Show info
         document.getElementById('templateInfo').innerHTML = `
-            <strong>Geladen:</strong> ${file.name}<br>
+            <strong>Geladen:</strong> ${escapeHtml(file.name)}<br>
             <strong>Template rijen:</strong> ${parsed.data.length}<br>
             <strong>Kolommen:</strong> ${parsed.headers.length}
         `;
@@ -576,15 +627,45 @@ function handleTemplateSelect(e) {
     reader.readAsText(file);
 }
 
+/**
+ * Parses a CSV string into headers and data rows
+ * Handles quoted values with commas properly
+ * @param {string} csv - The CSV string to parse
+ * @returns {Object} - Object with headers array and data array
+ */
 function parseCSV(csv) {
     const lines = csv.trim().split('\n');
     if (lines.length === 0) return { data: [], headers: [] };
     
-    const headers = lines[0].split(',').map(h => h.trim());
+    // Helper function to parse a CSV line respecting quotes
+    function parseLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        values.push(current.trim());
+        return values;
+    }
+    
+    const headers = parseLine(lines[0]);
     const data = [];
     
     for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
+        if (!lines[i].trim()) continue; // Skip empty lines
+        
+        const values = parseLine(lines[i]);
         const row = {};
         headers.forEach((header, index) => {
             row[header] = values[index] || '';
@@ -636,6 +717,10 @@ function transferData(fromId, toId) {
     }
 }
 
+/**
+ * Displays data in a modal table view with proper HTML escaping
+ * @param {Object} block - The block whose data to display
+ */
 function displayData(block) {
     let blockData = dataStore[block.id];
     let headers = [];
@@ -658,15 +743,15 @@ function displayData(block) {
         let html = '<table>';
         html += '<thead><tr>';
         headers.forEach(header => {
-            html += `<th>${header}</th>`;
+            html += `<th>${escapeHtml(header)}</th>`;
         });
         html += '</tr></thead>';
         html += '<tbody>';
         if (rows.length > 0) {
-            rows.slice(0, 100).forEach(row => {
+            rows.slice(0, MAX_DISPLAY_ROWS).forEach(row => {
                 html += '<tr>';
                 headers.forEach(header => {
-                    html += `<td>${row[header] || ''}</td>`;
+                    html += `<td>${escapeHtml(row[header] || '')}</td>`;
                 });
                 html += '</tr>';
             });
@@ -675,18 +760,25 @@ function displayData(block) {
         }
         html += '</tbody>';
         html += '</table>';
-        if (rows.length > 100) {
-            html += `<p style="margin-top: 15px; color: #666; font-size: 12px;">Toon eerste 100 van ${rows.length} rijen</p>`;
+        if (rows.length > MAX_DISPLAY_ROWS) {
+            html += `<p style="margin-top: 15px; color: #666; font-size: 12px;">Toon eerste ${MAX_DISPLAY_ROWS} van ${rows.length} rijen</p>`;
         }
         document.getElementById('dataDisplay').innerHTML = html;
-        document.getElementById('viewModal').style.display = 'block';
+        showModal('viewModal');
     } else {
         document.getElementById('dataDisplay').innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
-        document.getElementById('viewModal').style.display = 'block';
+        showModal('viewModal');
     }
 }
 
 // Automapper functionality
+/**
+ * Automatically generates column mappings between input and output headers
+ * Uses exact, partial, and fuzzy matching strategies
+ * @param {string[]} inputHeaders - Input column names
+ * @param {string[]} outputHeaders - Output column names
+ * @returns {Object} - Mappings object and confidence levels
+ */
 function autoGenerateMappings(inputHeaders, outputHeaders) {
     const mappings = {};
     const matchedInputs = new Set();
@@ -714,19 +806,19 @@ function autoGenerateMappings(inputHeaders, outputHeaders) {
             // Exact match after normalization
             if (outNorm === inNorm) {
                 bestMatch = inHeader;
-                bestScore = 1.0;
+                bestScore = EXACT_MATCH_SCORE;
                 matchConfidence[outHeader] = 'exact';
             }
             // Partial match - output contains input or vice versa
-            else if (bestScore < 0.8 && (outNorm.includes(inNorm) || inNorm.includes(outNorm))) {
+            else if (bestScore < PARTIAL_MATCH_SCORE && (outNorm.includes(inNorm) || inNorm.includes(outNorm))) {
                 bestMatch = inHeader;
-                bestScore = 0.8;
+                bestScore = PARTIAL_MATCH_SCORE;
                 matchConfidence[outHeader] = 'partial';
             }
             // Similarity match using simple character overlap
-            else if (bestScore < 0.5) {
+            else if (bestScore < SIMILARITY_THRESHOLD) {
                 const similarity = calculateSimilarity(outNorm, inNorm);
-                if (similarity > 0.5 && similarity > bestScore) {
+                if (similarity > SIMILARITY_THRESHOLD && similarity > bestScore) {
                     bestMatch = inHeader;
                     bestScore = similarity;
                     matchConfidence[outHeader] = 'fuzzy';
@@ -745,12 +837,22 @@ function autoGenerateMappings(inputHeaders, outputHeaders) {
     return { mappings, matchConfidence };
 }
 
+/**
+ * Calculates similarity between two strings
+ * Uses position-based and character-based matching
+ * @param {string} str1 - First string
+ * @param {string} str2 - Second string
+ * @returns {number} - Similarity score between 0 and 1
+ */
 function calculateSimilarity(str1, str2) {
     const len1 = str1.length;
     const len2 = str2.length;
     const maxLen = Math.max(len1, len2);
     
-    if (maxLen === 0) return 1.0;
+    if (maxLen === 0) return EXACT_MATCH_SCORE;
+    
+    // Quick check for exact match
+    if (str1 === str2) return EXACT_MATCH_SCORE;
     
     // Count matching characters at same positions
     let matches = 0;
