@@ -257,7 +257,7 @@ header h1 {
     pointer-events: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-opacity: 0.25;
+    stroke-opacity: 0.4;
     transition: stroke-opacity 0.12s ease, stroke-width 0.12s ease;
 }
 

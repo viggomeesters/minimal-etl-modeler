@@ -451,8 +451,8 @@ function addConnection(fromId, toId) {
     try {
         transferData(fromId, toId);
     } catch (error) {
-        console.error('Error transferring data:', error);
-        throw error; // Re-throw for visibility in dev console
+        console.error('Error transferring data on connection:', error);
+        // Continue gracefully - connection is still valid even if transfer fails
     }
 }
 
@@ -697,7 +697,8 @@ function parseCSV(csv) {
         return { data: data, headers: headers };
     } catch (error) {
         console.error('Error parsing CSV:', error);
-        throw error; // Re-throw for caller to handle
+        // Return empty structure instead of crashing
+        return { data: [], headers: [], error: error.message };
     }
 }
 
