@@ -223,6 +223,9 @@ function renderBlock(block) {
     
     canvas.appendChild(blockEl);
     initConnectors(block.id);
+    
+    // Update canvas size to accommodate new block
+    updateCanvasSize();
 }
 
 function deleteBlock(blockId) {
@@ -270,19 +273,29 @@ function startDragBlock(e) {
 function dragBlockMove(e) {
     if (!isDragging || !dragBlock) return;
     
-    const canvasRect = document.getElementById('canvas').getBoundingClientRect();
-    const x = e.clientX - canvasRect.left - dragOffsetX;
-    const y = e.clientY - canvasRect.top - dragOffsetY;
+    const canvas = document.getElementById('canvas');
+    const canvasRect = canvas.getBoundingClientRect();
     
-    dragBlock.style.left = `${x}px`;
-    dragBlock.style.top = `${y}px`;
+    // Calculate position relative to canvas content (including scroll)
+    const x = e.clientX - canvasRect.left + canvas.scrollLeft - dragOffsetX;
+    const y = e.clientY - canvasRect.top + canvas.scrollTop - dragOffsetY;
+    
+    // Ensure blocks can't be positioned at negative coordinates
+    const finalX = Math.max(0, x);
+    const finalY = Math.max(0, y);
+    
+    dragBlock.style.left = `${finalX}px`;
+    dragBlock.style.top = `${finalY}px`;
     
     // Update block position in state
     const block = blocks.find(b => b.id === dragBlock.id);
     if (block) {
-        block.x = x;
-        block.y = y;
+        block.x = finalX;
+        block.y = finalY;
     }
+    
+    // Update canvas size to accommodate block position
+    updateCanvasSize();
     
     renderConnections();
 }
@@ -295,6 +308,38 @@ function stopDragBlock() {
     dragBlock = null;
     document.removeEventListener('mousemove', dragBlockMove);
     document.removeEventListener('mouseup', stopDragBlock);
+}
+
+// Ensure canvas size accommodates all blocks
+function updateCanvasSize() {
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+    
+    // Calculate required canvas size based on block positions
+    let maxX = 0;
+    let maxY = 0;
+    const blockPadding = 300; // Extra space around blocks for comfortable dragging
+    const defaultBlockWidth = 220; // Approximate block width including padding
+    const defaultBlockHeight = 120; // Approximate block height including padding
+    
+    blocks.forEach(block => {
+        const blockEl = document.getElementById(block.id);
+        const blockWidth = blockEl ? blockEl.offsetWidth : defaultBlockWidth;
+        const blockHeight = blockEl ? blockEl.offsetHeight : defaultBlockHeight;
+        
+        maxX = Math.max(maxX, block.x + blockWidth);
+        maxY = Math.max(maxY, block.y + blockHeight);
+    });
+    
+    // Set minimum canvas content size
+    const minWidth = canvas.clientWidth;
+    const minHeight = canvas.clientHeight;
+    const requiredWidth = Math.max(minWidth, maxX + blockPadding);
+    const requiredHeight = Math.max(minHeight, maxY + blockPadding);
+    
+    // Use CSS custom properties to control the ::after pseudo-element size
+    canvas.style.setProperty('--canvas-width', `${requiredWidth}px`);
+    canvas.style.setProperty('--canvas-height', `${requiredHeight}px`);
 }
 
 // Connectors for linking blocks
