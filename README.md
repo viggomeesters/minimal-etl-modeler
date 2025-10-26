@@ -119,3 +119,41 @@ node test-automapper-integration.js   # Test complete data flow (10 tests)
 2. Mapping → Handmatig kolommen mappen
 3. Transform → Transformeer en exporteer
 4. Output Data → Exporteer resultaat
+## ⚡ Performance
+
+### Optimale Dataset Groottes
+- **Aanbevolen**: < 10,000 rijen, < 50 kolommen
+- **Maximum**: 50,000 rijen, < 100 kolommen
+- **File grootte**: < 50 MB voor beste prestaties
+
+### Performance Tips
+- Data View toont automatisch eerste 100 rijen voor snelheid
+- Grote bestanden kunnen browser vertragen
+- Gebruik filters om datasets te verkleinen waar mogelijk
+
+## 🔒 Beveiliging & Privacy
+
+### Data Privacy
+- ✅ Alle data blijft lokaal in je browser
+- ✅ Geen data wordt naar externe servers gestuurd
+- ✅ Geen tracking of analytics
+- ✅ Data wordt gewist bij page refresh
+
+### Veilig Gebruik
+- Valideer altijd je CSV bestanden voor gebruik
+- Check output data voor correctheid
+- XSS bescherming ingebouwd voor data display
+
+## 📚 Documentatie
+
+- **[CSV Format Guide](CSV-GUIDE.md)** - CSV bestand vereisten en best practices
+- **[Architecture](ARCHITECTURE.md)** - Technische architectuur en design patterns
+- **[Quick Start](QUICKSTART.md)** - Snelle start gids
+- **[User Guide](GEBRUIKERSHANDLEIDING.md)** - Uitgebreide gebruikershandleiding
+
+## 🐛 Bekende Beperkingen
+
+- Quotes binnen CSV waarden nog niet ondersteund (in ontwikkeling)
+- Newlines binnen CSV waarden niet ondersteund
+- Maximum bestandsgrootte afhankelijk van browser geheugen
+- Canvas kan onoverzichtelijk worden met >50 blocks
