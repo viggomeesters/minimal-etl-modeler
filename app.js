@@ -430,15 +430,30 @@ document.addEventListener('mouseup', (e) => {
 });
 
 function addConnection(fromId, toId) {
+    // Validate both blocks exist
+    const fromBlock = blocks.find(b => b.id === fromId);
+    const toBlock = blocks.find(b => b.id === toId);
+    
+    if (!fromBlock || !toBlock) {
+        console.error('addConnection: Invalid block IDs', { fromId, toId });
+        return;
+    }
+    
     // Check if connection already exists
     const exists = connections.find(c => c.from === fromId && c.to === toId);
     if (exists) return;
     
-    connections.push({ from: fromId, to: toId });
+    // Add connection with active flag
+    connections.push({ from: fromId, to: toId, active: true });
     renderConnections();
     
-    // Transfer data if available
-    transferData(fromId, toId);
+    // Transfer data if available, with error handling
+    try {
+        transferData(fromId, toId);
+    } catch (error) {
+        console.error('Error transferring data:', error);
+        throw error; // Re-throw for visibility in dev console
+    }
 }
 
 /**
@@ -498,6 +513,11 @@ function renderConnections() {
         
         path.setAttribute('d', d);
         path.classList.add('connection-line');
+        
+        // Apply active class if connection is active (default true)
+        if (conn.active !== false) {
+            path.classList.add('active');
+        }
         
         svg.appendChild(path);
     });
@@ -634,46 +654,51 @@ function handleTemplateSelect(e) {
  * @returns {Object} - Object with headers array and data array
  */
 function parseCSV(csv) {
-    const lines = csv.trim().split('\n');
-    if (lines.length === 0) return { data: [], headers: [] };
-    
-    // Helper function to parse a CSV line respecting quotes
-    function parseLine(line) {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
+    try {
+        const lines = csv.trim().split('\n');
+        if (lines.length === 0) return { data: [], headers: [] };
         
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
+        // Helper function to parse a CSV line respecting quotes
+        function parseLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
             
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                values.push(current.trim());
-                current = '';
-            } else {
-                current += char;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
             }
+            values.push(current.trim());
+            return values;
         }
-        values.push(current.trim());
-        return values;
-    }
-    
-    const headers = parseLine(lines[0]);
-    const data = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue; // Skip empty lines
         
-        const values = parseLine(lines[i]);
-        const row = {};
-        headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-        });
-        data.push(row);
+        const headers = parseLine(lines[0]);
+        const data = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue; // Skip empty lines
+            
+            const values = parseLine(lines[i]);
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            data.push(row);
+        }
+        
+        return { data: data, headers: headers };
+    } catch (error) {
+        console.error('Error parsing CSV:', error);
+        throw error; // Re-throw for caller to handle
     }
-    
-    return { data: data, headers: headers };
 }
 
 function updateBlockContent(blockId, content) {
@@ -701,19 +726,50 @@ function propagateData(blockId) {
 }
 
 function transferData(fromId, toId) {
-    if (dataStore[fromId]) {
-        dataStore[toId] = dataStore[fromId];
-        const toBlock = blocks.find(b => b.id === toId);
-        let rowCount = 0;
-        if (dataStore[toId].data && Array.isArray(dataStore[toId].data)) {
-            rowCount = dataStore[toId].data.length;
-        } else if (Array.isArray(dataStore[toId])) {
-            // Legacy support for old format
-            rowCount = dataStore[toId].length;
-        }
-        if (toBlock && toBlock.type === 'view') {
-            updateBlockContent(toId, `Data beschikbaar (${rowCount} rijen)`);
-        }
+    // Defensive check: ensure source data exists and is valid
+    if (!dataStore[fromId]) {
+        console.warn('transferData: No data in source block', fromId);
+        return;
+    }
+    
+    const sourceData = dataStore[fromId];
+    let dataArray = [];
+    
+    // Handle both new format (with headers/data) and legacy format (array)
+    if (sourceData.data && Array.isArray(sourceData.data)) {
+        dataArray = sourceData.data;
+    } else if (Array.isArray(sourceData)) {
+        dataArray = sourceData;
+    }
+    
+    if (dataArray.length === 0) {
+        console.warn('transferData: Source data is empty', fromId);
+        // Still transfer empty data structure to maintain consistency
+    }
+    
+    // Clone data to avoid mutation when multiple connections exist
+    let clonedData;
+    if (sourceData.data && sourceData.headers) {
+        clonedData = {
+            data: dataArray.map(row => ({ ...row })),
+            headers: [...sourceData.headers]
+        };
+    } else {
+        clonedData = dataArray.map(row => ({ ...row }));
+    }
+    
+    dataStore[toId] = clonedData;
+    
+    console.debug('transferData', {
+        from: fromId,
+        to: toId,
+        rows: dataArray.length
+    });
+    
+    // Update target block UI if it's a view block
+    const toBlock = blocks.find(b => b.id === toId);
+    if (toBlock && toBlock.type === 'view') {
+        updateBlockContent(toId, `Data beschikbaar (${dataArray.length} rijen)`);
     }
 }
 

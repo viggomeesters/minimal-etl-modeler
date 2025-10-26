@@ -16,12 +16,28 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 
 ## 🚀 Quick Start
 
+### Optie 1: Direct in browser (aanbevolen voor lokale bestanden)
 1. Open `index.html` in je browser
 2. Sleep een **Data Input** block naar het canvas
 3. Dubbelklik op het block en laad een CSV bestand (bijv. `sample-data.csv`)
 4. Sleep een **Data View** block naar het canvas
 5. Verbind de blocks door te klikken op de output connector (⚪ onderaan) van Data Input en sleep naar de input connector (⚪ bovenaan) van Data View
 6. Dubbelklik op Data View om de data te bekijken
+
+### Optie 2: Met lokale server (voor geavanceerde features)
+Voor optimale werking, vooral wanneer je externe CSV bestanden wilt laden via URL, gebruik een lokale webserver:
+
+```bash
+# Met Python 3
+python3 -m http.server 8000
+
+# Of met Node.js (npx)
+npx http-server -p 8000
+```
+
+Open vervolgens: `http://localhost:8000`
+
+> **Note**: De applicatie gebruikt FileReader API voor lokale bestanden, wat werkt zonder server. Een lokale server is alleen nodig als je externe CSV bestanden wilt laden via fetch() of als je browser strikte CORS-restricties heeft.
 
 ## 📁 Project Structuur
 
