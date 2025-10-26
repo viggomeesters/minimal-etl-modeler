@@ -43,9 +43,38 @@ ID,Name,OptionalField,Status
 ```
 
 ### Special Characters
-- **Commas in values**: Must be quoted
-- **Quotes in values**: Not currently supported (will be added in future version)
-- **Newlines in values**: Not supported
+- **Commas in values**: ✅ Supported - Must be quoted (e.g., `"value, with comma"`)
+- **Escaped quotes in values**: ❌ Not currently supported (e.g., `"value with ""quotes"""`)
+- **Newlines in values**: ❌ Not supported
+
+### Examples of Supported Formats
+```csv
+# Commas in quoted values - SUPPORTED ✅
+Product,Description,Price
+Widget,"High quality, durable product",29.99
+
+# Empty values - SUPPORTED ✅
+ID,Name,Optional
+1,Test,
+2,Another,Value
+
+# Mixed quoted and unquoted - SUPPORTED ✅
+Item,Description,Status
+A1,"Complex, description",Active
+A2,Simple,Active
+```
+
+### Examples of Unsupported Formats
+```csv
+# Escaped quotes - NOT SUPPORTED ❌
+Name,Quote
+"He said ""Hello""","Test"
+
+# Newlines in values - NOT SUPPORTED ❌
+Name,Address
+"John","123 Main St
+Apt 4"
+```
 
 ## Best Practices
 

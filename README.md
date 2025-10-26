@@ -153,7 +153,10 @@ node test-automapper-integration.js   # Test complete data flow (10 tests)
 
 ## 🐛 Bekende Beperkingen
 
-- Quotes binnen CSV waarden nog niet ondersteund (in ontwikkeling)
-- Newlines binnen CSV waarden niet ondersteund
+- Escaped quotes binnen CSV waarden (bijv. `"value with ""quotes"""`) nog niet ondersteund
+- Newlines binnen quoted CSV waarden niet ondersteund
 - Maximum bestandsgrootte afhankelijk van browser geheugen
 - Canvas kan onoverzichtelijk worden met >50 blocks
+
+**Let op:** Basis quoted values met commas worden WEL ondersteund (bijv. `"value, with comma"`)
+
