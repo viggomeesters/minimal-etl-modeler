@@ -7,7 +7,24 @@ De Minimal ETL Modeler is een eenvoudige, visuele tool voor het transformeren va
 ## Aan de slag
 
 ### 1. Open de applicatie
-Open `index.html` in je webbrowser (Chrome, Firefox, Safari, of Edge).
+
+**Optie A: Direct via bestand**
+Open `index.html` in je webbrowser (Chrome, Firefox, Safari, of Edge). Dit werkt prima voor het laden van lokale CSV bestanden via de bestandskiezer.
+
+**Optie B: Via lokale server (aanbevolen)**
+Voor optimale werking, start een lokale webserver:
+
+```bash
+# Met Python 3
+python3 -m http.server 8000
+
+# Of met Node.js
+npx http-server -p 8000
+```
+
+Open vervolgens `http://localhost:8000` in je browser.
+
+> **Tip**: Een lokale server is alleen nodig als je externe CSV bestanden wilt laden via URL of als je browser strikte CORS-restricties heeft. Voor normale gebruik met lokale bestanden is dit niet vereist.
 
 ### 2. Bouw je eerste ETL flow
 

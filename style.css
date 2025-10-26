@@ -251,12 +251,19 @@ header h1 {
 
 .connection-line {
     position: absolute;
-    stroke: #4a90e2;
+    stroke: #2b9cff;
     stroke-width: 2;
     fill: none;
     pointer-events: none;
     stroke-linecap: round;
     stroke-linejoin: round;
+    stroke-opacity: 0.4;
+    transition: stroke-opacity 0.12s ease, stroke-width 0.12s ease;
+}
+
+.connection-line.active {
+    stroke-opacity: 1;
+    stroke-width: 3;
 }
 
 .temp-connection-line {
