@@ -7,7 +7,7 @@ This document describes the performance optimizations implemented to enable the 
 ## Problem Statement
 
 The original request (in Dutch) asked:
-> "Ik ben tevreden met de huidige staat van de app maar weet niet of hij goed werkt met bijv 15000 records in een dataset. Kunnen we de app optimaliseren voor datasets van 10k+ records? en aan dezelfde ontwerpprincipes blijven voldoen"
+> "Ik ben tevreden met de huidige staat van de app maar weet niet of hij goed werkt met bijv. 15000 records in een dataset. Kunnen we de app optimaliseren voor datasets van 10k+ records? en aan dezelfde ontwerpprincipes blijven voldoen"
 
 Translation: "I'm satisfied with the current state of the app but don't know if it works well with, for example, 15,000 records in a dataset. Can we optimize the app for datasets of 10k+ records while maintaining the same design principles?"
 
