@@ -14,9 +14,16 @@
         </header>
         
         <div class="workspace">
-            <!-- Toolbox with draggable components -->
+            <!-- Toolbox with draggable components and logs -->
             <aside class="toolbox">
-                <h3>Components</h3>
+                <!-- Tab navigation for sidebar -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-sidebar-tab="componentsPanel">Components</button>
+                    <button class="sidebar-tab" data-sidebar-tab="logsPanel">Logs</button>
+                </div>
+                
+                <!-- Components panel -->
+                <div id="componentsPanel" class="sidebar-panel active">
                 <div class="tool-item" draggable="true" data-type="input">
                     <span class="icon">📥</span>
                     <span>Input Source Data</span>
@@ -89,6 +96,14 @@
                     <span class="icon">💾</span>
                     <span>Output Data</span>
                 </div>
+                </div>
+                
+                <!-- Logs panel -->
+                <div id="logsPanel" class="sidebar-panel">
+                    <div id="globalLogsDisplay" class="global-logs-container">
+                        <p class="logs-empty-state">Geen logs beschikbaar. Logs verschijnen hier zodra data door componenten stroomt.</p>
+                    </div>
+                </div>
             </aside>
             
             <!-- Canvas for building ETL flow -->
@@ -120,20 +135,7 @@
         <div class="modal-content large">
             <span class="close">&times;</span>
             <h2>Data View</h2>
-            
-            <!-- Tab navigation -->
-            <div class="tab-navigation">
-                <button class="tab-button active" data-tab="dataTab">Data</button>
-                <button class="tab-button" data-tab="logsTab">Logs</button>
-            </div>
-            
-            <!-- Tab content -->
-            <div id="dataTab" class="tab-content active">
-                <div id="dataDisplay"></div>
-            </div>
-            <div id="logsTab" class="tab-content">
-                <div id="logsDisplay"></div>
-            </div>
+            <div id="dataDisplay"></div>
         </div>
     </div>
     

@@ -44,8 +44,54 @@ header h1 {
     width: 200px;
     background: white;
     border-right: 1px solid #e0e0e0;
-    padding: 20px;
+    padding: 0;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar tabs for Components/Logs */
+.sidebar-tabs {
+    display: flex;
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 12px 10px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.sidebar-tab:hover {
+    background: #fff;
+    color: #333;
+}
+
+.sidebar-tab.active {
+    color: #4a90e2;
+    border-bottom-color: #4a90e2;
+    background: white;
+}
+
+.sidebar-panel {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.sidebar-panel.active {
+    display: block;
 }
 
 .toolbox h3 {
@@ -484,89 +530,59 @@ table tr:hover {
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-/* Tab Navigation Styles */
-.tab-navigation {
-    display: flex;
-    gap: 5px;
-    border-bottom: 2px solid #e0e0e0;
-    margin: 15px 0 0 0;
-    padding: 0 5px;
-}
-
-.tab-button {
-    padding: 10px 20px;
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    transition: all 0.2s;
-    position: relative;
-    top: 2px;
-}
-
-.tab-button:hover {
-    color: #333;
-    background: #f9f9f9;
-}
-
-.tab-button.active {
-    color: #4a90e2;
-    border-bottom-color: #4a90e2;
-}
-
-.tab-content {
-    display: none;
-    padding: 20px 0;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Logs Display Styles */
-#logsDisplay {
+/* Global Logs Display Styles */
+.global-logs-container {
     font-family: 'Courier New', monospace;
-    font-size: 12px;
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    font-size: 11px;
+    background: #fafafa;
     border-radius: 4px;
-    padding: 15px;
-    max-height: 500px;
+    padding: 10px;
+    height: 100%;
     overflow-y: auto;
 }
 
 .log-entry {
-    padding: 8px 0;
-    border-bottom: 1px solid #e8e8e8;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 3px;
+    border-left: 3px solid #4a90e2;
 }
 
 .log-entry:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .log-timestamp {
     color: #999;
-    font-size: 11px;
-    margin-right: 10px;
+    font-size: 10px;
+    display: block;
+    margin-bottom: 3px;
 }
 
 .log-message {
     color: #333;
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.log-block-id {
+    color: #4a90e2;
+    font-size: 10px;
+    font-weight: 600;
 }
 
 .log-details {
     color: #666;
-    margin-left: 75px;
-    font-size: 11px;
+    font-size: 10px;
     margin-top: 3px;
 }
 
-.log-empty {
+.logs-empty-state {
     text-align: center;
     color: #999;
-    padding: 40px;
+    padding: 30px 10px;
+    font-size: 12px;
     font-style: italic;
 }

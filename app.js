@@ -77,6 +77,9 @@ function addLog(blockId, message, details = {}) {
     if (dataLogs[blockId].length > 100) {
         dataLogs[blockId].shift();
     }
+    
+    // Update the global logs display in the sidebar
+    updateGlobalLogsDisplay();
 }
 
 /**
@@ -132,7 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
     initDragAndDrop();
     initModals();
     initCanvasPanning();
+    initSidebarTabs();
 });
+
+/**
+ * Initializes sidebar tab navigation for Components/Logs
+ */
+function initSidebarTabs() {
+    const tabButtons = document.querySelectorAll('.sidebar-tab');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabId = e.target.getAttribute('data-sidebar-tab');
+            
+            // Remove active class from all buttons and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.sidebar-panel').forEach(panel => panel.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding panel
+            e.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+}
 
 // Drag and Drop functionality
 function initDragAndDrop() {
@@ -736,30 +761,6 @@ function initModals() {
     
     // Template input handler
     document.getElementById('templateInput').addEventListener('change', handleTemplateSelect);
-    
-    // Tab navigation handler
-    initTabNavigation();
-}
-
-/**
- * Initializes tab navigation for the view modal
- */
-function initTabNavigation() {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const tabId = e.target.getAttribute('data-tab');
-            
-            // Remove active class from all buttons and tabs
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            
-            // Add active class to clicked button and corresponding tab
-            e.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        });
-    });
 }
 
 /**
@@ -1224,28 +1225,47 @@ function displayData(block) {
         dataDisplay.innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
         showModal('viewModal');
     }
-    
-    // Display logs
-    displayLogs(block.id);
 }
 
 /**
- * Displays logs for a specific block in the logs tab
- * @param {string} blockId - The ID of the block
+ * Updates the global logs display in the sidebar
+ * Shows all logs from all blocks in chronological order
  */
-function displayLogs(blockId) {
-    const logsDisplay = document.getElementById('logsDisplay');
-    const logs = getLogs(blockId);
+function updateGlobalLogsDisplay() {
+    const logsDisplay = document.getElementById('globalLogsDisplay');
     
-    if (logs.length === 0) {
-        logsDisplay.innerHTML = '<div class="log-empty">No logs available. Logs will appear here as data flows through this component.</div>';
+    // Collect all logs from all blocks with block information
+    const allLogs = [];
+    Object.keys(dataLogs).forEach(blockId => {
+        const block = blocks.find(b => b.id === blockId);
+        const blockType = block ? block.type : 'unknown';
+        
+        dataLogs[blockId].forEach(log => {
+            allLogs.push({
+                ...log,
+                blockId,
+                blockType
+            });
+        });
+    });
+    
+    // Sort by timestamp (most recent last)
+    allLogs.sort((a, b) => {
+        const timeA = new Date('1970-01-01 ' + a.timestamp).getTime();
+        const timeB = new Date('1970-01-01 ' + b.timestamp).getTime();
+        return timeA - timeB;
+    });
+    
+    if (allLogs.length === 0) {
+        logsDisplay.innerHTML = '<p class="logs-empty-state">Geen logs beschikbaar. Logs verschijnen hier zodra data door componenten stroomt.</p>';
         return;
     }
     
     let html = '';
-    logs.forEach(log => {
+    allLogs.forEach(log => {
         html += '<div class="log-entry">';
-        html += `<span class="log-timestamp">${escapeHtml(log.timestamp)}</span>`;
+        html += `<span class="log-timestamp">${escapeHtml(log.timestamp)}</span> `;
+        html += `<span class="log-block-id">[${escapeHtml(log.blockType)}]</span><br>`;
         html += `<span class="log-message">${escapeHtml(log.message)}</span>`;
         
         if (log.details && Object.keys(log.details).length > 0) {
