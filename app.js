@@ -1998,14 +1998,23 @@ function applyAdvancedTransformationLogic(inputData, transformations, preserveUn
         // If preserveUnmapped is true, first copy all unmapped input columns
         if (preserveUnmapped) {
             inputHeaders.forEach(inputCol => {
-                // Check if this input column is used in any transformation
-                const isUsedInTransformation = outputHeaders.some(outCol => {
-                    const transformation = transformations[outCol];
-                    return transformation.inputs && transformation.inputs.includes(inputCol);
-                });
+                // Check if this input column is used in any transformation and if keepOriginal is enabled
+                let shouldPreserve = true;
                 
-                // If not used in any transformation, preserve it as-is
-                if (!isUsedInTransformation) {
+                for (const outCol of outputHeaders) {
+                    const transformation = transformations[outCol];
+                    if (transformation.inputs && transformation.inputs.includes(inputCol)) {
+                        // Column is used in transformation
+                        // Only exclude it if keepOriginal is NOT set to true
+                        if (!transformation.params || transformation.params.keepOriginal !== true) {
+                            shouldPreserve = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // Preserve the column if it should be preserved
+                if (shouldPreserve) {
                     newRow[inputCol] = row[inputCol] || '';
                 }
             });
@@ -2142,12 +2151,21 @@ function applyAdvancedTransformationLogic(inputData, transformations, preserveUn
     // Determine final headers: unmapped columns + transformed columns
     let finalHeaders = outputHeaders;
     if (preserveUnmapped) {
-        // Get unmapped input columns
+        // Get unmapped input columns (or mapped with keepOriginal=true)
         const unmappedColumns = inputHeaders.filter(inputCol => {
-            return !outputHeaders.some(outCol => {
+            // Check if this column is used in any transformation
+            for (const outCol of outputHeaders) {
                 const transformation = transformations[outCol];
-                return transformation.inputs && transformation.inputs.includes(inputCol);
-            });
+                if (transformation.inputs && transformation.inputs.includes(inputCol)) {
+                    // Column is used in transformation
+                    // Only exclude it if keepOriginal is NOT set to true
+                    if (!transformation.params || transformation.params.keepOriginal !== true) {
+                        return false; // Exclude this column from unmapped list
+                    }
+                    // If keepOriginal is true, we keep it as "unmapped" (i.e., preserve it)
+                }
+            }
+            return true; // Include in unmapped list
         });
         // Combine unmapped columns (first) with transformed columns
         finalHeaders = [...unmappedColumns, ...outputHeaders];
@@ -3268,7 +3286,8 @@ function openSplitModal(block) {
         outputColumn: '', 
         inputColumn: '', 
         delimiter: ',', 
-        index: 0 
+        index: 0,
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3297,6 +3316,14 @@ function openSplitModal(block) {
     html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">Index 0 = eerste deel, 1 = tweede deel, etc.</p>';
     html += '</div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="splitKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('splitInterface').innerHTML = html;
     showModal('splitModal');
     
@@ -3310,19 +3337,20 @@ function applySplit(block, inputData) {
     const inputColumn = document.getElementById('splitInputCol').value;
     const delimiter = document.getElementById('splitDelimiter').value;
     const index = parseInt(document.getElementById('splitIndex').value);
+    const keepOriginal = document.getElementById('splitKeepOriginal').checked;
     
     if (!outputColumn || !inputColumn) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn, delimiter, index };
+    block.config = { outputColumn, inputColumn, delimiter, index, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'split',
             inputs: [inputColumn],
-            params: { delimiter, index }
+            params: { delimiter, index, keepOriginal }
         }
     };
     
@@ -3354,7 +3382,8 @@ function openCaseChangeModal(block) {
     const config = block.config || { 
         outputColumn: '', 
         inputColumn: '', 
-        caseType: 'upper' 
+        caseType: 'upper',
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3380,6 +3409,14 @@ function openCaseChangeModal(block) {
     html += `<option value="capitalize" ${config.caseType === 'capitalize' ? 'selected' : ''}>Capitalize</option>`;
     html += '</select></div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="caseKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('caseChangeInterface').innerHTML = html;
     showModal('caseChangeModal');
     
@@ -3392,19 +3429,20 @@ function applyCaseChange(block, inputData) {
     const outputColumn = document.getElementById('caseOutputCol').value.trim();
     const inputColumn = document.getElementById('caseInputCol').value;
     const caseType = document.getElementById('caseType').value;
+    const keepOriginal = document.getElementById('caseKeepOriginal').checked;
     
     if (!outputColumn || !inputColumn) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn, caseType };
+    block.config = { outputColumn, inputColumn, caseType, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'case',
             inputs: [inputColumn],
-            params: { type: caseType }
+            params: { type: caseType, keepOriginal }
         }
     };
     
@@ -3437,7 +3475,8 @@ function openMathModal(block) {
         outputColumn: '', 
         inputs: [], 
         mathOp: 'add', 
-        round: 'none' 
+        round: 'none',
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3474,6 +3513,14 @@ function openMathModal(block) {
     html += `<option value="4" ${config.round === '4' ? 'selected' : ''}>4 decimalen</option>`;
     html += '</select></div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="mathKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Columns</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input columns will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('mathInterface').innerHTML = html;
     showModal('mathModal');
     
@@ -3486,6 +3533,7 @@ function applyMath(block, inputData) {
     const outputColumn = document.getElementById('mathOutputCol').value.trim();
     const mathOp = document.getElementById('mathOp').value;
     const round = document.getElementById('mathRound').value;
+    const keepOriginal = document.getElementById('mathKeepOriginal').checked;
     const selectedInputs = Array.from(document.querySelectorAll('.math-input-col:checked'))
         .map(cb => cb.value);
     
@@ -3494,13 +3542,13 @@ function applyMath(block, inputData) {
         return;
     }
     
-    block.config = { outputColumn, inputs: selectedInputs, mathOp, round };
+    block.config = { outputColumn, inputs: selectedInputs, mathOp, round, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'math',
             inputs: selectedInputs,
-            params: { mathOp, round }
+            params: { mathOp, round, keepOriginal }
         }
     };
     
@@ -3533,7 +3581,8 @@ function openRegexReplaceModal(block) {
         outputColumn: '', 
         inputColumn: '', 
         pattern: '', 
-        replacement: '' 
+        replacement: '',
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3562,6 +3611,14 @@ function openRegexReplaceModal(block) {
     html += `<input type="text" id="regexReplacement" value="${config.replacement}" placeholder="bijv. '', 'X', etc." style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
     html += '</div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="regexKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('regexReplaceInterface').innerHTML = html;
     showModal('regexReplaceModal');
     
@@ -3575,19 +3632,20 @@ function applyRegexReplace(block, inputData) {
     const inputColumn = document.getElementById('regexInputCol').value;
     const pattern = document.getElementById('regexPattern').value;
     const replacement = document.getElementById('regexReplacement').value;
+    const keepOriginal = document.getElementById('regexKeepOriginal').checked;
     
     if (!outputColumn || !inputColumn || !pattern) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn, pattern, replacement };
+    block.config = { outputColumn, inputColumn, pattern, replacement, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'regex',
             inputs: [inputColumn],
-            params: { pattern, replacement }
+            params: { pattern, replacement, keepOriginal }
         }
     };
     
@@ -3620,7 +3678,8 @@ function openDateFormatModal(block) {
         outputColumn: '', 
         inputColumn: '', 
         inputFormat: 'ISO', 
-        outputFormat: 'YYYY-MM-DD' 
+        outputFormat: 'YYYY-MM-DD',
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3648,6 +3707,14 @@ function openDateFormatModal(block) {
     html += `<input type="text" id="dateOutputFormat" value="${config.outputFormat}" placeholder="YYYY-MM-DD, DD/MM/YYYY, etc." style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
     html += '</div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="dateKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('dateFormatInterface').innerHTML = html;
     showModal('dateFormatModal');
     
@@ -3661,19 +3728,20 @@ function applyDateFormat(block, inputData) {
     const inputColumn = document.getElementById('dateInputCol').value;
     const inputFormat = document.getElementById('dateInputFormat').value;
     const outputFormat = document.getElementById('dateOutputFormat').value;
+    const keepOriginal = document.getElementById('dateKeepOriginal').checked;
     
     if (!outputColumn || !inputColumn) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn, inputFormat, outputFormat };
+    block.config = { outputColumn, inputColumn, inputFormat, outputFormat, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'date',
             inputs: [inputColumn],
-            params: { inputFormat, outputFormat }
+            params: { inputFormat, outputFormat, keepOriginal }
         }
     };
     
@@ -3780,7 +3848,8 @@ function openCopyRenameModal(block) {
     
     const config = block.config || { 
         outputColumn: '', 
-        inputColumn: '' 
+        inputColumn: '',
+        keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
@@ -3798,6 +3867,14 @@ function openCopyRenameModal(block) {
     });
     html += '</select></div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="copyKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('copyRenameInterface').innerHTML = html;
     showModal('copyRenameModal');
     
@@ -3809,19 +3886,20 @@ function openCopyRenameModal(block) {
 function applyCopyRename(block, inputData) {
     const outputColumn = document.getElementById('copyOutputCol').value.trim();
     const inputColumn = document.getElementById('copyInputCol').value;
+    const keepOriginal = document.getElementById('copyKeepOriginal').checked;
     
     if (!outputColumn || !inputColumn) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn };
+    block.config = { outputColumn, inputColumn, keepOriginal };
     
     const transformation = {
         [outputColumn]: {
             op: 'copy',
             inputs: [inputColumn],
-            params: {}
+            params: { keepOriginal }
         }
     };
     
