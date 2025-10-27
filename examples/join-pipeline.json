@@ -1,0 +1,206 @@
+{
+  "id": "example-join-pipeline",
+  "name": "Customer Orders Analysis",
+  "description": "Example pipeline demonstrating join block with two CSV sources",
+  "blocks": [
+    {
+      "id": "source-customers",
+      "type": "source",
+      "name": "Load Customers",
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "customers-output",
+          "name": "Customers Data"
+        }
+      ],
+      "config": {
+        "type": "csv",
+        "connection": {
+          "path": "examples/data/customers.csv"
+        }
+      },
+      "position": {
+        "x": 100,
+        "y": 100
+      }
+    },
+    {
+      "id": "source-orders",
+      "type": "source",
+      "name": "Load Orders",
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "orders-output",
+          "name": "Orders Data"
+        }
+      ],
+      "config": {
+        "type": "csv",
+        "connection": {
+          "path": "examples/data/orders.csv"
+        }
+      },
+      "position": {
+        "x": 100,
+        "y": 300
+      }
+    },
+    {
+      "id": "join-customer-orders",
+      "type": "join",
+      "name": "Join Customers with Orders",
+      "inputs": [
+        {
+          "id": "join-left",
+          "name": "Customers (Left)"
+        },
+        {
+          "id": "join-right",
+          "name": "Orders (Right)"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "join-output",
+          "name": "Joined Data"
+        }
+      ],
+      "config": {
+        "joinType": "left",
+        "keys": [
+          {
+            "leftKey": "customer_id",
+            "rightKey": "customer_id"
+          }
+        ],
+        "predicate": null,
+        "outputColumns": [
+          {
+            "sourceColumn": "left.customer_id",
+            "outputName": "customer_id"
+          },
+          {
+            "sourceColumn": "left.customer_name",
+            "outputName": "customer_name"
+          },
+          {
+            "sourceColumn": "left.email",
+            "outputName": "email"
+          },
+          {
+            "sourceColumn": "left.country",
+            "outputName": "country"
+          },
+          {
+            "sourceColumn": "right.order_id",
+            "outputName": "order_id"
+          },
+          {
+            "sourceColumn": "right.order_date",
+            "outputName": "order_date"
+          },
+          {
+            "sourceColumn": "right.amount",
+            "outputName": "order_amount"
+          },
+          {
+            "sourceColumn": "right.status",
+            "outputName": "order_status"
+          }
+        ],
+        "options": {
+          "broadcast": "right",
+          "nullEquality": false,
+          "dedupe": false
+        }
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "filter-completed",
+      "type": "filter",
+      "name": "Filter Completed Orders",
+      "inputs": [
+        {
+          "id": "filter-input",
+          "name": "Input"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "filter-output",
+          "name": "Output"
+        }
+      ],
+      "config": {
+        "condition": "order_status = 'completed' OR order_status IS NULL"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    },
+    {
+      "id": "sink-output",
+      "type": "sink",
+      "name": "Export to CSV",
+      "inputs": [
+        {
+          "id": "sink-input",
+          "name": "Input"
+        }
+      ],
+      "outputs": [],
+      "config": {
+        "type": "csv",
+        "destination": {
+          "path": "examples/output/customer-orders-report.csv"
+        }
+      },
+      "position": {
+        "x": 1000,
+        "y": 200
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "sourceBlockId": "source-customers",
+      "sourcePortId": "customers-output",
+      "targetBlockId": "join-customer-orders",
+      "targetPortId": "join-left"
+    },
+    {
+      "id": "conn-2",
+      "sourceBlockId": "source-orders",
+      "sourcePortId": "orders-output",
+      "targetBlockId": "join-customer-orders",
+      "targetPortId": "join-right"
+    },
+    {
+      "id": "conn-3",
+      "sourceBlockId": "join-customer-orders",
+      "sourcePortId": "join-output",
+      "targetBlockId": "filter-completed",
+      "targetPortId": "filter-input"
+    },
+    {
+      "id": "conn-4",
+      "sourceBlockId": "filter-completed",
+      "sourcePortId": "filter-output",
+      "targetBlockId": "sink-output",
+      "targetPortId": "sink-input"
+    }
+  ],
+  "metadata": {
+    "created": "2025-10-27",
+    "author": "ETL Modeler",
+    "description": "Demonstrates a complete ETL pipeline with join block"
+  }
+}
