@@ -451,8 +451,8 @@ table tr:hover {
 
 /* Flow Controls - Save/Load Buttons */
 .flow-controls {
-    position: absolute;
-    top: 15px;
+    position: fixed;
+    top: calc(88px + 15px); /* header height + padding */
     right: 15px;
     display: flex;
     gap: 8px;

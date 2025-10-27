@@ -535,9 +535,13 @@ function renderConnections() {
     const canvas = document.getElementById('canvas');
     const canvasRect = canvas.getBoundingClientRect(); // Cache canvas rect
     
+    // Get the full canvas content size from CSS custom properties
+    const canvasWidth = canvas.style.getPropertyValue('--canvas-width') || '100%';
+    const canvasHeight = canvas.style.getPropertyValue('--canvas-height') || '100%';
+    
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'connections-svg';
-    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1';
+    svg.style.cssText = `position:absolute;top:0;left:0;width:${canvasWidth};height:${canvasHeight};pointer-events:none;z-index:1`;
     
     const minSpacing = 30;
     
