@@ -3356,6 +3356,14 @@ function openSplitModal(block) {
     html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
     html += '</div>';
     
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="splitKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
     document.getElementById('splitInterface').innerHTML = html;
     showModal('splitModal');
     
