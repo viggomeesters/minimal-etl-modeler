@@ -213,6 +213,38 @@ function renderBlock(block) {
         icon = '🔄';
         title = 'Value Mapper';
         content = block.content || 'Klik om value mappings te configureren';
+    } else if (block.type === 'concatenate') {
+        icon = '➕';
+        title = 'Concatenate';
+        content = block.content || 'Klik om kolommen samen te voegen';
+    } else if (block.type === 'split') {
+        icon = '✂️';
+        title = 'Split';
+        content = block.content || 'Klik om kolom te splitsen';
+    } else if (block.type === 'casechange') {
+        icon = '🔤';
+        title = 'Case Change';
+        content = block.content || 'Klik om hoofdletters te wijzigen';
+    } else if (block.type === 'math') {
+        icon = '🔢';
+        title = 'Math';
+        content = block.content || 'Klik om berekeningen uit te voeren';
+    } else if (block.type === 'regexreplace') {
+        icon = '🔍';
+        title = 'Regex Replace';
+        content = block.content || 'Klik om tekst te vervangen';
+    } else if (block.type === 'dateformat') {
+        icon = '📅';
+        title = 'Date Format';
+        content = block.content || 'Klik om datum te formatteren';
+    } else if (block.type === 'expression') {
+        icon = '📝';
+        title = 'Expression';
+        content = block.content || 'Klik om expressie te evalueren';
+    } else if (block.type === 'copyrename') {
+        icon = '📋';
+        title = 'Copy/Rename';
+        content = block.content || 'Klik om kolom te kopiëren/hernoemen';
     }
     
     blockEl.innerHTML = `
@@ -644,6 +676,22 @@ function openBlockModal(block) {
         openValidationModal(block);
     } else if (block.type === 'valuemapper') {
         openValueMapperModal(block);
+    } else if (block.type === 'concatenate') {
+        openConcatenateModal(block);
+    } else if (block.type === 'split') {
+        openSplitModal(block);
+    } else if (block.type === 'casechange') {
+        openCaseChangeModal(block);
+    } else if (block.type === 'math') {
+        openMathModal(block);
+    } else if (block.type === 'regexreplace') {
+        openRegexReplaceModal(block);
+    } else if (block.type === 'dateformat') {
+        openDateFormatModal(block);
+    } else if (block.type === 'expression') {
+        openExpressionModal(block);
+    } else if (block.type === 'copyrename') {
+        openCopyRenameModal(block);
     }
 }
 
@@ -2919,4 +2967,678 @@ function clearCanvas() {
     // Show hint again
     const hint = document.querySelector('.hint');
     if (hint) hint.style.display = 'block';
+}
+
+// ============================================================================
+// NEW TRANSFORMATION BLOCK IMPLEMENTATIONS
+// ============================================================================
+
+/**
+ * Opens Concatenate block modal
+ */
+function openConcatenateModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('concatenateInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('concatenateModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Load existing configuration
+    const config = block.config || { 
+        outputColumn: '', 
+        inputs: [], 
+        separator: ' ' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="concatOutputCol" value="${config.outputColumn}" placeholder="bijv. FullName" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Selecteer Kolommen om Samen te Voegen:</label>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white;">';
+    inputHeaders.forEach(header => {
+        const checked = config.inputs.includes(header) ? 'checked' : '';
+        html += `<label style="display: block; padding: 5px; cursor: pointer;">`;
+        html += `<input type="checkbox" class="concat-input-col" value="${header}" ${checked} style="margin-right: 5px;" />`;
+        html += `${header}</label>`;
+    });
+    html += '</div></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Scheidingsteken:</label>';
+    html += `<input type="text" id="concatSeparator" value="${config.separator}" placeholder="bijv. ' ', '-', ', '" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    document.getElementById('concatenateInterface').innerHTML = html;
+    showModal('concatenateModal');
+    
+    document.getElementById('applyConcatenate').onclick = () => {
+        applyConcatenate(block, inputData);
+    };
+}
+
+function applyConcatenate(block, inputData) {
+    const outputColumn = document.getElementById('concatOutputCol').value.trim();
+    const separator = document.getElementById('concatSeparator').value;
+    const selectedInputs = Array.from(document.querySelectorAll('.concat-input-col:checked'))
+        .map(cb => cb.value);
+    
+    if (!outputColumn || selectedInputs.length === 0) {
+        alert('Vul een output kolom naam in en selecteer minstens één input kolom.');
+        return;
+    }
+    
+    // Store configuration
+    block.config = { outputColumn, inputs: selectedInputs, separator };
+    
+    // Transform data
+    const transformation = {
+        [outputColumn]: {
+            op: 'concatenate',
+            inputs: selectedInputs,
+            params: { separator }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('concatenateModal');
+}
+
+/**
+ * Opens Split block modal
+ */
+function openSplitModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('splitInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('splitModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '', 
+        delimiter: ',', 
+        index: 0 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="splitOutputCol" value="${config.outputColumn}" placeholder="bijv. Domain" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="splitInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Scheidingsteken:</label>';
+    html += `<input type="text" id="splitDelimiter" value="${config.delimiter}" placeholder="bijv. '@', ',', '-'" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Index (0-based):</label>';
+    html += `<input type="number" id="splitIndex" value="${config.index}" min="0" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">Index 0 = eerste deel, 1 = tweede deel, etc.</p>';
+    html += '</div>';
+    
+    document.getElementById('splitInterface').innerHTML = html;
+    showModal('splitModal');
+    
+    document.getElementById('applySplit').onclick = () => {
+        applySplit(block, inputData);
+    };
+}
+
+function applySplit(block, inputData) {
+    const outputColumn = document.getElementById('splitOutputCol').value.trim();
+    const inputColumn = document.getElementById('splitInputCol').value;
+    const delimiter = document.getElementById('splitDelimiter').value;
+    const index = parseInt(document.getElementById('splitIndex').value);
+    
+    if (!outputColumn || !inputColumn) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputColumn, delimiter, index };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'split',
+            inputs: [inputColumn],
+            params: { delimiter, index }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('splitModal');
+}
+
+/**
+ * Opens Case Change block modal
+ */
+function openCaseChangeModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('caseChangeInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('caseChangeModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '', 
+        caseType: 'upper' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="caseOutputCol" value="${config.outputColumn}" placeholder="bijv. UpperDept" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="caseInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Case Type:</label>';
+    html += `<select id="caseType" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="upper" ${config.caseType === 'upper' ? 'selected' : ''}>UPPERCASE</option>`;
+    html += `<option value="lower" ${config.caseType === 'lower' ? 'selected' : ''}>lowercase</option>`;
+    html += `<option value="capitalize" ${config.caseType === 'capitalize' ? 'selected' : ''}>Capitalize</option>`;
+    html += '</select></div>';
+    
+    document.getElementById('caseChangeInterface').innerHTML = html;
+    showModal('caseChangeModal');
+    
+    document.getElementById('applyCaseChange').onclick = () => {
+        applyCaseChange(block, inputData);
+    };
+}
+
+function applyCaseChange(block, inputData) {
+    const outputColumn = document.getElementById('caseOutputCol').value.trim();
+    const inputColumn = document.getElementById('caseInputCol').value;
+    const caseType = document.getElementById('caseType').value;
+    
+    if (!outputColumn || !inputColumn) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputColumn, caseType };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'case',
+            inputs: [inputColumn],
+            params: { type: caseType }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('caseChangeModal');
+}
+
+/**
+ * Opens Math block modal
+ */
+function openMathModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('mathInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('mathModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputs: [], 
+        mathOp: 'add', 
+        round: 'none' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="mathOutputCol" value="${config.outputColumn}" placeholder="bijv. Total" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Selecteer Numerieke Kolommen:</label>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: white;">';
+    inputHeaders.forEach(header => {
+        const checked = config.inputs.includes(header) ? 'checked' : '';
+        html += `<label style="display: block; padding: 5px; cursor: pointer;">`;
+        html += `<input type="checkbox" class="math-input-col" value="${header}" ${checked} style="margin-right: 5px;" />`;
+        html += `${header}</label>`;
+    });
+    html += '</div></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Bewerking:</label>';
+    html += `<select id="mathOp" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="add" ${config.mathOp === 'add' ? 'selected' : ''}>Add (+)</option>`;
+    html += `<option value="subtract" ${config.mathOp === 'subtract' ? 'selected' : ''}>Subtract (-)</option>`;
+    html += `<option value="multiply" ${config.mathOp === 'multiply' ? 'selected' : ''}>Multiply (*)</option>`;
+    html += `<option value="divide" ${config.mathOp === 'divide' ? 'selected' : ''}>Divide (/)</option>`;
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Afronden:</label>';
+    html += `<select id="mathRound" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="none" ${config.round === 'none' ? 'selected' : ''}>Geen afronden</option>`;
+    html += `<option value="0" ${config.round === '0' ? 'selected' : ''}>0 decimalen</option>`;
+    html += `<option value="2" ${config.round === '2' ? 'selected' : ''}>2 decimalen</option>`;
+    html += `<option value="4" ${config.round === '4' ? 'selected' : ''}>4 decimalen</option>`;
+    html += '</select></div>';
+    
+    document.getElementById('mathInterface').innerHTML = html;
+    showModal('mathModal');
+    
+    document.getElementById('applyMath').onclick = () => {
+        applyMath(block, inputData);
+    };
+}
+
+function applyMath(block, inputData) {
+    const outputColumn = document.getElementById('mathOutputCol').value.trim();
+    const mathOp = document.getElementById('mathOp').value;
+    const round = document.getElementById('mathRound').value;
+    const selectedInputs = Array.from(document.querySelectorAll('.math-input-col:checked'))
+        .map(cb => cb.value);
+    
+    if (!outputColumn || selectedInputs.length < 2) {
+        alert('Vul een output kolom naam in en selecteer minstens twee input kolommen.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputs: selectedInputs, mathOp, round };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'math',
+            inputs: selectedInputs,
+            params: { mathOp, round }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('mathModal');
+}
+
+/**
+ * Opens Regex Replace block modal
+ */
+function openRegexReplaceModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('regexReplaceInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('regexReplaceModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '', 
+        pattern: '', 
+        replacement: '' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="regexOutputCol" value="${config.outputColumn}" placeholder="bijv. Cleaned" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="regexInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Regex Patroon:</label>';
+    html += `<input type="text" id="regexPattern" value="${config.pattern}" placeholder="bijv. [0-9]+" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">Gebruik reguliere expressie syntax</p>';
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Vervanging:</label>';
+    html += `<input type="text" id="regexReplacement" value="${config.replacement}" placeholder="bijv. '', 'X', etc." style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    document.getElementById('regexReplaceInterface').innerHTML = html;
+    showModal('regexReplaceModal');
+    
+    document.getElementById('applyRegexReplace').onclick = () => {
+        applyRegexReplace(block, inputData);
+    };
+}
+
+function applyRegexReplace(block, inputData) {
+    const outputColumn = document.getElementById('regexOutputCol').value.trim();
+    const inputColumn = document.getElementById('regexInputCol').value;
+    const pattern = document.getElementById('regexPattern').value;
+    const replacement = document.getElementById('regexReplacement').value;
+    
+    if (!outputColumn || !inputColumn || !pattern) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputColumn, pattern, replacement };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'regex',
+            inputs: [inputColumn],
+            params: { pattern, replacement }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('regexReplaceModal');
+}
+
+/**
+ * Opens Date Format block modal
+ */
+function openDateFormatModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('dateFormatInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('dateFormatModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '', 
+        inputFormat: 'ISO', 
+        outputFormat: 'YYYY-MM-DD' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="dateOutputCol" value="${config.outputColumn}" placeholder="bijv. FormattedDate" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="dateInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Formaat:</label>';
+    html += `<input type="text" id="dateInputFormat" value="${config.inputFormat}" placeholder="ISO, locale, etc." style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Formaat:</label>';
+    html += `<input type="text" id="dateOutputFormat" value="${config.outputFormat}" placeholder="YYYY-MM-DD, DD/MM/YYYY, etc." style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    document.getElementById('dateFormatInterface').innerHTML = html;
+    showModal('dateFormatModal');
+    
+    document.getElementById('applyDateFormat').onclick = () => {
+        applyDateFormat(block, inputData);
+    };
+}
+
+function applyDateFormat(block, inputData) {
+    const outputColumn = document.getElementById('dateOutputCol').value.trim();
+    const inputColumn = document.getElementById('dateInputCol').value;
+    const inputFormat = document.getElementById('dateInputFormat').value;
+    const outputFormat = document.getElementById('dateOutputFormat').value;
+    
+    if (!outputColumn || !inputColumn) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputColumn, inputFormat, outputFormat };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'date',
+            inputs: [inputColumn],
+            params: { inputFormat, outputFormat }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('dateFormatModal');
+}
+
+/**
+ * Opens Expression block modal
+ */
+function openExpressionModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('expressionInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('expressionModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        expression: '' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="exprOutputCol" value="${config.outputColumn}" placeholder="bijv. Computed" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Expressie:</label>';
+    html += `<input type="text" id="exprExpression" value="${config.expression}" placeholder="bijv. \${FirstName}-\${LastName}" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">Gebruik \${kolomNaam} om kolom waarden te refereren</p>';
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<p style="font-weight: 600; margin-bottom: 5px;">Beschikbare Kolommen:</p>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    inputHeaders.forEach(header => {
+        html += `<span style="display: inline-block; padding: 3px 8px; margin: 2px; background: white; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 12px;">${header}</span>`;
+    });
+    html += '</div></div>';
+    
+    document.getElementById('expressionInterface').innerHTML = html;
+    showModal('expressionModal');
+    
+    document.getElementById('applyExpression').onclick = () => {
+        applyExpression(block, inputData);
+    };
+}
+
+function applyExpression(block, inputData) {
+    const outputColumn = document.getElementById('exprOutputCol').value.trim();
+    const expression = document.getElementById('exprExpression').value;
+    
+    if (!outputColumn || !expression) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, expression };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'expression',
+            inputs: [],
+            params: { expression }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('expressionModal');
+}
+
+/**
+ * Opens Copy/Rename block modal
+ */
+function openCopyRenameModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('copyRenameInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('copyRenameModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '' 
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="copyOutputCol" value="${config.outputColumn}" placeholder="bijv. Material" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="copyInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    document.getElementById('copyRenameInterface').innerHTML = html;
+    showModal('copyRenameModal');
+    
+    document.getElementById('applyCopyRename').onclick = () => {
+        applyCopyRename(block, inputData);
+    };
+}
+
+function applyCopyRename(block, inputData) {
+    const outputColumn = document.getElementById('copyOutputCol').value.trim();
+    const inputColumn = document.getElementById('copyInputCol').value;
+    
+    if (!outputColumn || !inputColumn) {
+        alert('Vul alle velden in.');
+        return;
+    }
+    
+    block.config = { outputColumn, inputColumn };
+    
+    const transformation = {
+        [outputColumn]: {
+            op: 'copy',
+            inputs: [inputColumn],
+            params: {}
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    propagateData(block.id);
+    hideModal('copyRenameModal');
 }
