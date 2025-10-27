@@ -2857,6 +2857,14 @@ function loadFlow(event) {
             // Render all connections
             renderConnections();
             
+            // Propagate data from blocks that have data to their connected blocks
+            // This ensures data flows through the entire pipeline after loading
+            blocks.forEach(block => {
+                if (dataStore[block.id]) {
+                    propagateData(block.id);
+                }
+            });
+            
             // Hide hint if there are blocks
             if (blocks.length > 0) {
                 const hint = document.querySelector('.hint');
