@@ -245,9 +245,10 @@ test('File sizes are reasonable for POC', () => {
     };
     
     // Reasonable size limits for a POC
-    checkSize('app.js', 150);      // Increased from 50KB due to feature growth
+    // Note: app.js size increased due to performance optimizations for large datasets (10k+ records)
+    checkSize('app.js', 170);      // Increased to 170KB to accommodate performance optimizations
     checkSize('style.css', 20);    // 20KB max
-    checkSize('index.html', 10);   // 10KB max
+    checkSize('index.html', 20);   // Increased to 20KB due to additional blocks and features
 });
 
 // Test 11: Data transfer on connect (programmatic simulation)

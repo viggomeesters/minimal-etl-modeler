@@ -896,7 +896,9 @@ function parseCSV(csv) {
         const data = [];
         
         // For large datasets, pre-allocate array capacity hint (if possible)
-        const isLargeDataset = lines.length > LARGE_DATASET_THRESHOLD;
+        // Use fallback value if LARGE_DATASET_THRESHOLD is not defined (for test compatibility)
+        const threshold = typeof LARGE_DATASET_THRESHOLD !== 'undefined' ? LARGE_DATASET_THRESHOLD : 1000;
+        const isLargeDataset = lines.length > threshold;
         
         for (let i = 1; i < lines.length; i++) {
             if (!lines[i].trim()) continue; // Skip empty lines
@@ -974,7 +976,9 @@ function transferData(fromId, toId) {
     // For large datasets, use shallow copy of array and only clone row references
     // This is safe because transform operations create new row objects
     let clonedData;
-    const isLargeDataset = dataArray.length >= LARGE_DATASET_THRESHOLD;
+    // Use fallback value if LARGE_DATASET_THRESHOLD is not defined (for test compatibility)
+    const threshold = typeof LARGE_DATASET_THRESHOLD !== 'undefined' ? LARGE_DATASET_THRESHOLD : 1000;
+    const isLargeDataset = dataArray.length >= threshold;
     
     if (sourceData.data && sourceData.headers) {
         if (isLargeDataset) {
@@ -1042,7 +1046,9 @@ function displayData(block) {
     // Display table if we have headers
     if (headers.length > 0) {
         // For large datasets, use DOM manipulation for better performance
-        const isLargeDataset = rows.length >= LARGE_DATASET_THRESHOLD;
+        // Use fallback value if LARGE_DATASET_THRESHOLD is not defined (for test compatibility)
+        const threshold = typeof LARGE_DATASET_THRESHOLD !== 'undefined' ? LARGE_DATASET_THRESHOLD : 1000;
+        const isLargeDataset = rows.length >= threshold;
         
         if (isLargeDataset) {
             // Use DocumentFragment for efficient DOM building
