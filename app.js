@@ -78,9 +78,12 @@ function handleDragOver(e) {
 function handleDrop(e) {
     e.preventDefault();
     const blockType = e.dataTransfer.getData('blockType');
-    const canvasRect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - canvasRect.left;
-    const y = e.clientY - canvasRect.top;
+    const canvas = e.currentTarget;
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    // Calculate position relative to canvas content (including scroll)
+    const x = e.clientX - canvasRect.left + canvas.scrollLeft;
+    const y = e.clientY - canvasRect.top + canvas.scrollTop;
     
     createBlock(blockType, x, y);
     
