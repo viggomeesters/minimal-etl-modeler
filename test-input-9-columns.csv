@@ -1,0 +1,4 @@
+Material_Number,Material_Description,Plant,Storage_Location,Batch,Quantity,Unit,Created_By,Created_Date
+MAT001,Steel Plate,P001,SL01,B001,100,KG,USER1,2024-01-01
+MAT002,Aluminum Sheet,P001,SL02,B002,200,KG,USER2,2024-01-02
+MAT003,Copper Wire,P002,SL01,B003,150,M,USER1,2024-01-03
