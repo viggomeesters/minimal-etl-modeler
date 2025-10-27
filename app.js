@@ -3309,16 +3309,16 @@ function openSplitModal(block) {
     const inputHeaders = inputData.headers || [];
     
     const config = block.config || { 
-        outputColumn: '', 
+        outputColumnPrefix: '', 
         inputColumn: '', 
-        delimiter: ',', 
-        index: 0,
+        delimiter: ',',
         keepOriginal: false
     };
     
     let html = '<div style="margin-bottom: 15px;">';
-    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
-    html += `<input type="text" id="splitOutputCol" value="${config.outputColumn}" placeholder="bijv. Domain" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Prefix:</label>';
+    html += `<input type="text" id="splitOutputCol" value="${escapeHtml(config.outputColumnPrefix)}" placeholder="bijv. Part" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">De gesplitste kolommen krijgen namen: [Prefix]_1, [Prefix]_2, etc.</p>';
     html += '</div>';
     
     html += '<div style="margin-bottom: 15px;">';
@@ -3327,19 +3327,33 @@ function openSplitModal(block) {
     html += '<option value="">-- Selecteer kolom --</option>';
     inputHeaders.forEach(header => {
         const selected = config.inputColumn === header ? 'selected' : '';
-        html += `<option value="${header}" ${selected}>${header}</option>`;
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
     });
     html += '</select></div>';
     
     html += '<div style="margin-bottom: 15px;">';
     html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Scheidingsteken:</label>';
-    html += `<input type="text" id="splitDelimiter" value="${config.delimiter}" placeholder="bijv. '@', ',', '-'" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += `<select id="splitDelimiter" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="," ${config.delimiter === ',' ? 'selected' : ''}>Comma ','</option>`;
+    html += `<option value=" " ${config.delimiter === ' ' ? 'selected' : ''}>Space ' '</option>`;
+    html += `<option value=";" ${config.delimiter === ';' ? 'selected' : ''}>Semicolon ';'</option>`;
+    html += `<option value="\t" ${config.delimiter === '\t' ? 'selected' : ''}>Tab '\\t'</option>`;
+    html += `<option value="@" ${config.delimiter === '@' ? 'selected' : ''}>At '@'</option>`;
+    html += `<option value="|" ${config.delimiter === '|' ? 'selected' : ''}>Pipe '|'</option>`;
+    html += `<option value="-" ${config.delimiter === '-' ? 'selected' : ''}>Dash '-'</option>`;
+    html += `<option value="_" ${config.delimiter === '_' ? 'selected' : ''}>Underscore '_'</option>`;
+    html += `<option value=":" ${config.delimiter === ':' ? 'selected' : ''}>Colon ':'</option>`;
+    html += `<option value="custom">Custom...</option>`;
+    html += '</select>';
+    html += `<input type="text" id="splitCustomDelimiter" value="" placeholder="Voer custom scheidingsteken in" style="width: 100%; padding: 8px; margin-top: 8px; border: 1px solid #e0e0e0; border-radius: 4px; display: ${config.delimiter && ![',', ' ', ';', '\t', '@', '|', '-', '_', ':'].includes(config.delimiter) ? 'block' : 'none'};" />`;
     html += '</div>';
     
     html += '<div style="margin-bottom: 15px;">';
-    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Index (0-based):</label>';
-    html += `<input type="number" id="splitIndex" value="${config.index}" min="0" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
-    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">Index 0 = eerste deel, 1 = tweede deel, etc.</p>';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="splitKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
     html += '</div>';
     
     html += '<div style="margin-bottom: 15px;">';
@@ -3353,37 +3367,77 @@ function openSplitModal(block) {
     document.getElementById('splitInterface').innerHTML = html;
     showModal('splitModal');
     
+    // Setup event listener for custom delimiter
+    const delimiterSelect = document.getElementById('splitDelimiter');
+    const customDelimiterInput = document.getElementById('splitCustomDelimiter');
+    
+    delimiterSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDelimiterInput.style.display = 'block';
+            customDelimiterInput.focus();
+        } else {
+            customDelimiterInput.style.display = 'none';
+        }
+    });
+    
+    // Set initial custom delimiter value if applicable
+    if (config.delimiter && ![',', ' ', ';', '\t', '@', '|', '-', '_', ':'].includes(config.delimiter)) {
+        delimiterSelect.value = 'custom';
+        customDelimiterInput.value = config.delimiter;
+        customDelimiterInput.style.display = 'block';
+    }
+    
     document.getElementById('applySplit').onclick = () => {
         applySplit(block, inputData);
     };
 }
 
 function applySplit(block, inputData) {
-    const outputColumn = document.getElementById('splitOutputCol').value.trim();
+    const outputColumnPrefix = document.getElementById('splitOutputCol').value.trim();
     const inputColumn = document.getElementById('splitInputCol').value;
-    const delimiter = document.getElementById('splitDelimiter').value;
-    const index = parseInt(document.getElementById('splitIndex').value);
+    let delimiter = document.getElementById('splitDelimiter').value;
     const keepOriginal = document.getElementById('splitKeepOriginal').checked;
     
-    if (!outputColumn || !inputColumn) {
+    // Handle custom delimiter
+    if (delimiter === 'custom') {
+        const customDelimiter = document.getElementById('splitCustomDelimiter').value;
+        if (!customDelimiter) {
+            alert('Vul een custom scheidingsteken in.');
+            return;
+        }
+        delimiter = customDelimiter;
+    }
+    
+    if (!outputColumnPrefix || !inputColumn) {
         alert('Vul alle velden in.');
         return;
     }
     
-    block.config = { outputColumn, inputColumn, delimiter, index, keepOriginal };
+    block.config = { outputColumnPrefix, inputColumn, delimiter, keepOriginal };
     
-    const transformation = {
-        [outputColumn]: {
+    // First, determine the maximum number of parts we'll get from splitting
+    let maxParts = 0;
+    inputData.data.forEach(row => {
+        const value = row[inputColumn] || '';
+        const parts = value.split(delimiter);
+        maxParts = Math.max(maxParts, parts.length);
+    });
+    
+    // Create transformation for each part
+    const transformation = {};
+    for (let i = 0; i < maxParts; i++) {
+        const columnName = `${outputColumnPrefix}_${i + 1}`;
+        transformation[columnName] = {
             op: 'split',
             inputs: [inputColumn],
-            params: { delimiter, index, keepOriginal }
-        }
-    };
+            params: { delimiter, index: i, keepOriginal }
+        };
+    }
     
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
-    updateBlockContent(block.id, `${outputColumn} aangemaakt`);
+    updateBlockContent(block.id, `${maxParts} kolommen aangemaakt (${outputColumnPrefix}_1 t/m ${outputColumnPrefix}_${maxParts})`);
     propagateData(block.id);
     hideModal('splitModal');
 }
