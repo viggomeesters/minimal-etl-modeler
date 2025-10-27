@@ -248,6 +248,10 @@ function renderBlock(block) {
         icon = '📋';
         title = 'Copy/Rename';
         content = block.content || 'Klik om kolom te kopiëren/hernoemen';
+    } else if (block.type === 'join') {
+        icon = '🔀';
+        title = 'Join';
+        content = block.content || 'Klik om datasets samen te voegen';
     }
     
     blockEl.innerHTML = `
@@ -695,6 +699,8 @@ function openBlockModal(block) {
         openExpressionModal(block);
     } else if (block.type === 'copyrename') {
         openCopyRenameModal(block);
+    } else if (block.type === 'join') {
+        openJoinModal(block);
     }
 }
 
@@ -3644,4 +3650,284 @@ function applyCopyRename(block, inputData) {
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('copyRenameModal');
+}
+
+/**
+ * Opens Join block modal
+ * Join block requires TWO input connections from different sources
+ */
+function openJoinModal(block) {
+    selectedBlock = block;
+    
+    // Get all input connections to this block
+    const inputConnections = connections.filter(c => c.to === block.id);
+    
+    if (inputConnections.length < 2) {
+        document.getElementById('joinInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst TWEE data bronnen met deze Join block.</p>';
+        showModal('joinModal');
+        return;
+    }
+    
+    // Get data from both inputs
+    const leftInput = dataStore[inputConnections[0].from];
+    const rightInput = dataStore[inputConnections[1].from];
+    
+    if (!leftInput || !rightInput) {
+        document.getElementById('joinInterface').innerHTML = 
+            '<p style="color: #e44;">Beide input blocks moeten data bevatten.</p>';
+        showModal('joinModal');
+        return;
+    }
+    
+    const leftHeaders = leftInput.headers || [];
+    const rightHeaders = rightInput.headers || [];
+    
+    if (leftHeaders.length === 0 || rightHeaders.length === 0) {
+        document.getElementById('joinInterface').innerHTML = 
+            '<p style="color: #e44;">Beide inputs moeten kolommen hebben.</p>';
+        showModal('joinModal');
+        return;
+    }
+    
+    // Load existing configuration
+    const config = block.config || {
+        joinType: 'inner',
+        leftKey: '',
+        rightKey: ''
+    };
+    
+    let html = '<div style="display: flex; gap: 30px; margin-bottom: 20px;">';
+    
+    // Left dataset info
+    html += '<div style="flex: 1; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: #f9f9f9;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Left Dataset</h3>';
+    html += `<p style="font-size: 12px; color: #666;">Rijen: ${leftInput.data.length}, Kolommen: ${leftHeaders.length}</p>`;
+    html += '<div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">';
+    leftHeaders.forEach(header => {
+        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${header}</div>`;
+    });
+    html += '</div></div>';
+    
+    // Right dataset info
+    html += '<div style="flex: 1; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: #f9f9f9;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Right Dataset</h3>';
+    html += `<p style="font-size: 12px; color: #666;">Rijen: ${rightInput.data.length}, Kolommen: ${rightHeaders.length}</p>`;
+    html += '<div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">';
+    rightHeaders.forEach(header => {
+        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${header}</div>`;
+    });
+    html += '</div></div>';
+    
+    html += '</div>';
+    
+    // Join configuration
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: white;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 15px; font-weight: 600;">Join Configuration</h3>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Join Type:</label>';
+    html += `<select id="joinType" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="inner" ${config.joinType === 'inner' ? 'selected' : ''}>Inner Join (alleen matches)</option>`;
+    html += `<option value="left" ${config.joinType === 'left' ? 'selected' : ''}>Left Join (alle left + matches)</option>`;
+    html += `<option value="right" ${config.joinType === 'right' ? 'selected' : ''}>Right Join (alle right + matches)</option>`;
+    html += `<option value="outer" ${config.joinType === 'outer' ? 'selected' : ''}>Full Outer Join (alle rijen)</option>`;
+    html += '</select></div>';
+    
+    html += '<div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center;">';
+    
+    html += '<div>';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Left Key:</label>';
+    html += `<select id="joinLeftKey" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    leftHeaders.forEach(header => {
+        const selected = config.leftKey === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="text-align: center; font-size: 20px; color: #666;">⟷</div>';
+    
+    html += '<div>';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Right Key:</label>';
+    html += `<select id="joinRightKey" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    rightHeaders.forEach(header => {
+        const selected = config.rightKey === header ? 'selected' : '';
+        html += `<option value="${header}" ${selected}>${header}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '</div>';
+    
+    html += '<div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 4px; border-left: 4px solid #4a90e2;">';
+    html += '<p style="font-size: 12px; margin: 0;"><strong>Tip:</strong> Selecteer kolommen met matching waarden om datasets samen te voegen.</p>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    document.getElementById('joinInterface').innerHTML = html;
+    showModal('joinModal');
+    
+    document.getElementById('applyJoin').onclick = () => {
+        applyJoin(block, leftInput, rightInput);
+    };
+}
+
+function applyJoin(block, leftInput, rightInput) {
+    const joinType = document.getElementById('joinType').value;
+    const leftKey = document.getElementById('joinLeftKey').value;
+    const rightKey = document.getElementById('joinRightKey').value;
+    
+    if (!leftKey || !rightKey) {
+        alert('Selecteer beide join keys.');
+        return;
+    }
+    
+    // Store configuration
+    block.config = { joinType, leftKey, rightKey };
+    
+    // Perform the join
+    const joinedData = performJoin(leftInput, rightInput, leftKey, rightKey, joinType);
+    
+    // Store result
+    dataStore[block.id] = joinedData;
+    
+    // Update block content
+    const joinTypeLabel = {
+        'inner': 'Inner',
+        'left': 'Left',
+        'right': 'Right',
+        'outer': 'Full Outer'
+    }[joinType] || joinType;
+    
+    updateBlockContent(block.id, `${joinTypeLabel} Join: ${joinedData.data.length} rijen`);
+    propagateData(block.id);
+    hideModal('joinModal');
+}
+
+/**
+ * Performs a join operation on two datasets
+ * @param {Object} leftData - Left dataset with headers and data
+ * @param {Object} rightData - Right dataset with headers and data
+ * @param {string} leftKey - Column name to join on from left dataset
+ * @param {string} rightKey - Column name to join on from right dataset
+ * @param {string} joinType - Type of join: 'inner', 'left', 'right', 'outer'
+ * @returns {Object} Joined dataset with headers and data
+ */
+function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
+    const leftRows = leftData.data || [];
+    const rightRows = rightData.data || [];
+    const leftHeaders = leftData.headers || [];
+    const rightHeaders = rightData.headers || [];
+    
+    // Create result headers - left headers + right headers (excluding right key if it's same name)
+    const resultHeaders = [...leftHeaders];
+    rightHeaders.forEach(header => {
+        // Add right header with prefix if it conflicts with left headers (except the join key)
+        if (header === rightKey && header === leftKey) {
+            // Skip the right key if it's the same as left key
+            return;
+        }
+        if (leftHeaders.includes(header)) {
+            resultHeaders.push(`right_${header}`);
+        } else {
+            resultHeaders.push(header);
+        }
+    });
+    
+    const resultRows = [];
+    const matchedRightIndices = new Set();
+    
+    // Build index for right dataset for faster lookup
+    const rightIndex = {};
+    rightRows.forEach((row, idx) => {
+        const key = row[rightKey];
+        if (key !== undefined && key !== null && key !== '') {
+            if (!rightIndex[key]) {
+                rightIndex[key] = [];
+            }
+            rightIndex[key].push({ row, idx });
+        }
+    });
+    
+    // Process left rows
+    leftRows.forEach(leftRow => {
+        const leftKeyValue = leftRow[leftKey];
+        const rightMatches = rightIndex[leftKeyValue] || [];
+        
+        if (rightMatches.length > 0) {
+            // Found match(es) - create joined row(s)
+            rightMatches.forEach(({ row: rightRow, idx }) => {
+                matchedRightIndices.add(idx);
+                const joinedRow = { ...leftRow };
+                
+                // Add right columns
+                rightHeaders.forEach(header => {
+                    if (header === rightKey && header === leftKey) {
+                        // Skip duplicate key column
+                        return;
+                    }
+                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    joinedRow[targetHeader] = rightRow[header];
+                });
+                
+                resultRows.push(joinedRow);
+            });
+        } else {
+            // No match found
+            if (joinType === 'left' || joinType === 'outer') {
+                // Include left row with null values for right columns
+                const joinedRow = { ...leftRow };
+                rightHeaders.forEach(header => {
+                    if (header === rightKey && header === leftKey) {
+                        return;
+                    }
+                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    joinedRow[targetHeader] = '';
+                });
+                resultRows.push(joinedRow);
+            }
+        }
+    });
+    
+    // Process unmatched right rows (for right join and outer join)
+    if (joinType === 'right' || joinType === 'outer') {
+        rightRows.forEach((rightRow, idx) => {
+            if (!matchedRightIndices.has(idx)) {
+                // Unmatched right row - add with null values for left columns
+                const joinedRow = {};
+                
+                // Add empty left columns
+                leftHeaders.forEach(header => {
+                    joinedRow[header] = '';
+                });
+                
+                // Add right columns
+                rightHeaders.forEach(header => {
+                    if (header === rightKey && header === leftKey) {
+                        joinedRow[leftKey] = rightRow[rightKey];
+                        return;
+                    }
+                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    joinedRow[targetHeader] = rightRow[header];
+                });
+                
+                resultRows.push(joinedRow);
+            }
+        });
+    }
+    
+    return {
+        data: resultRows,
+        headers: resultHeaders,
+        joinInfo: {
+            type: joinType,
+            leftKey,
+            rightKey,
+            leftRows: leftRows.length,
+            rightRows: rightRows.length,
+            resultRows: resultRows.length
+        }
+    };
 }
