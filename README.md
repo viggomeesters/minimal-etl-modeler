@@ -10,6 +10,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 - 👁️ **Data View**: Bekijk en verifieer je data
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
 - 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
+- 📋 **Data Flow Log**: ✨ **NIEUW** - Bekijk een tekstuele representatie van data flow en transformaties
 - 🔄 **Individuele Transformatie Blocks**: ✨ **NIEUW** - Visuele transformatie blokken voor betere flow zichtbaarheid
   - ➕ **Concatenate**: Voeg kolommen samen
   - ✂️ **Split**: Split kolommen op delimiter
@@ -236,6 +237,7 @@ De applicatie is geoptimaliseerd voor datasets met **10,000+ rijen**:
 ## 📚 Documentatie
 
 - **[CSV Format Guide](CSV-GUIDE.md)** - CSV bestand vereisten en best practices
+- **[Logging Guide](LOGGING-GUIDE.md)** - Data Flow Log functionaliteit en gebruik
 - **[Architecture](ARCHITECTURE.md)** - Technische architectuur en design patterns
 - **[Quick Start](QUICKSTART.md)** - Snelle start gids
 - **[User Guide](GEBRUIKERSHANDLEIDING.md)** - Uitgebreide gebruikershandleiding
