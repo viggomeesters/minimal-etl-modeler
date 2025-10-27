@@ -3705,7 +3705,7 @@ function openJoinModal(block) {
     html += `<p style="font-size: 12px; color: #666;">Rijen: ${leftInput.data.length}, Kolommen: ${leftHeaders.length}</p>`;
     html += '<div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">';
     leftHeaders.forEach(header => {
-        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${header}</div>`;
+        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${escapeHtml(header)}</div>`;
     });
     html += '</div></div>';
     
@@ -3715,7 +3715,7 @@ function openJoinModal(block) {
     html += `<p style="font-size: 12px; color: #666;">Rijen: ${rightInput.data.length}, Kolommen: ${rightHeaders.length}</p>`;
     html += '<div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">';
     rightHeaders.forEach(header => {
-        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${header}</div>`;
+        html += `<div style="padding: 4px; font-size: 12px; background: white; margin-bottom: 3px; border-radius: 3px;">${escapeHtml(header)}</div>`;
     });
     html += '</div></div>';
     
@@ -3742,7 +3742,7 @@ function openJoinModal(block) {
     html += '<option value="">-- Selecteer kolom --</option>';
     leftHeaders.forEach(header => {
         const selected = config.leftKey === header ? 'selected' : '';
-        html += `<option value="${header}" ${selected}>${header}</option>`;
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
     });
     html += '</select></div>';
     
@@ -3754,7 +3754,7 @@ function openJoinModal(block) {
     html += '<option value="">-- Selecteer kolom --</option>';
     rightHeaders.forEach(header => {
         const selected = config.rightKey === header ? 'selected' : '';
-        html += `<option value="${header}" ${selected}>${header}</option>`;
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
     });
     html += '</select></div>';
     
