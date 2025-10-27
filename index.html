@@ -37,9 +37,41 @@
                     <span class="icon">🔗</span>
                     <span>Mapping</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="concatenate">
+                    <span class="icon">➕</span>
+                    <span>Concatenate</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="split">
+                    <span class="icon">✂️</span>
+                    <span>Split</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="casechange">
+                    <span class="icon">🔤</span>
+                    <span>Case Change</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="math">
+                    <span class="icon">🔢</span>
+                    <span>Math</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="regexreplace">
+                    <span class="icon">🔍</span>
+                    <span>Regex Replace</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="dateformat">
+                    <span class="icon">📅</span>
+                    <span>Date Format</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="expression">
+                    <span class="icon">📝</span>
+                    <span>Expression</span>
+                </div>
+                <div class="tool-item" draggable="true" data-type="copyrename">
+                    <span class="icon">📋</span>
+                    <span>Copy/Rename</span>
+                </div>
                 <div class="tool-item" draggable="true" data-type="transform">
                     <span class="icon">⚙️</span>
-                    <span>Transform</span>
+                    <span>Transform (Legacy)</span>
                 </div>
                 <div class="tool-item" draggable="true" data-type="validation">
                     <span class="icon">✓</span>
@@ -169,6 +201,94 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Define value mappings for data columns</p>
             <div id="valueMapperInterface"></div>
             <button id="applyValueMapper" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Value Mappings</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Concatenate -->
+    <div id="concatenateModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Concatenate</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Combine multiple columns into one</p>
+            <div id="concatenateInterface"></div>
+            <button id="applyConcatenate" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Split -->
+    <div id="splitModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Split</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Split a column on a delimiter</p>
+            <div id="splitInterface"></div>
+            <button id="applySplit" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Case Change -->
+    <div id="caseChangeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Case Change</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Change text case</p>
+            <div id="caseChangeInterface"></div>
+            <button id="applyCaseChange" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Math -->
+    <div id="mathModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Math</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Perform mathematical operations</p>
+            <div id="mathInterface"></div>
+            <button id="applyMath" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Regex Replace -->
+    <div id="regexReplaceModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Regex Replace</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Find and replace using regular expressions</p>
+            <div id="regexReplaceInterface"></div>
+            <button id="applyRegexReplace" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Date Format -->
+    <div id="dateFormatModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Date Format</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Parse and reformat dates</p>
+            <div id="dateFormatInterface"></div>
+            <button id="applyDateFormat" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Expression -->
+    <div id="expressionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Expression</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Evaluate expressions with column values</p>
+            <div id="expressionInterface"></div>
+            <button id="applyExpression" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Copy/Rename -->
+    <div id="copyRenameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Copy/Rename</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Copy or rename a column</p>
+            <div id="copyRenameInterface"></div>
+            <button id="applyCopyRename" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
         </div>
     </div>
     

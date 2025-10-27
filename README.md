@@ -10,7 +10,16 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 - 👁️ **Data View**: Bekijk en verifieer je data
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
 - 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
-- ⚙️ **Transform**: Transformeer data en exporteer naar CSV
+- 🔄 **Individuele Transformatie Blocks**: ✨ **NIEUW** - Visuele transformatie blokken voor betere flow zichtbaarheid
+  - ➕ **Concatenate**: Voeg kolommen samen
+  - ✂️ **Split**: Split kolommen op delimiter
+  - 🔤 **Case Change**: Wijzig hoofdletters
+  - 🔢 **Math**: Bereken met getallen
+  - 🔍 **Regex Replace**: Vervang tekst patronen
+  - 📅 **Date Format**: Formatteer datums
+  - 📝 **Expression**: Evalueer expressies
+  - 📋 **Copy/Rename**: Kopieer/hernoem kolommen
+- ⚙️ **Transform (Legacy)**: Complete transformatie block voor complexe bewerkingen
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
 
@@ -92,7 +101,21 @@ minimal-etl-modeler/
 - Ondersteunt zowel template-based als free-form mapping
 - Toepassen van mapping transformaties
 
-### Transform Block
+### Transformatie Blocks ✨ NIEUW
+Individuele blocks voor elk transformatie type - verbeter de visuele duidelijkheid van je data flow:
+
+- **➕ Concatenate**: Voeg meerdere kolommen samen met een scheidingsteken
+- **✂️ Split**: Split een kolom op een delimiter en extraheer een specifiek deel
+- **🔤 Case Change**: Wijzig tekstkapitalisatie (UPPERCASE, lowercase, Capitalize)
+- **🔢 Math**: Voer mathematische bewerkingen uit (optellen, aftrekken, vermenigvuldigen, delen)
+- **🔍 Regex Replace**: Zoek en vervang tekst met reguliere expressies
+- **📅 Date Format**: Parse en herformatteer datums
+- **📝 Expression**: Evalueer expressies met kolom waarde substitutie
+- **📋 Copy/Rename**: Kopieer of hernoem kolommen
+
+Zie [SPLIT-TRANSFORM-BLOCKS-GUIDE.md](SPLIT-TRANSFORM-BLOCKS-GUIDE.md) voor uitgebreide documentatie.
+
+### Transform Block (Legacy)
 - Map input kolommen naar output kolommen
 - Transformeer data volgens mapping regels
 - Exporteer getransformeerde data als CSV
@@ -115,12 +138,23 @@ minimal-etl-modeler/
 Het project bevat uitgebreide tests voor alle functionaliteiten:
 
 ```bash
-node test-mapping.js                  # Test mapping functionaliteit (9 tests)
-node test-automapper.js               # Test automapper functionaliteit (12 tests)
-node test-automapper-integration.js   # Test complete data flow (10 tests)
+node test-mapping.js                   # Test mapping functionaliteit (9 tests)
+node test-automapper.js                # Test automapper functionaliteit (12 tests)
+node test-automapper-integration.js    # Test complete data flow (10 tests)
+node test-advanced-transform.js        # Test transformatie operaties (20 tests)
+node test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
 ```
 
-## 🔄 Aanbevolen Workflow
+## 🔄 Aanbevolen Workflows
+
+**Met visuele transformatie blocks:** ✨ NIEUW
+1. Data Input → Laad bron CSV
+2. Concatenate → Voeg kolommen samen (bijv. voornaam + achternaam)
+3. Split → Extraheer domein uit email
+4. Case Change → Normaliseer tekst
+5. Math → Bereken totalen
+6. Data View → Preview resultaat
+7. Output Data → Exporteer resultaat
 
 **Snelle mapping met Automapper:**
 1. Data Input → Laad bron CSV
@@ -133,7 +167,7 @@ node test-automapper-integration.js   # Test complete data flow (10 tests)
 **Handmatige mapping:**
 1. Data Input → Laad bron CSV
 2. Mapping → Handmatig kolommen mappen
-3. Transform → Transformeer en exporteer
+3. Transform (Legacy) → Transformeer en exporteer
 4. Output Data → Exporteer resultaat
 ## ⚡ Performance
 
