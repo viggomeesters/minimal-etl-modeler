@@ -120,7 +120,20 @@
         <div class="modal-content large">
             <span class="close">&times;</span>
             <h2>Data View</h2>
-            <div id="dataDisplay"></div>
+            
+            <!-- Tab navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="dataTab">Data</button>
+                <button class="tab-button" data-tab="logsTab">Logs</button>
+            </div>
+            
+            <!-- Tab content -->
+            <div id="dataTab" class="tab-content active">
+                <div id="dataDisplay"></div>
+            </div>
+            <div id="logsTab" class="tab-content">
+                <div id="logsDisplay"></div>
+            </div>
         </div>
     </div>
     

@@ -4,6 +4,7 @@ let connections = [];
 let blockCounter = 0;
 let selectedBlock = null;
 let dataStore = {};
+let dataLogs = {}; // Store logs for each block
 
 // Constants
 const MAX_DISPLAY_ROWS = 100;
@@ -49,6 +50,50 @@ function measurePerformance(operationName, fn, warnThreshold = 1000) {
     }
     
     return result;
+}
+
+// Logging Functions
+/**
+ * Adds a log entry for a specific block
+ * @param {string} blockId - The ID of the block
+ * @param {string} message - The log message
+ * @param {Object} details - Optional details about the operation
+ */
+function addLog(blockId, message, details = {}) {
+    if (!dataLogs[blockId]) {
+        dataLogs[blockId] = [];
+    }
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = {
+        timestamp,
+        message,
+        details
+    };
+    
+    dataLogs[blockId].push(logEntry);
+    
+    // Keep only the last 100 log entries per block to avoid memory issues
+    if (dataLogs[blockId].length > 100) {
+        dataLogs[blockId].shift();
+    }
+}
+
+/**
+ * Gets all logs for a specific block
+ * @param {string} blockId - The ID of the block
+ * @returns {Array} Array of log entries
+ */
+function getLogs(blockId) {
+    return dataLogs[blockId] || [];
+}
+
+/**
+ * Clears logs for a specific block
+ * @param {string} blockId - The ID of the block
+ */
+function clearLogs(blockId) {
+    dataLogs[blockId] = [];
 }
 
 // Utility Functions
@@ -691,6 +736,30 @@ function initModals() {
     
     // Template input handler
     document.getElementById('templateInput').addEventListener('change', handleTemplateSelect);
+    
+    // Tab navigation handler
+    initTabNavigation();
+}
+
+/**
+ * Initializes tab navigation for the view modal
+ */
+function initTabNavigation() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabId = e.target.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and tabs
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding tab
+            e.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
 }
 
 /**
@@ -769,6 +838,13 @@ function handleFileSelect(e) {
             data: parsed.data,
             headers: parsed.headers
         };
+        
+        // Log the data input
+        addLog(selectedBlock.id, `Loaded CSV file: ${file.name}`, {
+            rows: parsed.data.length,
+            columns: parsed.headers.length,
+            size: `${fileSizeMB} MB`
+        });
         
         // Update block UI with performance indicator
         let statusText = `${escapeHtml(file.name)} (${parsed.data.length} rijen)`;
@@ -1012,8 +1088,22 @@ function transferData(fromId, toId) {
         optimized: isLargeDataset
     });
     
-    // Update target block UI if it's a view block
+    // Log the data transfer
+    const fromBlock = blocks.find(b => b.id === fromId);
     const toBlock = blocks.find(b => b.id === toId);
+    
+    if (toBlock) {
+        const fromType = fromBlock ? fromBlock.type : 'unknown';
+        const headers = sourceData.headers || (dataArray.length > 0 ? Object.keys(dataArray[0]) : []);
+        
+        addLog(toId, `Received data from ${fromType} block`, {
+            rows: dataArray.length,
+            columns: headers.length,
+            source: fromId
+        });
+    }
+    
+    // Update target block UI if it's a view block
     if (toBlock && toBlock.type === 'view') {
         updateBlockContent(toId, `Data beschikbaar (${dataArray.length} rijen)`);
     }
@@ -1134,6 +1224,44 @@ function displayData(block) {
         dataDisplay.innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
         showModal('viewModal');
     }
+    
+    // Display logs
+    displayLogs(block.id);
+}
+
+/**
+ * Displays logs for a specific block in the logs tab
+ * @param {string} blockId - The ID of the block
+ */
+function displayLogs(blockId) {
+    const logsDisplay = document.getElementById('logsDisplay');
+    const logs = getLogs(blockId);
+    
+    if (logs.length === 0) {
+        logsDisplay.innerHTML = '<div class="log-empty">No logs available. Logs will appear here as data flows through this component.</div>';
+        return;
+    }
+    
+    let html = '';
+    logs.forEach(log => {
+        html += '<div class="log-entry">';
+        html += `<span class="log-timestamp">${escapeHtml(log.timestamp)}</span>`;
+        html += `<span class="log-message">${escapeHtml(log.message)}</span>`;
+        
+        if (log.details && Object.keys(log.details).length > 0) {
+            const detailsStr = Object.entries(log.details)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+            html += `<div class="log-details">${escapeHtml(detailsStr)}</div>`;
+        }
+        
+        html += '</div>';
+    });
+    
+    logsDisplay.innerHTML = html;
+    
+    // Auto-scroll to bottom to show latest logs
+    logsDisplay.scrollTop = logsDisplay.scrollHeight;
 }
 
 // Automapper functionality
@@ -1584,8 +1712,15 @@ function applyMapping(block, inputHeaders, outputHeaders) {
         // Store mapped data
         dataStore[block.id] = mappedData;
         
-        // Update block content
+        // Log the mapping operation
         const mappingCount = Object.keys(mappings).length;
+        addLog(block.id, `Applied column mappings`, {
+            mappings: mappingCount,
+            'output columns': mappedData.headers.length,
+            'output rows': mappedData.data.length
+        });
+        
+        // Update block content
         updateBlockContent(block.id, `${mappingCount} mapping(s) actief`);
         
         // Propagate data to connected blocks
@@ -3242,6 +3377,13 @@ function applyConcatenate(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Log the concatenation
+    addLog(block.id, `Concatenated columns into '${outputColumn}'`, {
+        'source columns': selectedInputs.length,
+        separator: separator || '(none)',
+        rows: transformedData.data.length
+    });
+    
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('concatenateModal');
@@ -3328,6 +3470,13 @@ function applySplit(block, inputData) {
     
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
+    
+    // Log the split operation
+    addLog(block.id, `Split column '${inputColumn}' into '${outputColumn}'`, {
+        delimiter: delimiter,
+        'index extracted': index,
+        rows: transformedData.data.length
+    });
     
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);

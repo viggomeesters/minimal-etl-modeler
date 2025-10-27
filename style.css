@@ -483,3 +483,90 @@ table tr:hover {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
+
+/* Tab Navigation Styles */
+.tab-navigation {
+    display: flex;
+    gap: 5px;
+    border-bottom: 2px solid #e0e0e0;
+    margin: 15px 0 0 0;
+    padding: 0 5px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s;
+    position: relative;
+    top: 2px;
+}
+
+.tab-button:hover {
+    color: #333;
+    background: #f9f9f9;
+}
+
+.tab-button.active {
+    color: #4a90e2;
+    border-bottom-color: #4a90e2;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px 0;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Logs Display Styles */
+#logsDisplay {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-timestamp {
+    color: #999;
+    font-size: 11px;
+    margin-right: 10px;
+}
+
+.log-message {
+    color: #333;
+}
+
+.log-details {
+    color: #666;
+    margin-left: 75px;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.log-empty {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-style: italic;
+}
