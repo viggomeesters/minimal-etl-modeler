@@ -3272,7 +3272,7 @@ function openSplitModal(block) {
     
     let html = '<div style="margin-bottom: 15px;">';
     html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Prefix:</label>';
-    html += `<input type="text" id="splitOutputCol" value="${config.outputColumnPrefix}" placeholder="bijv. Part" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += `<input type="text" id="splitOutputCol" value="${escapeHtml(config.outputColumnPrefix)}" placeholder="bijv. Part" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
     html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">De gesplitste kolommen krijgen namen: [Prefix]_1, [Prefix]_2, etc.</p>';
     html += '</div>';
     
@@ -3282,7 +3282,7 @@ function openSplitModal(block) {
     html += '<option value="">-- Selecteer kolom --</option>';
     inputHeaders.forEach(header => {
         const selected = config.inputColumn === header ? 'selected' : '';
-        html += `<option value="${header}" ${selected}>${header}</option>`;
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
     });
     html += '</select></div>';
     
