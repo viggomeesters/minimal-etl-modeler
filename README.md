@@ -6,6 +6,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 
 ## ✨ Features
 
+### Legacy Vanilla JS System
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
 - 👁️ **Data View**: Bekijk en verifieer je data
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
@@ -13,6 +14,16 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 - ⚙️ **Transform**: Transformeer data en exporteer naar CSV
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
+
+### 🆕 TypeScript Block System (NEW)
+- ⚡ **Join Block**: Combine two data streams with inner/left/right/full/cross joins
+- 📊 **Explicit Block Types**: Well-defined block types (source, sink, filter, map, derive, aggregate, join, union, split, lookup, sql, udf)
+- 🔧 **Schema Propagation**: Automatic output schema inference
+- 🧪 **Fully Tested**: 15 passing tests (unit + integration)
+- 📝 **TypeScript**: Type-safe block definitions and configurations
+- 🎨 **React UI**: Modern UI components for block configuration
+
+See [docs/blocks.md](docs/blocks.md) for detailed documentation on the new block system.
 
 ## 🚀 Quick Start
 
@@ -41,6 +52,7 @@ Open vervolgens: `http://localhost:8000`
 
 ## 📁 Project Structuur
 
+### Legacy System
 ```
 minimal-etl-modeler/
 ├── index.html                    # Hoofd HTML bestand
@@ -52,6 +64,41 @@ minimal-etl-modeler/
 ├── GEBRUIKERSHANDLEIDING.md      # Uitgebreide handleiding
 ├── ARCHITECTURE.md               # Technische architectuur
 └── demo.html                     # Demo pagina
+```
+
+### TypeScript Block System
+```
+minimal-etl-modeler/
+├── src/                          # TypeScript source code
+│   ├── models/                   # Block type definitions
+│   │   ├── block.ts             # Core interfaces & enums
+│   │   └── schemaHelpers.ts     # Schema utilities
+│   ├── executor/                # Execution engine
+│   │   ├── engine.ts            # Pipeline executor
+│   │   └── joinExecutor.ts      # Join implementation
+│   └── ui/                      # React UI components
+│       ├── nodes/               # Block node components
+│       │   ├── JoinNode.tsx
+│       │   └── JoinNode.css
+│       └── components/          # Reusable UI components
+│           └── JoinKeyMapper.tsx
+├── tests/                       # Jest tests
+│   ├── executor/               
+│   │   └── joinExecutor.test.ts
+│   └── integration/
+│       └── joinNode.integration.test.ts
+├── design/                      # Design documentation
+│   ├── block-types.md
+│   └── blocks/
+│       └── join-example.json
+├── examples/                    # Example pipelines
+│   └── join-pipeline.json
+├── docs/                        # User documentation
+│   └── blocks.md
+├── dist/                        # Compiled JavaScript (build output)
+├── package.json                 # NPM dependencies
+├── tsconfig.json               # TypeScript config
+└── jest.config.js              # Test config
 ```
 
 ## 🎨 Design Filosofie
@@ -112,6 +159,8 @@ minimal-etl-modeler/
 
 ## 🧪 Tests
 
+### Legacy Vanilla JS Tests
+
 Het project bevat uitgebreide tests voor alle functionaliteiten:
 
 ```bash
@@ -119,6 +168,30 @@ node test-mapping.js                  # Test mapping functionaliteit (9 tests)
 node test-automapper.js               # Test automapper functionaliteit (12 tests)
 node test-automapper-integration.js   # Test complete data flow (10 tests)
 ```
+
+### TypeScript Block System Tests
+
+The new TypeScript block system includes comprehensive Jest tests:
+
+```bash
+# Install dependencies
+npm install
+
+# Build TypeScript code
+npm run build
+
+# Run all tests
+npm test
+
+# Run specific test suites
+npm test -- tests/executor/joinExecutor.test.ts
+npm test -- tests/integration/joinNode.integration.test.ts
+```
+
+**Test Coverage:**
+- ✅ 11 unit tests for join executor (all join types, null equality, deduplication)
+- ✅ 4 integration tests for complete join pipelines
+- ✅ All 15 tests passing
 
 ## 🔄 Aanbevolen Workflow
 
@@ -162,10 +235,17 @@ node test-automapper-integration.js   # Test complete data flow (10 tests)
 
 ## 📚 Documentatie
 
+### Legacy System
 - **[CSV Format Guide](CSV-GUIDE.md)** - CSV bestand vereisten en best practices
 - **[Architecture](ARCHITECTURE.md)** - Technische architectuur en design patterns
 - **[Quick Start](QUICKSTART.md)** - Snelle start gids
 - **[User Guide](GEBRUIKERSHANDLEIDING.md)** - Uitgebreide gebruikershandleiding
+
+### TypeScript Block System
+- **[Block Types](design/block-types.md)** - Complete block model design document
+- **[Blocks Documentation](docs/blocks.md)** - User guide for using blocks (especially Join)
+- **[Join Example](design/blocks/join-example.json)** - Join block configuration example
+- **[Example Pipeline](examples/join-pipeline.json)** - Complete working example
 
 ## 🐛 Bekende Beperkingen
 
