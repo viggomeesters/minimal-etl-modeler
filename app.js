@@ -141,6 +141,11 @@ function initCanvasPanning() {
             e.preventDefault();
         }
     });
+    
+    // Update connection lines when canvas is scrolled
+    canvas.addEventListener('scroll', () => {
+        renderConnections();
+    });
 }
 
 function createBlock(type, x, y) {
@@ -544,10 +549,11 @@ function renderConnections() {
         const fromRect = fromConnector.getBoundingClientRect();
         const toRect = toConnector.getBoundingClientRect();
         
-        const x1 = fromRect.left - canvasRect.left + fromRect.width / 2;
-        const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
-        const x2 = toRect.left - canvasRect.left + toRect.width / 2;
-        const y2 = toRect.top - canvasRect.top + toRect.height / 2;
+        // Account for canvas scroll position when calculating connector positions
+        const x1 = fromRect.left - canvasRect.left + canvas.scrollLeft + fromRect.width / 2;
+        const y1 = fromRect.top - canvasRect.top + canvas.scrollTop + fromRect.height / 2;
+        const x2 = toRect.left - canvasRect.left + canvas.scrollLeft + toRect.width / 2;
+        const y2 = toRect.top - canvasRect.top + canvas.scrollTop + toRect.height / 2;
         
         // Create orthogonal path (right-angle lines) for clean left-to-right flow
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
