@@ -7,7 +7,8 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 ## ✨ Features
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
-- 👁️ **Data View**: Bekijk en verifieer je data
+- 👁️ **Data View**: Bekijk en verifieer je data met tabbladen voor data en logging ✨ **NIEUW**
+- 📋 **Logging**: Volg de stappen die data doorloopt in een duidelijk logboek ✨ **NIEUW**
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
 - 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
 - 🔄 **Individuele Transformatie Blocks**: ✨ **NIEUW** - Visuele transformatie blokken voor betere flow zichtbaarheid
@@ -82,6 +83,23 @@ minimal-etl-modeler/
 - Tabelweergave van data
 - Sticky headers voor gemakkelijk scrollen
 - Limiet van 100 rijen voor performance
+- **Tabblad interface** ✨ **NIEUW**: 
+  - **Data tab**: Bekijk de actuele data in tabelvorm
+  - **Logs tab**: Bekijk de logging van alle bewerkingen die op dit component zijn uitgevoerd
+
+### Logging Feature ✨ **NIEUW**
+- **Automatische logging**: Alle data operaties worden automatisch gelogd
+- **Gedetailleerde informatie**: Elke log entry bevat:
+  - Timestamp van de operatie
+  - Beschrijving van de bewerking (bijv. "Received data from input block", "Applied column mappings")
+  - Details zoals aantal rijen, kolommen, bron block ID
+- **Per-block logging**: Elke component heeft zijn eigen logboek
+- **Zichtbaar in Data View**: Open een Data View block en klik op het "Logs" tabblad om de logs te bekijken
+- **Gebruik cases**:
+  - Debuggen van data flows
+  - Begrijpen welke bewerkingen zijn uitgevoerd
+  - Traceerbaarheid van data transformaties
+  - Troubleshooting bij onverwachte resultaten
 
 ### Automapper Block ✨ NEW
 - Automatische kolom mapping tussen input en output templates
