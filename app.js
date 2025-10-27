@@ -1342,8 +1342,9 @@ function openAutomapperModal(block) {
     // Show unmapped input columns
     const unmappedInputs = inputHeaders.filter(h => !Object.values(mappings).includes(h));
     if (unmappedInputs.length > 0) {
-        html += '<div style="margin-top: 20px; padding: 12px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">';
+        html += '<div style="margin-top: 20px; padding: 12px; background: #e8f5e9; border-radius: 4px; border-left: 4px solid #4caf50;">';
         html += `<strong>Niet gemapte input kolommen (${unmappedInputs.length}):</strong><br>`;
+        html += '<div style="margin-top: 5px; font-size: 12px; color: #666;">Deze kolommen worden automatisch doorgegeven en kunnen later handmatig worden gemapt.</div>';
         html += '<div style="margin-top: 8px; font-size: 12px;">';
         html += unmappedInputs.map(h => `<span style="display: inline-block; padding: 4px 8px; background: white; border-radius: 3px; margin-right: 5px; margin-bottom: 5px;">${h}</span>`).join('');
         html += '</div>';
@@ -1371,14 +1372,19 @@ function applyAutomapper(block, inputHeaders) {
     const inputConnection = connections.find(c => c.to === block.id);
     if (inputConnection && dataStore[inputConnection.from]) {
         const inputData = dataStore[inputConnection.from];
-        const mappedData = applyMappingTransformation(inputData, mappings);
+        // Pass unmapped columns through so they can be manually mapped later
+        const mappedData = applyMappingTransformation(inputData, mappings, true);
         
         // Store mapped data
         dataStore[block.id] = mappedData;
         
         // Update block content
         const mappingCount = Object.keys(mappings).length;
-        updateBlockContent(block.id, `${mappingCount} auto-mapping(s) actief`);
+        const unmappedCount = mappedData.unmappedColumns ? mappedData.unmappedColumns.length : 0;
+        const statusText = unmappedCount > 0 
+            ? `${mappingCount} mapped, ${unmappedCount} passthrough`
+            : `${mappingCount} auto-mapping(s) actief`;
+        updateBlockContent(block.id, statusText);
         
         // Propagate data to connected blocks
         propagateData(block.id);
@@ -1596,26 +1602,46 @@ function applyMapping(block, inputHeaders, outputHeaders) {
     document.getElementById('mappingModal').style.display = 'none';
 }
 
-function applyMappingTransformation(inputData, mappings) {
+function applyMappingTransformation(inputData, mappings, includeUnmapped = false) {
     const inputRows = inputData.data || [];
     const inputHeaders = inputData.headers || [];
     
     // Create new headers based on mappings
     const outputHeaders = Object.keys(mappings);
     
+    // Find unmapped input columns
+    const mappedInputColumns = new Set(Object.values(mappings));
+    const unmappedInputColumns = inputHeaders.filter(h => !mappedInputColumns.has(h));
+    
+    // Include unmapped columns if requested
+    const allOutputHeaders = includeUnmapped 
+        ? [...outputHeaders, ...unmappedInputColumns]
+        : outputHeaders;
+    
     // Transform each row
     const outputRows = inputRows.map(row => {
         const newRow = {};
+        
+        // Apply mappings
         outputHeaders.forEach(outputCol => {
             const inputCol = mappings[outputCol];
             newRow[outputCol] = row[inputCol] || '';
         });
+        
+        // Include unmapped input columns if requested
+        if (includeUnmapped) {
+            unmappedInputColumns.forEach(inputCol => {
+                newRow[inputCol] = row[inputCol] || '';
+            });
+        }
+        
         return newRow;
     });
     
     return {
         data: outputRows,
-        headers: outputHeaders
+        headers: allOutputHeaders,
+        unmappedColumns: includeUnmapped ? unmappedInputColumns : []
     };
 }
 
