@@ -99,6 +99,19 @@ header h1 {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    --canvas-width: 100%;
+    --canvas-height: 100%;
+}
+
+.canvas::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--canvas-width, 100%);
+    height: var(--canvas-height, 100%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .canvas.panning {
