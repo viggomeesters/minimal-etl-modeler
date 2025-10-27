@@ -58,11 +58,11 @@ Example:
 
 Example:
 ```
-[8:51:41 PM] LOGGING (block-1): DATA_TRANSFER
+[8:51:41 PM] VIEW (block-2): DATA_TRANSFER
   → Rows: 3
   → Columns: Name, Age, City
   → From: input (block-0)
-  → To: logging (block-1)
+  → To: view (block-2)
 ```
 
 #### MAPPING_APPLIED
@@ -74,7 +74,7 @@ Example:
 
 Example:
 ```
-[8:51:41 PM] INPUT (block-0): MAPPING_APPLIED
+[8:51:41 PM] MAPPING (block-3): MAPPING_APPLIED
   → Rows: 3
   → Mapping: {"FullName":"Name","Years":"Age","Location":"City"}
 ```
@@ -88,7 +88,7 @@ Example:
 
 Example:
 ```
-[8:51:41 PM] INPUT (block-0): TRANSFORM_APPLIED
+[8:51:41 PM] TRANSFORM (block-4): TRANSFORM_APPLIED
   → Rows: 3
   → Transform: 2 transformations
 ```
