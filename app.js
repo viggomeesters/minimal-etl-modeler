@@ -3292,7 +3292,7 @@ function openSplitModal(block) {
     html += `<option value="," ${config.delimiter === ',' ? 'selected' : ''}>Comma ','</option>`;
     html += `<option value=" " ${config.delimiter === ' ' ? 'selected' : ''}>Space ' '</option>`;
     html += `<option value=";" ${config.delimiter === ';' ? 'selected' : ''}>Semicolon ';'</option>`;
-    html += `<option value="\\t" ${config.delimiter === '\\t' ? 'selected' : ''}>Tab '\\t'</option>`;
+    html += `<option value="\t" ${config.delimiter === '\t' ? 'selected' : ''}>Tab '\\t'</option>`;
     html += `<option value="@" ${config.delimiter === '@' ? 'selected' : ''}>At '@'</option>`;
     html += `<option value="|" ${config.delimiter === '|' ? 'selected' : ''}>Pipe '|'</option>`;
     html += `<option value="-" ${config.delimiter === '-' ? 'selected' : ''}>Dash '-'</option>`;
@@ -3300,7 +3300,7 @@ function openSplitModal(block) {
     html += `<option value=":" ${config.delimiter === ':' ? 'selected' : ''}>Colon ':'</option>`;
     html += `<option value="custom">Custom...</option>`;
     html += '</select>';
-    html += `<input type="text" id="splitCustomDelimiter" value="" placeholder="Voer custom scheidingsteken in" style="width: 100%; padding: 8px; margin-top: 8px; border: 1px solid #e0e0e0; border-radius: 4px; display: ${config.delimiter && ![',', ' ', ';', '\\t', '@', '|', '-', '_', ':'].includes(config.delimiter) ? 'block' : 'none'};" />`;
+    html += `<input type="text" id="splitCustomDelimiter" value="" placeholder="Voer custom scheidingsteken in" style="width: 100%; padding: 8px; margin-top: 8px; border: 1px solid #e0e0e0; border-radius: 4px; display: ${config.delimiter && ![',', ' ', ';', '\t', '@', '|', '-', '_', ':'].includes(config.delimiter) ? 'block' : 'none'};" />`;
     html += '</div>';
     
     document.getElementById('splitInterface').innerHTML = html;
@@ -3320,7 +3320,7 @@ function openSplitModal(block) {
     });
     
     // Set initial custom delimiter value if applicable
-    if (config.delimiter && ![',', ' ', ';', '\\t', '@', '|', '-', '_', ':'].includes(config.delimiter)) {
+    if (config.delimiter && ![',', ' ', ';', '\t', '@', '|', '-', '_', ':'].includes(config.delimiter)) {
         delimiterSelect.value = 'custom';
         customDelimiterInput.value = config.delimiter;
         customDelimiterInput.style.display = 'block';
@@ -3344,11 +3344,6 @@ function applySplit(block, inputData) {
             return;
         }
         delimiter = customDelimiter;
-    }
-    
-    // Replace escaped tab with actual tab character
-    if (delimiter === '\\t') {
-        delimiter = '\t';
     }
     
     if (!outputColumnPrefix || !inputColumn) {
@@ -3380,7 +3375,7 @@ function applySplit(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
-    updateBlockContent(block.id, `${maxParts} kolommen aangemaakt`);
+    updateBlockContent(block.id, `${maxParts} kolommen aangemaakt (${outputColumnPrefix}_1 t/m ${outputColumnPrefix}_${maxParts})`);
     propagateData(block.id);
     hideModal('splitModal');
 }
