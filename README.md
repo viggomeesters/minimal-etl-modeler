@@ -19,6 +19,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
   - 📅 **Date Format**: Formatteer datums
   - 📝 **Expression**: Evalueer expressies
   - 📋 **Copy/Rename**: Kopieer/hernoem kolommen
+  - 🔀 **Join**: Voeg twee datasets samen ✨ **NIEUW**
 - ⚙️ **Transform (Legacy)**: Complete transformatie block voor complexe bewerkingen
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
@@ -112,8 +113,20 @@ Individuele blocks voor elk transformatie type - verbeter de visuele duidelijkhe
 - **📅 Date Format**: Parse en herformatteer datums
 - **📝 Expression**: Evalueer expressies met kolom waarde substitutie
 - **📋 Copy/Rename**: Kopieer of hernoem kolommen
+- **🔀 Join**: Voeg twee datasets samen op basis van matching sleutels
 
 Zie [SPLIT-TRANSFORM-BLOCKS-GUIDE.md](SPLIT-TRANSFORM-BLOCKS-GUIDE.md) voor uitgebreide documentatie.
+
+### Join Block ✨ NIEUW
+- Voeg twee datasets samen op basis van matching kolommen
+- Ondersteunt 4 join types:
+  - **Inner Join**: Alleen matching records
+  - **Left Join**: Alle records uit linker dataset + matches
+  - **Right Join**: Alle records uit rechter dataset + matches  
+  - **Full Outer Join**: Alle records uit beide datasets
+- Vereist twee input connecties
+- Automatische conflict resolutie voor kolommen met dezelfde naam
+- Visuele preview van beide datasets voor de join
 
 ### Transform Block (Legacy)
 - Map input kolommen naar output kolommen
@@ -143,9 +156,17 @@ node test-automapper.js                # Test automapper functionaliteit (12 tes
 node test-automapper-integration.js    # Test complete data flow (10 tests)
 node test-advanced-transform.js        # Test transformatie operaties (20 tests)
 node test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
+node test-join.js                      # Test join functionaliteit (10 tests)
 ```
 
 ## 🔄 Aanbevolen Workflows
+
+**Met Join block voor dataset combinatie:** ✨ NIEUW
+1. Data Input 1 → Laad eerste dataset (bijv. employees.csv)
+2. Data Input 2 → Laad tweede dataset (bijv. departments.csv)
+3. Join → Verbind beide inputs, selecteer join type en keys
+4. Data View → Preview samengevoegde resultaat
+5. Output Data → Exporteer gecombineerde dataset
 
 **Met visuele transformatie blocks:** ✨ NIEUW
 1. Data Input → Laad bron CSV

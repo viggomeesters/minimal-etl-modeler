@@ -69,6 +69,10 @@
                     <span class="icon">📋</span>
                     <span>Copy/Rename</span>
                 </div>
+                <div class="tool-item" draggable="true" data-type="join">
+                    <span class="icon">🔀</span>
+                    <span>Join</span>
+                </div>
                 <div class="tool-item" draggable="true" data-type="transform">
                     <span class="icon">⚙️</span>
                     <span>Transform (Legacy)</span>
@@ -289,6 +293,17 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Copy or rename a column</p>
             <div id="copyRenameInterface"></div>
             <button id="applyCopyRename" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Join -->
+    <div id="joinModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Join</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Join two datasets on matching keys</p>
+            <div id="joinInterface"></div>
+            <button id="applyJoin" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
         </div>
     </div>
     
