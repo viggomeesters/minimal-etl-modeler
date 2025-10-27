@@ -97,6 +97,7 @@ function initCanvasPanning() {
     let startY = 0;
     let scrollLeft = 0;
     let scrollTop = 0;
+    let scrollTimeout = null;
     
     canvas.addEventListener('mousedown', (e) => {
         // Enable panning with shift+drag or middle button
@@ -142,9 +143,14 @@ function initCanvasPanning() {
         }
     });
     
-    // Update connection lines when canvas is scrolled
+    // Update connection lines when canvas is scrolled (throttled for performance)
     canvas.addEventListener('scroll', () => {
-        renderConnections();
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        scrollTimeout = setTimeout(() => {
+            renderConnections();
+        }, 16); // ~60fps throttle
     });
 }
 
