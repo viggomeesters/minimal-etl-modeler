@@ -59,8 +59,9 @@ test('Output Data block and modal exist', () => {
         throw new Error('Output Data modal not found');
     }
     
-    if (!html.includes('exportOutputData')) {
-        throw new Error('Export button not found in Output Data modal');
+    // Check for new export buttons (CSV and XLSX)
+    if (!html.includes('exportOutputCSV') && !html.includes('exportOutputXLSX')) {
+        throw new Error('Export buttons not found in Output Data modal');
     }
 });
 

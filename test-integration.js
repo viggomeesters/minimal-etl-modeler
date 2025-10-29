@@ -48,9 +48,9 @@ test('index.html has required structure', () => {
         'canvas',
         'tool-item',
         'data-type="input"',
-        'data-type="view"',
+        'data-type="rejectedoutput"',
         'inputModal',
-        'viewModal'
+        'dataPreviewModal'
     ];
     
     requiredElements.forEach(element => {
@@ -88,8 +88,10 @@ test('app.js has core functions', () => {
         'createBlock',
         'parseCSV',
         'handleFileSelect',
-        'displayData',
-        'addConnection'
+        'showDataPreview',
+        'addConnection',
+        'generateFilename',
+        'exportToXLSX'
     ];
     
     requiredFunctions.forEach(fn => {
@@ -245,10 +247,10 @@ test('File sizes are reasonable for POC', () => {
     };
     
     // Reasonable size limits for a POC
-    // Note: app.js size increased due to performance optimizations for large datasets (10k+ records)
-    checkSize('app.js', 170);      // Increased to 170KB to accommodate performance optimizations
+    // Note: app.js size increased due to new export features, data preview, and rejected output functionality
+    checkSize('app.js', 200);      // Increased to 200KB to accommodate new features
     checkSize('style.css', 20);    // 20KB max
-    checkSize('index.html', 20);   // Increased to 20KB due to additional blocks and features
+    checkSize('index.html', 22);   // Increased to 22KB due to additional modals for rejected output
 });
 
 // Test 11: Data transfer on connect (programmatic simulation)

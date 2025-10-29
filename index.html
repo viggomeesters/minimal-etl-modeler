@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimal ETL Modeler</title>
     <link rel="stylesheet" href="style.css">
+    <!-- SheetJS for XLSX export support -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -29,10 +31,6 @@
                             <span class="icon">📥</span>
                             <span>Input Source Data</span>
                         </div>
-                        <div class="tool-item" draggable="true" data-type="view">
-                            <span class="icon">👁️</span>
-                            <span>Data View</span>
-                        </div>
                         <div class="tool-item" draggable="true" data-type="output">
                             <span class="icon">📤</span>
                             <span>Target Structure</span>
@@ -40,6 +38,10 @@
                         <div class="tool-item" draggable="true" data-type="outputdata">
                             <span class="icon">💾</span>
                             <span>Output Data</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="rejectedoutput">
+                            <span class="icon">🚫</span>
+                            <span>Rejected Output</span>
                         </div>
                     </div>
                 </div>
@@ -176,12 +178,12 @@
         </div>
     </div>
     
-    <!-- Modal for Data View -->
-    <div id="viewModal" class="modal">
+    <!-- Modal for Data Preview (Universal) -->
+    <div id="dataPreviewModal" class="modal">
         <div class="modal-content large">
             <span class="close">&times;</span>
-            <h2>Data View</h2>
-            <div id="dataDisplay"></div>
+            <h2 id="dataPreviewTitle">Data Preview</h2>
+            <div id="dataPreviewDisplay"></div>
         </div>
     </div>
     
@@ -240,10 +242,24 @@
     <div id="outputDataModal" class="modal">
         <div class="modal-content large">
             <span class="close">&times;</span>
-            <h2>Output Data - Export CSV</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Export transformed data to CSV file</p>
+            <h2>Output Data - Export</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Preview and export transformed data</p>
             <div id="outputDataInterface"></div>
-            <button id="exportOutputData" style="margin-top: 20px; padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Export CSV</button>
+            <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 14px;">Export Options</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 13px;">Filename Pattern:</label>
+                    <input type="text" id="exportFilename" placeholder="e.g., S_AUFK#YYYYMMDD" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+                    <p style="font-size: 11px; color: #888; margin-top: 5px;">
+                        Use # to separate prefix/postfix. Tokens: YYYYMMDD, YYYYMMDD_HHMMSS, YYYY-MM-DD
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="exportOutputCSV" style="padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Export CSV</button>
+                    <button id="exportOutputXLSX" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Export XLSX</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -365,6 +381,31 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Join two datasets on matching keys</p>
             <div id="joinInterface"></div>
             <button id="applyJoin" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Rejected Output -->
+    <div id="rejectedOutputModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Rejected Output - Export</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Preview and export rejected records from validation</p>
+            <div id="rejectedOutputInterface"></div>
+            <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 14px;">Export Options</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 13px;">Filename Pattern:</label>
+                    <input type="text" id="rejectedExportFilename" placeholder="e.g., rejected#YYYYMMDD" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+                    <p style="font-size: 11px; color: #888; margin-top: 5px;">
+                        Use # to separate prefix/postfix. Tokens: YYYYMMDD, YYYYMMDD_HHMMSS, YYYY-MM-DD
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="exportRejectedCSV" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Export CSV</button>
+                    <button id="exportRejectedXLSX" style="padding: 10px 20px; background: #c0392b; color: white; border: none; border-radius: 4px; cursor: pointer;">Export XLSX</button>
+                </div>
+            </div>
         </div>
     </div>
     
