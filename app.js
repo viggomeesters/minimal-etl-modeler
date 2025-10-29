@@ -4,6 +4,7 @@ let connections = [];
 let blockCounter = 0;
 let selectedBlock = null;
 let dataStore = {};
+let rejectedDataStore = {}; // Store rejected data from validation blocks
 let dataFlowLog = []; // Store data flow logs
 
 // Constants
@@ -312,10 +313,6 @@ function renderBlock(block) {
         icon = '📥';
         title = 'Input Source Data';
         content = 'Klik om data te laden';
-    } else if (block.type === 'view') {
-        icon = '👁️';
-        title = 'Data View';
-        content = 'Klik om data te bekijken';
     } else if (block.type === 'output') {
         icon = '📤';
         title = 'Target Structure';
@@ -380,6 +377,10 @@ function renderBlock(block) {
         icon = '🔀';
         title = 'Join';
         content = block.content || 'Klik om datasets samen te voegen';
+    } else if (block.type === 'rejectedoutput') {
+        icon = '🚫';
+        title = 'Rejected Output';
+        content = block.content || 'Klik om rejected data te exporteren';
     }
     
     blockEl.innerHTML = `
@@ -812,13 +813,21 @@ function initModals() {
  */
 function openBlockModal(block) {
     if (block.type === 'input') {
-        showModal('inputModal');
-        selectedBlock = block;
-    } else if (block.type === 'view') {
-        displayData(block);
+        // Check if block has data - if yes, show preview; if no, show file upload
+        if (dataStore[block.id]) {
+            showDataPreview(block, 'Input Source Data');
+        } else {
+            showModal('inputModal');
+            selectedBlock = block;
+        }
     } else if (block.type === 'output') {
-        showModal('outputModal');
-        selectedBlock = block;
+        // Check if block has data - if yes, show preview; if no, show template upload
+        if (dataStore[block.id]) {
+            showDataPreview(block, 'Target Structure');
+        } else {
+            showModal('outputModal');
+            selectedBlock = block;
+        }
     } else if (block.type === 'automapper') {
         openAutomapperModal(block);
     } else if (block.type === 'mapping') {
@@ -849,6 +858,8 @@ function openBlockModal(block) {
         openCopyRenameModal(block);
     } else if (block.type === 'join') {
         openJoinModal(block);
+    } else if (block.type === 'rejectedoutput') {
+        openRejectedOutputModal(block);
     }
 }
 
@@ -1258,11 +1269,193 @@ function displayData(block) {
             }
             dataDisplay.innerHTML = html;
         }
-        showModal('viewModal');
+        showModal('dataPreviewModal');
     } else {
         dataDisplay.innerHTML = '<p>Geen data beschikbaar. Verbind met een Data Input block.</p>';
-        showModal('viewModal');
+        showModal('dataPreviewModal');
     }
+}
+
+/**
+ * Universal data preview function for any block type
+ * @param {Object} block - Block to preview data from
+ * @param {string} title - Title for the preview modal
+ */
+function showDataPreview(block, title) {
+    let blockData = dataStore[block.id];
+    let headers = [];
+    let rows = [];
+    
+    // Handle new data structure with headers and data properties
+    if (blockData && blockData.headers && Array.isArray(blockData.headers)) {
+        headers = blockData.headers;
+        rows = blockData.data || [];
+    } else if (Array.isArray(blockData)) {
+        // Legacy support: old format where data was stored as array
+        if (blockData.length > 0) {
+            headers = Object.keys(blockData[0]);
+            rows = blockData;
+        }
+    }
+    
+    const dataDisplay = document.getElementById('dataPreviewDisplay');
+    const titleEl = document.getElementById('dataPreviewTitle');
+    titleEl.textContent = title;
+    
+    // Display table if we have headers
+    if (headers.length > 0) {
+        // For large datasets, use DOM manipulation for better performance
+        const threshold = typeof LARGE_DATASET_THRESHOLD !== 'undefined' ? LARGE_DATASET_THRESHOLD : 1000;
+        const isLargeDataset = rows.length >= threshold;
+        
+        if (isLargeDataset) {
+            // Use DocumentFragment for efficient DOM building
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            const tbody = document.createElement('tbody');
+            const displayRows = rows.slice(0, MAX_DISPLAY_ROWS);
+            
+            if (displayRows.length > 0) {
+                displayRows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        td.textContent = row[header] || '';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+            } else {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.setAttribute('colspan', headers.length);
+                td.style.textAlign = 'center';
+                td.style.color = '#888';
+                td.textContent = 'Geen data, alleen kolommen';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            }
+            
+            table.appendChild(tbody);
+            
+            // Clear and append
+            dataDisplay.innerHTML = '';
+            dataDisplay.appendChild(table);
+            
+            if (rows.length > MAX_DISPLAY_ROWS) {
+                const info = document.createElement('p');
+                info.style.marginTop = '15px';
+                info.style.color = '#666';
+                info.style.fontSize = '12px';
+                info.textContent = `Toon eerste ${MAX_DISPLAY_ROWS} van ${rows.length} rijen`;
+                dataDisplay.appendChild(info);
+            }
+        } else {
+            // For smaller datasets, use string concatenation (faster for small data)
+            let html = '<table>';
+            html += '<thead><tr>';
+            headers.forEach(header => {
+                html += `<th>${escapeHtml(header)}</th>`;
+            });
+            html += '</tr></thead>';
+            html += '<tbody>';
+            if (rows.length > 0) {
+                rows.slice(0, MAX_DISPLAY_ROWS).forEach(row => {
+                    html += '<tr>';
+                    headers.forEach(header => {
+                        html += `<td>${escapeHtml(row[header] || '')}</td>`;
+                    });
+                    html += '</tr>';
+                });
+            } else {
+                html += '<tr><td colspan="' + headers.length + '" style="text-align:center; color:#888;">Geen data, alleen kolommen</td></tr>';
+            }
+            html += '</tbody>';
+            html += '</table>';
+            if (rows.length > MAX_DISPLAY_ROWS) {
+                html += `<p style="margin-top: 15px; color: #666; font-size: 12px;">Toon eerste ${MAX_DISPLAY_ROWS} van ${rows.length} rijen</p>`;
+            }
+            dataDisplay.innerHTML = html;
+        }
+        showModal('dataPreviewModal');
+    } else {
+        dataDisplay.innerHTML = '<p>Geen data beschikbaar.</p>';
+        showModal('dataPreviewModal');
+    }
+}
+
+/**
+ * Generate filename with pattern support
+ * @param {string} pattern - Filename pattern (e.g., "S_AUFK#YYYYMMDD")
+ * @param {string} defaultName - Default filename if no pattern
+ * @param {string} extension - File extension (e.g., "csv" or "xlsx")
+ * @returns {string} - Generated filename
+ */
+function generateFilename(pattern, defaultName, extension) {
+    if (!pattern || pattern.trim() === '') {
+        return `${defaultName}.${extension}`;
+    }
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    let filename = pattern;
+    
+    // Replace date tokens
+    filename = filename.replace(/YYYYMMDD_HHMMSS/g, `${year}${month}${day}_${hours}${minutes}${seconds}`);
+    filename = filename.replace(/YYYYMMDD/g, `${year}${month}${day}`);
+    filename = filename.replace(/YYYY-MM-DD/g, `${year}-${month}-${day}`);
+    
+    // Handle # separator for prefix/postfix
+    if (filename.includes('#')) {
+        filename = filename.replace(/#/g, '');
+    }
+    
+    // Add extension
+    return `${filename}.${extension}`;
+}
+
+/**
+ * Export data to XLSX format
+ * @param {Array} rows - Data rows
+ * @param {Array} headers - Column headers
+ * @param {string} filename - Filename for export
+ */
+function exportToXLSX(rows, headers, filename) {
+    if (typeof XLSX === 'undefined') {
+        alert('XLSX library not loaded. Please check your internet connection.');
+        return;
+    }
+    
+    // Create worksheet data
+    const wsData = [headers];
+    rows.forEach(row => {
+        const rowData = headers.map(header => row[header] || '');
+        wsData.push(rowData);
+    });
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Data');
+    
+    // Export file
+    XLSX.writeFile(wb, filename);
 }
 
 // Automapper functionality
@@ -2503,7 +2696,7 @@ function applyTransformationLogic(inputData, mappings, preserveUnmapped = true) 
     };
 }
 
-function exportTransformedCSV(block) {
+function exportTransformedCSV(block, filename = 'transformed-output.csv') {
     // Get the transformed data
     const transformedData = dataStore[block.id];
     
@@ -2535,7 +2728,7 @@ function exportTransformedCSV(block) {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', 'transformed-output.csv');
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -2601,10 +2794,160 @@ function openOutputDataModal(block) {
     document.getElementById('outputDataInterface').innerHTML = html;
     document.getElementById('outputDataModal').style.display = 'block';
     
-    // Export button
-    document.getElementById('exportOutputData').onclick = () => {
-        exportTransformedCSV(block);
+    // Export CSV button
+    document.getElementById('exportOutputCSV').onclick = () => {
+        const pattern = document.getElementById('exportFilename').value;
+        const filename = generateFilename(pattern, 'output', 'csv');
+        exportTransformedCSV(block, filename);
     };
+    
+    // Export XLSX button
+    document.getElementById('exportOutputXLSX').onclick = () => {
+        const pattern = document.getElementById('exportFilename').value;
+        const filename = generateFilename(pattern, 'output', 'xlsx');
+        exportToXLSX(inputRows, inputHeaders, filename);
+    };
+}
+
+// Rejected Output functionality
+function openRejectedOutputModal(block) {
+    selectedBlock = block;
+    
+    // Find all validation blocks that have rejected data
+    const validationBlocks = blocks.filter(b => b.type === 'validation');
+    const rejectedDataSources = [];
+    
+    validationBlocks.forEach(valBlock => {
+        if (rejectedDataStore[valBlock.id]) {
+            rejectedDataSources.push({
+                blockId: valBlock.id,
+                data: rejectedDataStore[valBlock.id]
+            });
+        }
+    });
+    
+    if (rejectedDataSources.length === 0) {
+        document.getElementById('rejectedOutputInterface').innerHTML = '<p style="color: #e44;">Geen rejected data beschikbaar. Voer eerst validatie uit die rejected records produceert.</p>';
+        document.getElementById('rejectedOutputModal').style.display = 'block';
+        return;
+    }
+    
+    // Combine all rejected data
+    let allRejectedRows = [];
+    let rejectedHeaders = [];
+    
+    rejectedDataSources.forEach(source => {
+        if (source.data.data && source.data.data.length > 0) {
+            allRejectedRows = allRejectedRows.concat(source.data.data);
+            if (rejectedHeaders.length === 0) {
+                rejectedHeaders = source.data.headers;
+            }
+        }
+    });
+    
+    // Store combined rejected data for this block
+    dataStore[block.id] = {
+        headers: rejectedHeaders,
+        data: allRejectedRows
+    };
+    
+    // Build rejected output interface
+    let html = '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px; background: #fff5f5;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600; color: #e74c3c;">Rejected Data Overview</h3>';
+    html += `<p style="color: #666; font-size: 13px; margin-bottom: 10px;">Rejected records: ${allRejectedRows.length} rijen en ${rejectedHeaders.length} kolommen</p>`;
+    
+    // Show column names
+    html += '<div style="margin-top: 15px;">';
+    html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Kolommen:</h4>';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+    rejectedHeaders.forEach(header => {
+        const isErrorCol = header === '__validation_errors__';
+        const bgColor = isErrorCol ? '#ffe6e6' : 'white';
+        html += `<span style="padding: 6px 12px; background: ${bgColor}; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">${header}</span>`;
+    });
+    html += '</div></div>';
+    
+    // Show preview of first few rejected rows
+    if (allRejectedRows.length > 0) {
+        html += '<div style="margin-top: 15px;">';
+        html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Preview (eerste 3 rijen):</h4>';
+        html += '<table style="width: 100%; border-collapse: collapse; background: white; font-size: 12px;">';
+        html += '<thead><tr>';
+        rejectedHeaders.forEach(header => {
+            const isErrorCol = header === '__validation_errors__';
+            const bgColor = isErrorCol ? '#ffe6e6' : '#f5f5f5';
+            html += `<th style="padding: 8px; border: 1px solid #e0e0e0; background: ${bgColor}; text-align: left;">${header}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        allRejectedRows.slice(0, 3).forEach(row => {
+            html += '<tr>';
+            rejectedHeaders.forEach(header => {
+                html += `<td style="padding: 8px; border: 1px solid #e0e0e0;">${escapeHtml(row[header] || '')}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    document.getElementById('rejectedOutputInterface').innerHTML = html;
+    
+    // Update block content with rejected count
+    updateBlockContent(block.id, `🚫 ${allRejectedRows.length} rejected records`);
+    
+    document.getElementById('rejectedOutputModal').style.display = 'block';
+    
+    // Export CSV button
+    document.getElementById('exportRejectedCSV').onclick = () => {
+        const pattern = document.getElementById('rejectedExportFilename').value;
+        const filename = generateFilename(pattern, 'rejected', 'csv');
+        exportRejectedCSV(allRejectedRows, rejectedHeaders, filename);
+    };
+    
+    // Export XLSX button
+    document.getElementById('exportRejectedXLSX').onclick = () => {
+        const pattern = document.getElementById('rejectedExportFilename').value;
+        const filename = generateFilename(pattern, 'rejected', 'xlsx');
+        exportToXLSX(allRejectedRows, rejectedHeaders, filename);
+    };
+}
+
+function exportRejectedCSV(rows, headers, filename) {
+    if (!rows || rows.length === 0) {
+        alert('Geen rejected data om te exporteren.');
+        return;
+    }
+    
+    // Generate CSV content
+    let csvContent = headers.join(',') + '\n';
+    rows.forEach(row => {
+        const values = headers.map(header => {
+            const value = row[header] || '';
+            // Escape values with commas or quotes
+            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        });
+        csvContent += values.join(',') + '\n';
+    });
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show success message
+    alert(`Rejected data CSV geëxporteerd met ${rows.length} rijen.`);
 }
 
 // Add click handlers for remove buttons (using event delegation)
@@ -2796,8 +3139,13 @@ function applyValidationConfig(block, inputHeaders) {
     if (inputConnection && dataStore[inputConnection.from]) {
         const validationResult = applyValidation(block, dataStore[inputConnection.from]);
         
-        // Store validation result in dataStore
+        // Store validation result in dataStore (only valid rows)
         dataStore[block.id] = validationResult;
+        
+        // Store rejected data separately
+        if (validationResult.rejectedData && validationResult.rejectedData.data.length > 0) {
+            rejectedDataStore[block.id] = validationResult.rejectedData;
+        }
         
         // Update block content with validation summary
         const { validCount, invalidCount } = validationResult.validation;
@@ -2822,6 +3170,8 @@ function applyValidation(block, inputData) {
     const rows = inputData.data || [];
     
     const rowErrors = [];
+    const validRows = [];
+    const rejectedRows = [];
     let validCount = 0;
     let invalidCount = 0;
     
@@ -2844,19 +3194,27 @@ function applyValidation(block, inputData) {
         
         if (errors.length > 0) {
             rowErrors.push({ rowIndex, errors });
+            // Add error information to rejected row
+            const rejectedRow = { ...row, __validation_errors__: errors.map(e => e.message).join('; ') };
+            rejectedRows.push(rejectedRow);
             invalidCount++;
         } else {
+            validRows.push(row);
             validCount++;
         }
     });
     
     return {
-        data: rows,
+        data: validRows,  // Only valid rows pass through
         headers: headers,
         validation: {
             rowErrors,
             validCount,
             invalidCount
+        },
+        rejectedData: {
+            data: rejectedRows,
+            headers: [...headers, '__validation_errors__']
         }
     };
 }
