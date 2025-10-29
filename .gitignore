@@ -7,7 +7,7 @@ screenshot-test*.png
 Thumbs.db
 
 # Editor files
-.vscode/
+# .vscode/ - kept for Copilot configuration
 .idea/
 *.swp
 *.swo
