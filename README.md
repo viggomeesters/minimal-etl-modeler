@@ -7,11 +7,14 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 ## ✨ Features
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
-- 👁️ **Data View**: Bekijk en verifieer je data
+- 👁️ **Inline Data Preview**: ✨ **NIEUW** - Dubbelklik op elk block om data te bekijken (Shift+Dubbelklik voor preview)
+- 💾 **Multi-format Export**: ✨ **NIEUW** - Exporteer naar CSV en XLSX met custom filename patterns
+- 🚫 **Rejected Output**: ✨ **NIEUW** - Verzamel en exporteer records die validatie falen
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
 - 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
-- 📋 **Data Flow Log**: ✨ **NIEUW** - Bekijk een tekstuele representatie van data flow en transformaties
-- 🔄 **Individuele Transformatie Blocks**: ✨ **NIEUW** - Visuele transformatie blokken voor betere flow zichtbaarheid
+- ✓ **Validation**: Valideer data met regels en verzamel rejected records
+- 📋 **Data Flow Log**: Bekijk een tekstuele representatie van data flow en transformaties
+- 🔄 **Individuele Transformatie Blocks**: Visuele transformatie blokken voor betere flow zichtbaarheid
   - ➕ **Concatenate**: Voeg kolommen samen
   - ✂️ **Split**: Split kolommen op delimiter
   - 🔤 **Case Change**: Wijzig hoofdletters
@@ -20,7 +23,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
   - 📅 **Date Format**: Formatteer datums
   - 📝 **Expression**: Evalueer expressies
   - 📋 **Copy/Rename**: Kopieer/hernoem kolommen
-  - 🔀 **Join**: Voeg twee datasets samen ✨ **NIEUW**
+  - 🔀 **Join**: Voeg twee datasets samen
 - ⚙️ **Transform (Legacy)**: Complete transformatie block voor complexe bewerkingen
 - 🔗 **Visuele Connecties**: Verbind blokken door ze aan elkaar te koppelen
 - 🎯 **Minimalistisch Design**: Geen clutter, alleen de essentials
@@ -31,9 +34,10 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 1. Open `index.html` in je browser
 2. Sleep een **Data Input** block naar het canvas
 3. Dubbelklik op het block en laad een CSV bestand (bijv. `sample-data.csv`)
-4. Sleep een **Data View** block naar het canvas
-5. Verbind de blocks door te klikken op de output connector (⚪ onderaan) van Data Input en sleep naar de input connector (⚪ bovenaan) van Data View
-6. Dubbelklik op Data View om de data te bekijken
+4. Sleep een **Output Data** block naar het canvas
+5. Verbind de blocks door te klikken op de output connector (⚪ onderaan) van Data Input en sleep naar de input connector (⚪ bovenaan) van Output Data
+6. Dubbelklik op Output Data om te exporteren (CSV of XLSX)
+7. **TIP**: Gebruik Shift+Dubbelklik op elk block om data te previewen!
 
 ### Optie 2: Met lokale server (voor geavanceerde features)
 Voor optimale werking, vooral wanneer je externe CSV bestanden wilt laden via URL, gebruik een lokale webserver:
@@ -67,7 +71,7 @@ minimal-etl-modeler/
 
 ## 🎨 Design Filosofie
 
-- **Lightweight**: Geen externe dependencies, pure vanilla JavaScript
+- **Lightweight**: Geen externe dependencies (behalve SheetJS CDN voor XLSX export), pure vanilla JavaScript
 - **Scalable**: Modulaire architectuur voor toekomstige uitbreidingen
 - **Minimalistic**: Clean interface met alleen de noodzakelijke features
 - **0 Clutter**: Focus op functionaliteit zonder afleidingen
@@ -78,13 +82,34 @@ minimal-etl-modeler/
 - Ondersteunt CSV bestanden
 - Automatische parsing van headers
 - Toont aantal rijen en kolommen
+- **Dubbelklik**: Upload bestand of preview data (als al geladen)
+- **Shift+Dubbelklik**: Preview data direct
 
-### Data View Block
-- Tabelweergave van data
-- Sticky headers voor gemakkelijk scrollen
-- Limiet van 100 rijen voor performance
+### Inline Data Preview ✨ NIEUW
+- **Alle blocks** ondersteunen nu data preview
+- **Shift+Dubbelklik** op elk block om output data te bekijken
+- Preview toont eerste 100 rijen voor snelle controle
+- Werkt voor alle transformatie blocks, validation, joins, etc.
 
-### Automapper Block ✨ NEW
+### Output Data Block ✨ NIEUW
+- Export data naar **CSV** of **XLSX** formaat
+- Custom filename patterns met datum tokens:
+  - `YYYYMMDD`: bijv. "20240315"
+  - `YYYY-MM-DD`: bijv. "2024-03-15"
+  - `YYYYMMDD_HHMMSS`: bijv. "20240315_143052"
+  - Gebruik `#` als separator: `S_AUFK#YYYYMMDD` → `S_AUFK20240315.csv`
+- Preview van data voor export
+- Toont kolommen en eerste 3 rijen
+
+### Rejected Output Block 🚫 NIEUW
+- Verzamelt automatisch alle rejected records van validation blocks
+- Export rejected data naar CSV of XLSX
+- Inclusief `__validation_errors__` kolom met error details
+- Custom filename patterns (bijv. `rejected#YYYYMMDD`)
+- Bekijk aantal rejected records per validation
+- Perfect voor data quality monitoring en error analysis
+
+### Automapper Block
 - Automatische kolom mapping tussen input en output templates
 - Smart matching algoritme met 3 niveaus:
   - **Exact match**: Identieke kolomnamen (na normalisatie)
@@ -129,23 +154,17 @@ Zie [SPLIT-TRANSFORM-BLOCKS-GUIDE.md](SPLIT-TRANSFORM-BLOCKS-GUIDE.md) voor uitg
 - Automatische conflict resolutie voor kolommen met dezelfde naam
 - Visuele preview van beide datasets voor de join
 
-### Transform Block (Legacy)
-- Map input kolommen naar output kolommen
-- Transformeer data volgens mapping regels
-- Exporteer getransformeerde data als CSV
-- Download functionaliteit voor output bestanden
+### Validation Block
+- Configureer validatie regels voor kolommen
+- Ondersteunt: required, type checks, regex, min/max waarden
+- Toont aantal valid en invalid records
+- **Rejected records worden automatisch verzameld** ✨ NIEUW
+- Gebruik met Rejected Output block voor error analysis
 
 ### Connecties
 - Sleep van output (onderste connector) naar input (bovenste connector)
 - Data wordt automatisch doorgegeven via connecties
 - Visuele curved lines tonen data flow
-
-## 📝 Toekomstige Uitbreidingen
-
-- Meer transformatie opties (filters, aggregaties)
-- Save/Load ETL flows
-- Real-time data preview
-- Meer SAP-specifieke transformaties
 
 ## 🧪 Tests
 
@@ -158,25 +177,33 @@ node test-automapper-integration.js    # Test complete data flow (10 tests)
 node test-advanced-transform.js        # Test transformatie operaties (20 tests)
 node test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
 node test-join.js                      # Test join functionaliteit (10 tests)
+node test-validation.js                # Test validation functionaliteit (13 tests)
+node test-export-features.js           # Test export en rejected output (16 tests) ✨ NIEUW
 ```
 
 ## 🔄 Aanbevolen Workflows
 
-**Met Join block voor dataset combinatie:** ✨ NIEUW
+**Met data quality en rejected output:** ✨ NIEUW
+1. Data Input → Laad bron CSV
+2. Validation → Configureer validatie regels
+3. Output Data → Exporteer valid records naar XLSX met custom filename
+4. Rejected Output → Exporteer rejected records voor analyse
+5. **Tip**: Gebruik Shift+Dubbelklik op elk block om data te inspecteren
+
+**Met Join block voor dataset combinatie:**
 1. Data Input 1 → Laad eerste dataset (bijv. employees.csv)
 2. Data Input 2 → Laad tweede dataset (bijv. departments.csv)
 3. Join → Verbind beide inputs, selecteer join type en keys
-4. Data View → Preview samengevoegde resultaat
-5. Output Data → Exporteer gecombineerde dataset
+4. Output Data → Exporteer gecombineerde dataset als XLSX
 
-**Met visuele transformatie blocks:** ✨ NIEUW
+**Met visuele transformatie blocks:**
 1. Data Input → Laad bron CSV
 2. Concatenate → Voeg kolommen samen (bijv. voornaam + achternaam)
 3. Split → Extraheer domein uit email
 4. Case Change → Normaliseer tekst
 5. Math → Bereken totalen
-6. Data View → Preview resultaat
-7. Output Data → Exporteer resultaat
+6. **Shift+Dubbelklik** op elk block om data te inspecteren ✨ NIEUW
+7. Output Data → Exporteer resultaat als XLSX met custom filename
 
 **Snelle mapping met Automapper:**
 1. Data Input → Laad bron CSV

@@ -399,10 +399,35 @@ function renderBlock(block) {
     // Make block draggable
     blockEl.addEventListener('mousedown', startDragBlock);
     
-    // Double click to open
+    // Double click to open or preview
     blockEl.addEventListener('dblclick', (e) => {
         e.stopPropagation();
-        openBlockModal(block);
+        // Shift+DoubleClick shows data preview if block has data
+        if (e.shiftKey && dataStore[block.id]) {
+            const titles = {
+                'input': 'Input Source Data',
+                'output': 'Target Structure',
+                'automapper': 'Automapper Output',
+                'mapping': 'Mapping Output',
+                'transform': 'Transform Output',
+                'outputdata': 'Output Data',
+                'validation': 'Validation Output',
+                'valuemapper': 'Value Mapper Output',
+                'concatenate': 'Concatenate Output',
+                'split': 'Split Output',
+                'casechange': 'Case Change Output',
+                'math': 'Math Output',
+                'regexreplace': 'Regex Replace Output',
+                'dateformat': 'Date Format Output',
+                'expression': 'Expression Output',
+                'copyrename': 'Copy/Rename Output',
+                'join': 'Join Output',
+                'rejectedoutput': 'Rejected Data'
+            };
+            showDataPreview(block, titles[block.type] || 'Data Preview');
+        } else {
+            openBlockModal(block);
+        }
     });
     
     canvas.appendChild(blockEl);
