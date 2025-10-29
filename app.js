@@ -4,6 +4,7 @@ let connections = [];
 let blockCounter = 0;
 let selectedBlock = null;
 let dataStore = {};
+let dataFlowLog = []; // Store data flow logs
 
 // Constants
 const MAX_DISPLAY_ROWS = 100;
@@ -80,6 +81,81 @@ function showModal(modalId) {
 function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Adds a log entry to the data flow log
+ * @param {string} blockId - ID of the block performing the operation
+ * @param {string} operation - Type of operation being performed
+ * @param {Object} details - Details about the operation
+ */
+function addLogEntry(blockId, operation, details) {
+    const block = blocks.find(b => b.id === blockId);
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const logEntry = {
+        timestamp,
+        blockId,
+        blockType: block ? block.type : 'unknown',
+        operation,
+        details
+    };
+    
+    dataFlowLog.push(logEntry);
+    
+    // Limit log size to prevent memory issues
+    if (dataFlowLog.length > 1000) {
+        dataFlowLog.shift();
+    }
+}
+
+/**
+ * Formats a log entry as text
+ * @param {Object} entry - Log entry to format
+ * @returns {string} - Formatted log text
+ */
+function formatLogEntry(entry) {
+    let text = `[${entry.timestamp}] ${entry.blockType.toUpperCase()} (${entry.blockId}): ${entry.operation}\n`;
+    
+    if (entry.details.rowCount !== undefined) {
+        text += `  → Rows: ${entry.details.rowCount}\n`;
+    }
+    
+    if (entry.details.columns) {
+        text += `  → Columns: ${entry.details.columns.join(', ')}\n`;
+    }
+    
+    if (entry.details.from) {
+        text += `  → From: ${entry.details.from}\n`;
+    }
+    
+    if (entry.details.to) {
+        text += `  → To: ${entry.details.to}\n`;
+    }
+    
+    if (entry.details.transformation) {
+        text += `  → Transform: ${entry.details.transformation}\n`;
+    }
+    
+    if (entry.details.mapping) {
+        text += `  → Mapping: ${JSON.stringify(entry.details.mapping)}\n`;
+    }
+    
+    if (entry.details.error) {
+        text += `  ⚠️ Error: ${entry.details.error}\n`;
+    }
+    
+    return text;
+}
+
+/**
+ * Updates all logging blocks with current log
+ */
+function updateLoggingBlocks() {
+    blocks.filter(b => b.type === 'logging').forEach(block => {
+        const logCount = dataFlowLog.length;
+        updateBlockContent(block.id, `${logCount} log entries`);
+    });
 }
 
 // Initialize application
@@ -691,6 +767,21 @@ function initModals() {
     
     // Template input handler
     document.getElementById('templateInput').addEventListener('change', handleTemplateSelect);
+    
+    // Clear log button handler
+    document.getElementById('clearLog').addEventListener('click', () => {
+        dataFlowLog = [];
+        // Re-render if modal is open
+        const loggingInterface = document.getElementById('loggingInterface');
+        if (loggingInterface && loggingInterface.innerHTML !== '') {
+            loggingInterface.innerHTML = '<div style="color: #999; font-style: italic;">Log cleared. No entries yet.</div>';
+        }
+    });
+    
+    // Log flow button handler
+    document.getElementById('logFlowBtn').addEventListener('click', () => {
+        openLoggingModal();
+    });
 }
 
 /**
@@ -769,6 +860,13 @@ function handleFileSelect(e) {
             data: parsed.data,
             headers: parsed.headers
         };
+        
+        // Log the data loading
+        addLogEntry(selectedBlock.id, 'DATA_LOADED', {
+            rowCount: parsed.data.length,
+            columns: parsed.headers,
+            source: file.name
+        });
         
         // Update block UI with performance indicator
         let statusText = `${escapeHtml(file.name)} (${parsed.data.length} rijen)`;
@@ -1012,8 +1110,17 @@ function transferData(fromId, toId) {
         optimized: isLargeDataset
     });
     
-    // Update target block UI if it's a view block
+    // Log data transfer
+    const fromBlock = blocks.find(b => b.id === fromId);
     const toBlock = blocks.find(b => b.id === toId);
+    addLogEntry(toId, 'DATA_TRANSFER', {
+        from: `${fromBlock ? fromBlock.type : 'unknown'} (${fromId})`,
+        to: `${toBlock ? toBlock.type : 'unknown'} (${toId})`,
+        rowCount: dataArray.length,
+        columns: sourceData.headers || []
+    });
+    
+    // Update target block UI if it's a view block
     if (toBlock && toBlock.type === 'view') {
         updateBlockContent(toId, `Data beschikbaar (${dataArray.length} rijen)`);
     }
@@ -1590,6 +1697,14 @@ function applyMapping(block, inputHeaders, outputHeaders) {
         // Store mapped data
         dataStore[block.id] = mappedData;
         
+        // Log the mapping operation
+        addLogEntry(block.id, 'MAPPING_APPLIED', {
+            rowCount: mappedData.data.length,
+            mapping: mappings,
+            inputColumns: inputData.headers || [],
+            outputColumns: mappedData.headers || []
+        });
+        
         // Update block content
         const mappingCount = Object.keys(mappings).length;
         updateBlockContent(block.id, `${mappingCount} mapping(s) actief`);
@@ -1998,6 +2113,14 @@ function applyAdvancedTransform(block, inputHeaders, inputRows) {
         
         // Store transformed data
         dataStore[block.id] = transformedData;
+        
+        // Log the transformation
+        addLogEntry(block.id, 'TRANSFORM_APPLIED', {
+            rowCount: transformedData.data.length,
+            transformation: `${Object.keys(transformations).length} transformations`,
+            inputColumns: inputData.headers || [],
+            outputColumns: transformedData.headers || []
+        });
         
         // Update block content
         const transformCount = Object.keys(transformations).length;
@@ -4269,4 +4392,30 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
             resultRows: resultRows.length
         }
     };
+}
+
+/**
+ * Opens the logging modal and displays current log
+ * @param {Object} block - The logging block
+ */
+function openLoggingModal() {
+    const loggingInterface = document.getElementById('loggingInterface');
+    
+    if (dataFlowLog.length === 0) {
+        loggingInterface.innerHTML = '<div style="color: #999; font-style: italic;">No log entries yet. Execute some operations to see the data flow.</div>';
+    } else {
+        let logHtml = '<div style="white-space: pre-wrap;">';
+        dataFlowLog.forEach(entry => {
+            logHtml += formatLogEntry(entry) + '\n';
+        });
+        logHtml += '</div>';
+        loggingInterface.innerHTML = logHtml;
+        
+        // Scroll to bottom
+        setTimeout(() => {
+            loggingInterface.scrollTop = loggingInterface.scrollHeight;
+        }, 50);
+    }
+    
+    showModal('loggingModal');
 }

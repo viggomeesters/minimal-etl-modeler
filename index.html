@@ -99,6 +99,7 @@
                 <div class="flow-controls">
                     <button id="saveFlowBtn" class="flow-btn" title="Opslaan Flow">💾</button>
                     <button id="loadFlowBtn" class="flow-btn" title="Openen Flow">📂</button>
+                    <button id="logFlowBtn" class="flow-btn" title="Data Flow Log">📋</button>
                     <input type="file" id="loadFlowInput" accept=".json" style="display: none;" />
                 </div>
             </main>
@@ -304,6 +305,17 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Join two datasets on matching keys</p>
             <div id="joinInterface"></div>
             <button id="applyJoin" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Logging -->
+    <div id="loggingModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Data Flow Log</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Textual representation of data flow and transformations</p>
+            <div id="loggingInterface" style="max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 12px; background: #f5f5f5; padding: 15px; border-radius: 4px; line-height: 1.6;"></div>
+            <button id="clearLog" style="margin-top: 20px; padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear Log</button>
         </div>
     </div>
     
