@@ -14,7 +14,7 @@ python3 -m http.server 8080
 
 1. **Drag** a 📥 Data Input block to the canvas
 2. **Double-click** the block
-3. **Select** `sample-data.csv` (or your own CSV)
+3. **Select** `../examples/sample-data.csv` (or your own CSV)
 4. **Drag** a 👁️ Data View block to the canvas
 5. **Connect** them:
    - Click the bottom ⚪ of Data Input
@@ -42,8 +42,8 @@ You now have a working ETL flow that:
 - Click the ✕ in the top-right corner
 
 ### View More Examples
-- Open `example-flow.html` for a pre-configured demo
-- Open `demo.html` for the full demo page
+- Open `../examples/example-flow.html` for a pre-configured demo
+- Open `../examples/demo.html` for the full demo page
 
 ## Troubleshooting
 
@@ -64,7 +64,7 @@ You now have a working ETL flow that:
 
 Need more help? Check:
 - `GEBRUIKERSHANDLEIDING.md` - Full user guide (Dutch)
-- `README.md` - Complete documentation
+- `../README.md` - Complete documentation
 - `ARCHITECTURE.md` - Technical details
 
 ---

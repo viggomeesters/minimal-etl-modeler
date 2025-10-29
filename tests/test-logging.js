@@ -21,7 +21,7 @@ function test(name, fn) {
 
 // Test 1: Check if logging button exists in flow controls
 test('Logging button exists in flow controls', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('id="logFlowBtn"')) {
         throw new Error('Logging button not found in flow controls');
@@ -34,7 +34,7 @@ test('Logging button exists in flow controls', () => {
 
 // Test 2: Check if logging modal exists
 test('Logging modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('id="loggingModal"')) {
         throw new Error('Logging modal not found');
@@ -51,7 +51,7 @@ test('Logging modal exists in HTML', () => {
 
 // Test 3: Check if logging functions exist in app.js
 test('Logging functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'addLogEntry',
@@ -69,7 +69,7 @@ test('Logging functions exist in app.js', () => {
 
 // Test 4: Check if dataFlowLog global variable exists
 test('dataFlowLog variable is initialized', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('let dataFlowLog = []')) {
         throw new Error('dataFlowLog variable not found or not initialized as array');
@@ -78,7 +78,7 @@ test('dataFlowLog variable is initialized', () => {
 
 // Test 5: Check if logging is integrated in key operations
 test('Logging is integrated in data operations', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if addLogEntry is called for key operations
     const operations = [
@@ -97,7 +97,7 @@ test('Logging is integrated in data operations', () => {
 
 // Test 6: Check if log flow button handler is initialized
 test('Log flow button handler is initialized', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes("getElementById('logFlowBtn')")) {
         throw new Error('Log flow button not initialized');
@@ -110,7 +110,7 @@ test('Log flow button handler is initialized', () => {
 
 // Test 7: Check clear log button initialization
 test('Clear log button is initialized', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes("getElementById('clearLog')")) {
         throw new Error('Clear log button not initialized');

@@ -22,7 +22,7 @@ function test(name, fn) {
 }
 
 // Load app.js to get transformation functions
-const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
 // Extract and evaluate the transformation functions
 // We need to create a safe evaluation context
@@ -508,7 +508,7 @@ test('Empty input values handled gracefully', () => {
 
 // Test 18: Check if advanced transform functions exist in app.js
 test('Advanced transform functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'applyAdvancedTransform',
@@ -526,7 +526,7 @@ test('Advanced transform functions exist in app.js', () => {
 
 // Test 19: Verify createTransformMappingRow supports operations
 test('createTransformMappingRow function supports operation parameter', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('transform-operation')) {
         throw new Error('Operation selector not found in createTransformMappingRow');
@@ -543,7 +543,7 @@ test('createTransformMappingRow function supports operation parameter', () => {
 
 // Test 20: Check if getParameterFields helper exists
 test('getParameterFields helper function exists', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('function getParameterFields')) {
         throw new Error('getParameterFields function not found');

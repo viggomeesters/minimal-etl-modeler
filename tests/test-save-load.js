@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if save/load buttons exist in HTML
 test('Save/Load buttons exist in index.html', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('id="saveFlowBtn"')) {
         throw new Error('Save button not found in HTML');
@@ -38,7 +38,7 @@ test('Save/Load buttons exist in index.html', () => {
 
 // Test 2: Check if flow-controls styling exists
 test('Flow controls styling exists in CSS', () => {
-    const css = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
     
     if (!css.includes('.flow-controls')) {
         throw new Error('Flow controls styling not found in CSS');
@@ -50,7 +50,7 @@ test('Flow controls styling exists in CSS', () => {
 
 // Test 3: Check if save/load functions exist in app.js
 test('Save/Load functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('function saveFlow()')) {
         throw new Error('saveFlow function not found in app.js');
@@ -65,7 +65,7 @@ test('Save/Load functions exist in app.js', () => {
 
 // Test 4: Validate save flow structure
 test('Save flow creates correct data structure', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check that the save function includes all necessary properties
     const requiredProperties = ['version', 'timestamp', 'blocks', 'connections', 'dataStore', 'blockCounter'];
@@ -78,7 +78,7 @@ test('Save flow creates correct data structure', () => {
 
 // Test 5: Check that load flow handles JSON parsing
 test('Load flow includes JSON parsing', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('JSON.parse')) {
         throw new Error('Load flow does not parse JSON');
@@ -90,7 +90,7 @@ test('Load flow includes JSON parsing', () => {
 
 // Test 6: Check that save creates download
 test('Save flow creates file download', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('Blob')) {
         throw new Error('Save flow does not create Blob');
@@ -105,7 +105,7 @@ test('Save flow creates file download', () => {
 
 // Test 7: Check that load restores blocks
 test('Load flow restores blocks and connections', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const loadFlowSection = js.substring(js.indexOf('function loadFlow('));
     
@@ -119,7 +119,7 @@ test('Load flow restores blocks and connections', () => {
 
 // Test 8: Check that clearCanvas resets state
 test('Clear canvas resets all state', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const clearCanvasSection = js.substring(js.indexOf('function clearCanvas()'));
     
@@ -136,7 +136,7 @@ test('Clear canvas resets all state', () => {
 
 // Test 9: Check file input accept attribute
 test('Load file input accepts JSON files', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('accept=".json"')) {
         throw new Error('File input does not accept JSON files');
@@ -145,7 +145,7 @@ test('Load file input accepts JSON files', () => {
 
 // Test 10: Check for error handling in load
 test('Load flow includes error handling', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const loadFlowSection = js.substring(js.indexOf('function loadFlow('));
     

@@ -22,7 +22,7 @@ function test(name, fn) {
 }
 
 // Extract parseCSV function from app.js
-const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
 // Create a minimal execution environment
 const parseCSVMatch = appJs.match(/function parseCSV\(csv\) \{[\s\S]*?^}/m);

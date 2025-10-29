@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if transform block is in index.html
 test('Transform block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="transform"')) {
         throw new Error('Transform block not found in toolbox');
@@ -36,7 +36,7 @@ test('Transform block exists in toolbox', () => {
 
 // Test 2: Check if transform modal exists
 test('Transform modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('transformModal')) {
         throw new Error('Transform modal not found');
@@ -49,7 +49,7 @@ test('Transform modal exists in HTML', () => {
 
 // Test 3: Check if output data block and modal exist
 test('Output Data block and modal exist', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="outputdata"')) {
         throw new Error('Output Data block not found in toolbox');
@@ -67,7 +67,7 @@ test('Output Data block and modal exist', () => {
 
 // Test 4: Check if transform functions exist in app.js
 test('Transform functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'openTransformModal',
@@ -242,7 +242,7 @@ test('CSV escaping handles commas and quotes', () => {
 
 // Test 8: Check if transform block type is handled in renderBlock
 test('Transform block type is rendered correctly', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if transform type is handled
     if (!js.includes("block.type === 'transform'")) {

@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if automapper block is in index.html
 test('Automapper block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="automapper"')) {
         throw new Error('Automapper block not found in toolbox');
@@ -36,7 +36,7 @@ test('Automapper block exists in toolbox', () => {
 
 // Test 2: Check if automapper modal exists
 test('Automapper modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('automapperModal')) {
         throw new Error('Automapper modal not found');
@@ -49,7 +49,7 @@ test('Automapper modal exists in HTML', () => {
 
 // Test 3: Check if automapper functions exist in app.js
 test('Automapper functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'autoGenerateMappings',
@@ -381,7 +381,7 @@ test('Each input column is matched only once', () => {
 
 // Test 10: Check if automapper block type is handled in renderBlock
 test('Automapper block type is rendered correctly', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes("block.type === 'automapper'")) {
         throw new Error('Automapper block type not handled in renderBlock');
@@ -390,7 +390,7 @@ test('Automapper block type is rendered correctly', () => {
 
 // Test 11: Check CSS for automapper styles
 test('CSS has automapper styles', () => {
-    const css = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
     
     if (!css.includes('#applyAutomapper')) {
         throw new Error('Missing CSS for apply automapper button');

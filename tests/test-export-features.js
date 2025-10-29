@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if SheetJS is included in HTML
 test('SheetJS CDN is included in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('sheetjs') && !html.includes('xlsx')) {
         throw new Error('SheetJS library not found in HTML');
@@ -32,7 +32,7 @@ test('SheetJS CDN is included in HTML', () => {
 
 // Test 2: Check if Data View block is removed from toolbox
 test('Data View block is removed from toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     // Check that view block is not in toolbox
     const toolboxSection = html.substring(
@@ -47,7 +47,7 @@ test('Data View block is removed from toolbox', () => {
 
 // Test 3: Check if dataPreviewModal exists
 test('Data Preview modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('dataPreviewModal')) {
         throw new Error('dataPreviewModal not found');
@@ -60,7 +60,7 @@ test('Data Preview modal exists in HTML', () => {
 
 // Test 4: Check if old viewModal is removed
 test('Old viewModal is removed from HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (html.includes('id="viewModal"')) {
         throw new Error('Old viewModal still exists in HTML');
@@ -69,7 +69,7 @@ test('Old viewModal is removed from HTML', () => {
 
 // Test 5: Check if Rejected Output block exists in toolbox
 test('Rejected Output block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="rejectedoutput"')) {
         throw new Error('Rejected Output block not found in toolbox');
@@ -82,7 +82,7 @@ test('Rejected Output block exists in toolbox', () => {
 
 // Test 6: Check if rejectedOutputModal exists
 test('Rejected Output modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('rejectedOutputModal')) {
         throw new Error('rejectedOutputModal not found');
@@ -95,7 +95,7 @@ test('Rejected Output modal exists in HTML', () => {
 
 // Test 7: Check if XLSX export buttons exist in Output Data modal
 test('XLSX export buttons exist in Output Data modal', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('exportOutputXLSX')) {
         throw new Error('exportOutputXLSX button not found');
@@ -108,7 +108,7 @@ test('XLSX export buttons exist in Output Data modal', () => {
 
 // Test 8: Check if filename pattern input exists
 test('Filename pattern input exists in modals', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('exportFilename')) {
         throw new Error('exportFilename input not found');
@@ -121,7 +121,7 @@ test('Filename pattern input exists in modals', () => {
 
 // Test 9: Check if export functions exist in app.js
 test('Export functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('function generateFilename')) {
         throw new Error('generateFilename function not found');
@@ -196,7 +196,7 @@ test('generateFilename function works correctly', () => {
 
 // Test 11: Check if rejectedDataStore exists in app.js
 test('rejectedDataStore variable exists in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('rejectedDataStore')) {
         throw new Error('rejectedDataStore variable not found');
@@ -205,7 +205,7 @@ test('rejectedDataStore variable exists in app.js', () => {
 
 // Test 12: Check if openRejectedOutputModal function exists
 test('openRejectedOutputModal function exists in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('function openRejectedOutputModal')) {
         throw new Error('openRejectedOutputModal function not found');
@@ -214,7 +214,7 @@ test('openRejectedOutputModal function exists in app.js', () => {
 
 // Test 13: Check if exportRejectedCSV function exists
 test('exportRejectedCSV function exists in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes('function exportRejectedCSV')) {
         throw new Error('exportRejectedCSV function not found');
@@ -290,7 +290,7 @@ test('applyValidation returns rejected data structure', () => {
 
 // Test 15: Check if rejectedoutput block type is rendered
 test('Rejected Output block type is rendered correctly', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if renderBlock handles rejectedoutput type
     if (!js.includes("block.type === 'rejectedoutput'")) {
@@ -300,7 +300,7 @@ test('Rejected Output block type is rendered correctly', () => {
 
 // Test 16: Check if openBlockModal routes to rejectedoutput
 test('openBlockModal routes to rejectedoutput modal', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!js.includes("block.type === 'rejectedoutput'")) {
         throw new Error('openBlockModal does not route rejectedoutput type');

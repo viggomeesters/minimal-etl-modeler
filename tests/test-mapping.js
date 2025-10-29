@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if mapping block is in index.html
 test('Mapping block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="mapping"')) {
         throw new Error('Mapping block not found in toolbox');
@@ -36,7 +36,7 @@ test('Mapping block exists in toolbox', () => {
 
 // Test 2: Check if mapping modal exists
 test('Mapping modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('mappingModal')) {
         throw new Error('Mapping modal not found');
@@ -49,7 +49,7 @@ test('Mapping modal exists in HTML', () => {
 
 // Test 3: Check if mapping functions exist in app.js
 test('Mapping functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'openMappingModal',
@@ -242,7 +242,7 @@ test('Column rename mapping works', () => {
 
 // Test 8: Check if mapping block type is handled in renderBlock
 test('Mapping block type is rendered correctly', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if mapping type is handled
     if (!js.includes("block.type === 'mapping'")) {
@@ -252,7 +252,7 @@ test('Mapping block type is rendered correctly', () => {
 
 // Test 9: Check CSS for mapping styles
 test('CSS has mapping styles', () => {
-    const css = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
     
     if (!css.includes('#applyMapping')) {
         throw new Error('Missing CSS for apply mapping button');

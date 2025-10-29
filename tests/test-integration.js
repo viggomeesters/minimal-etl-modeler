@@ -27,7 +27,7 @@ test('All required files exist', () => {
         'index.html',
         'style.css',
         'app.js',
-        'sample-data.csv',
+        path.join(__dirname, '..', 'examples', 'sample-data.csv'),
         'README.md'
     ];
     
@@ -41,7 +41,7 @@ test('All required files exist', () => {
 
 // Test 2: Validate index.html structure
 test('index.html has required structure', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     const requiredElements = [
         'toolbox',
@@ -62,7 +62,7 @@ test('index.html has required structure', () => {
 
 // Test 3: Validate CSS file
 test('style.css has key styles', () => {
-    const css = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
     
     const requiredClasses = [
         '.toolbox',
@@ -81,7 +81,7 @@ test('style.css has key styles', () => {
 
 // Test 4: Validate JavaScript functions
 test('app.js has core functions', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'initDragAndDrop',
@@ -103,7 +103,7 @@ test('app.js has core functions', () => {
 
 // Test 5: Validate sample CSV
 test('sample-data.csv has valid format', () => {
-    const csv = fs.readFileSync(path.join(__dirname, 'sample-data.csv'), 'utf8');
+    const csv = fs.readFileSync(path.join(__dirname, path.join(__dirname, '..', 'examples', 'sample-data.csv')), 'utf8');
     const lines = csv.trim().split('\n');
     
     if (lines.length < 2) {
@@ -208,7 +208,7 @@ test('JavaScript files have valid syntax', () => {
 
 // Test 8: Validate SAP data structure
 test('Sample data has SAP-relevant fields', () => {
-    const csv = fs.readFileSync(path.join(__dirname, 'sample-data.csv'), 'utf8');
+    const csv = fs.readFileSync(path.join(__dirname, path.join(__dirname, '..', 'examples', 'sample-data.csv')), 'utf8');
     const headers = csv.split('\n')[0];
     
     const sapFields = ['Material', 'Plant', 'Storage'];

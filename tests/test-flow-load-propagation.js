@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Verify propagateData is called after loading flow
 test('loadFlow includes propagateData call after restoring state', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Find the loadFlow function
     const loadFlowMatch = js.match(/function loadFlow\(event\)\s*{[\s\S]*?^}/m);
@@ -53,7 +53,7 @@ test('loadFlow includes propagateData call after restoring state', () => {
 
 // Test 2: Verify propagateData iterates over blocks with data
 test('loadFlow iterates over blocks to propagate data', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const loadFlowMatch = js.match(/function loadFlow\(event\)\s*{[\s\S]*?^}/m);
     if (!loadFlowMatch) {
@@ -75,7 +75,7 @@ test('loadFlow iterates over blocks to propagate data', () => {
 
 // Test 3: Verify the fix is in the correct location
 test('Data propagation happens after connections are rendered', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const loadFlowMatch = js.match(/function loadFlow\(event\)\s*{[\s\S]*?^}/m);
     if (!loadFlowMatch) {
@@ -101,7 +101,7 @@ test('Data propagation happens after connections are rendered', () => {
 
 // Test 4: Verify comment explains the purpose
 test('Data propagation includes explanatory comment', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const loadFlowMatch = js.match(/function loadFlow\(event\)\s*{[\s\S]*?^}/m);
     if (!loadFlowMatch) {
