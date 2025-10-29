@@ -1,0 +1,88 @@
+{
+  "// GitHub Copilot Configuration": "Settings to optimize Copilot suggestions for this project",
+  
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "javascript": true,
+    "html": true,
+    "css": true
+  },
+  
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "",
+    "debug.testOverrideProxyUrl": "",
+    "debug.overrideProxyUrl": ""
+  },
+  
+  "// Editor Settings": "Configure editor for better development experience",
+  
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "editor.wordWrap": "on",
+  "editor.rulers": [100, 120],
+  
+  "// JavaScript Settings": "Vanilla JS specific settings",
+  
+  "javascript.suggest.autoImports": false,
+  "javascript.validate.enable": true,
+  "javascript.format.semicolons": "insert",
+  
+  "// Files Settings": "File handling preferences",
+  
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true
+  },
+  
+  "// Search Settings": "Exclude certain files from search",
+  
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/*.csv": false,
+    "**/*.md": false
+  },
+  
+  "// Language Specific Settings": "Per-language configuration",
+  
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    }
+  },
+  
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features",
+    "editor.tabSize": 2
+  },
+  
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features",
+    "editor.tabSize": 2
+  },
+  
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    }
+  },
+  
+  "// Workspace Recommendations": "Project-specific notes",
+  
+  "// Note": "This project uses vanilla JavaScript - no npm or external dependencies",
+  "// Testing": "Run tests with: node test-*.js",
+  "// Server": "For development, use: python3 -m http.server 8000 or npx http-server -p 8000"
+}
