@@ -57,12 +57,59 @@ header h1 {
     letter-spacing: 0.5px;
 }
 
+.tool-group {
+    margin-bottom: 15px;
+}
+
+.tool-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.tool-group-header:hover {
+    background: #e8e8e8;
+}
+
+.group-icon {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.tool-group-header.collapsed .group-icon {
+    transform: rotate(-90deg);
+}
+
+.group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tool-group-items {
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+
+.tool-group-items.collapsed {
+    display: none;
+}
+
 .tool-item {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     background: #f9f9f9;
     border: 1px solid #e0e0e0;
     border-radius: 6px;

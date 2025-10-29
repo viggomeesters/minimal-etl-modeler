@@ -17,77 +17,137 @@
             <!-- Toolbox with draggable components -->
             <aside class="toolbox">
                 <h3>Components</h3>
-                <div class="tool-item" draggable="true" data-type="input">
-                    <span class="icon">📥</span>
-                    <span>Input Source Data</span>
+                
+                <!-- Input/Output Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="input-output">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Input/Output</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="input-output">
+                        <div class="tool-item" draggable="true" data-type="input">
+                            <span class="icon">📥</span>
+                            <span>Input Source Data</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="view">
+                            <span class="icon">👁️</span>
+                            <span>Data View</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="output">
+                            <span class="icon">📤</span>
+                            <span>Target Structure</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="outputdata">
+                            <span class="icon">💾</span>
+                            <span>Output Data</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="tool-item" draggable="true" data-type="view">
-                    <span class="icon">👁️</span>
-                    <span>Data View</span>
+                
+                <!-- Mapping & Transformation Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="mapping">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Mapping</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="mapping">
+                        <div class="tool-item" draggable="true" data-type="automapper">
+                            <span class="icon">🤖</span>
+                            <span>Automapper</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="mapping">
+                            <span class="icon">🔗</span>
+                            <span>Mapping</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="valuemapper">
+                            <span class="icon">🔄</span>
+                            <span>Value Mapper</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="tool-item" draggable="true" data-type="output">
-                    <span class="icon">📤</span>
-                    <span>Target Structure</span>
+                
+                <!-- Data Operations Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="data-ops">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Data Operations</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="data-ops">
+                        <div class="tool-item" draggable="true" data-type="join">
+                            <span class="icon">🔀</span>
+                            <span>Join</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="validation">
+                            <span class="icon">✓</span>
+                            <span>Validation</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="tool-item" draggable="true" data-type="automapper">
-                    <span class="icon">🤖</span>
-                    <span>Automapper</span>
+                
+                <!-- Text Transformations Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="text-transform">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Text Operations</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="text-transform">
+                        <div class="tool-item" draggable="true" data-type="concatenate">
+                            <span class="icon">➕</span>
+                            <span>Concatenate</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="split">
+                            <span class="icon">✂️</span>
+                            <span>Split</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="casechange">
+                            <span class="icon">🔤</span>
+                            <span>Case Change</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="regexreplace">
+                            <span class="icon">🔍</span>
+                            <span>Regex Replace</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="copyrename">
+                            <span class="icon">📋</span>
+                            <span>Copy/Rename</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="tool-item" draggable="true" data-type="mapping">
-                    <span class="icon">🔗</span>
-                    <span>Mapping</span>
+                
+                <!-- Data Transformations Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="data-transform">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Transformations</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="data-transform">
+                        <div class="tool-item" draggable="true" data-type="math">
+                            <span class="icon">🔢</span>
+                            <span>Math</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="dateformat">
+                            <span class="icon">📅</span>
+                            <span>Date Format</span>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="expression">
+                            <span class="icon">📝</span>
+                            <span>Expression</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="tool-item" draggable="true" data-type="concatenate">
-                    <span class="icon">➕</span>
-                    <span>Concatenate</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="split">
-                    <span class="icon">✂️</span>
-                    <span>Split</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="casechange">
-                    <span class="icon">🔤</span>
-                    <span>Case Change</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="math">
-                    <span class="icon">🔢</span>
-                    <span>Math</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="regexreplace">
-                    <span class="icon">🔍</span>
-                    <span>Regex Replace</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="dateformat">
-                    <span class="icon">📅</span>
-                    <span>Date Format</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="expression">
-                    <span class="icon">📝</span>
-                    <span>Expression</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="copyrename">
-                    <span class="icon">📋</span>
-                    <span>Copy/Rename</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="join">
-                    <span class="icon">🔀</span>
-                    <span>Join</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="transform">
-                    <span class="icon">⚙️</span>
-                    <span>Transform (Legacy)</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="validation">
-                    <span class="icon">✓</span>
-                    <span>Validation</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="valuemapper">
-                    <span class="icon">🔄</span>
-                    <span>Value Mapper</span>
-                </div>
-                <div class="tool-item" draggable="true" data-type="outputdata">
-                    <span class="icon">💾</span>
-                    <span>Output Data</span>
+                
+                <!-- Legacy Group -->
+                <div class="tool-group">
+                    <div class="tool-group-header" data-group="legacy">
+                        <span class="group-icon">▼</span>
+                        <span class="group-title">Legacy</span>
+                    </div>
+                    <div class="tool-group-items" data-group-items="legacy">
+                        <div class="tool-item" draggable="true" data-type="transform">
+                            <span class="icon">⚙️</span>
+                            <span>Transform (Legacy)</span>
+                        </div>
+                    </div>
                 </div>
             </aside>
             
