@@ -673,7 +673,7 @@ function addConnection(fromId, toId) {
 
 /**
  * Renders all connections between blocks as SVG paths
- * Optimized to cache canvas rect and use early returns
+ * Optimized to cache canvas rect and reduce DOM queries
  */
 function renderConnections() {
     // Remove existing SVG
@@ -694,6 +694,10 @@ function renderConnections() {
     svg.style.cssText = `position:absolute;top:0;left:0;width:${canvasWidth};height:${canvasHeight};pointer-events:none;z-index:1`;
     
     const minSpacing = 30;
+    const scrollLeft = canvas.scrollLeft;
+    const scrollTop = canvas.scrollTop;
+    const canvasLeft = canvasRect.left;
+    const canvasTop = canvasRect.top;
     
     connections.forEach(conn => {
         const fromBlock = document.getElementById(conn.from);
@@ -710,10 +714,11 @@ function renderConnections() {
         const toRect = toConnector.getBoundingClientRect();
         
         // Account for canvas scroll position when calculating connector positions
-        const x1 = fromRect.left - canvasRect.left + canvas.scrollLeft + fromRect.width / 2;
-        const y1 = fromRect.top - canvasRect.top + canvas.scrollTop + fromRect.height / 2;
-        const x2 = toRect.left - canvasRect.left + canvas.scrollLeft + toRect.width / 2;
-        const y2 = toRect.top - canvasRect.top + canvas.scrollTop + toRect.height / 2;
+        // Optimization: use cached canvas rect values
+        const x1 = fromRect.left - canvasLeft + scrollLeft + fromRect.width / 2;
+        const y1 = fromRect.top - canvasTop + scrollTop + fromRect.height / 2;
+        const x2 = toRect.left - canvasLeft + scrollLeft + toRect.width / 2;
+        const y2 = toRect.top - canvasTop + scrollTop + toRect.height / 2;
         
         // Create orthogonal path (right-angle lines) for clean left-to-right flow
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -1263,27 +1268,37 @@ function autoGenerateMappings(inputHeaders, outputHeaders) {
             .replace(/[^a-z0-9]/g, '');
     }
     
+    // Pre-normalize input headers to avoid repeated computation (optimization)
+    const normalizedInputs = inputHeaders.map((header, idx) => ({
+        original: header,
+        normalized: normalize(header),
+        index: idx
+    }));
+    
     outputHeaders.forEach(outHeader => {
         let bestMatch = null;
         let bestScore = 0;
+        const outNorm = normalize(outHeader); // Normalize once per output header
         
-        inputHeaders.forEach(inHeader => {
-            if (matchedInputs.has(inHeader)) {
-                return; // Skip already matched columns
+        for (let i = 0; i < normalizedInputs.length; i++) {
+            const inputInfo = normalizedInputs[i];
+            
+            if (matchedInputs.has(inputInfo.original)) {
+                continue; // Skip already matched columns
             }
             
-            const outNorm = normalize(outHeader);
-            const inNorm = normalize(inHeader);
+            const inNorm = inputInfo.normalized;
             
             // Exact match after normalization
             if (outNorm === inNorm) {
-                bestMatch = inHeader;
+                bestMatch = inputInfo.original;
                 bestScore = EXACT_MATCH_SCORE;
                 matchConfidence[outHeader] = 'exact';
+                break; // No need to check further, exact match found
             }
             // Partial match - output contains input or vice versa
             else if (bestScore < PARTIAL_MATCH_SCORE && (outNorm.includes(inNorm) || inNorm.includes(outNorm))) {
-                bestMatch = inHeader;
+                bestMatch = inputInfo.original;
                 bestScore = PARTIAL_MATCH_SCORE;
                 matchConfidence[outHeader] = 'partial';
             }
@@ -1291,12 +1306,12 @@ function autoGenerateMappings(inputHeaders, outputHeaders) {
             else if (bestScore < SIMILARITY_THRESHOLD) {
                 const similarity = calculateSimilarity(outNorm, inNorm);
                 if (similarity > SIMILARITY_THRESHOLD && similarity > bestScore) {
-                    bestMatch = inHeader;
+                    bestMatch = inputInfo.original;
                     bestScore = similarity;
                     matchConfidence[outHeader] = 'fuzzy';
                 }
             }
-        });
+        }
         
         if (bestMatch) {
             mappings[outHeader] = bestMatch;
@@ -1312,6 +1327,7 @@ function autoGenerateMappings(inputHeaders, outputHeaders) {
 /**
  * Calculates similarity between two strings
  * Uses position-based and character-based matching
+ * Optimized to avoid unnecessary Set operations
  * @param {string} str1 - First string
  * @param {string} str2 - Second string
  * @returns {number} - Similarity score between 0 and 1
@@ -1335,18 +1351,28 @@ function calculateSimilarity(str1, str2) {
         }
     }
     
-    // Also count common characters regardless of position
-    const chars1 = new Set(str1);
-    const chars2 = new Set(str2);
+    // Count common characters regardless of position using character frequency
+    // Optimized: use object instead of Set for better performance
+    const charCount = {};
+    for (let i = 0; i < len1; i++) {
+        charCount[str1[i]] = (charCount[str1[i]] || 0) + 1;
+    }
+    
     let commonChars = 0;
-    chars1.forEach(char => {
-        if (chars2.has(char)) {
+    const seen = {};
+    for (let i = 0; i < len2; i++) {
+        const char = str2[i];
+        if (charCount[char] && !seen[char]) {
             commonChars++;
+            seen[char] = true;
         }
-    });
+    }
+    
+    // Calculate unique character count for denominator
+    const uniqueChars = new Set([...str1, ...str2]).size;
     
     // Weighted score: position matches count more
-    return (matches * 2 + commonChars) / (maxLen * 2 + Math.max(chars1.size, chars2.size));
+    return (matches * 2 + commonChars) / (maxLen * 2 + uniqueChars);
 }
 
 function openAutomapperModal(block) {
@@ -4284,14 +4310,17 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
     const rightHeaders = rightData.headers || [];
     
     // Create result headers - left headers + right headers (excluding right key if it's same name)
+    // Optimization: Use Set for O(1) lookup instead of .includes() which is O(n)
+    const leftHeadersSet = new Set(leftHeaders);
     const resultHeaders = [...leftHeaders];
+    
     rightHeaders.forEach(header => {
         // Add right header with prefix if it conflicts with left headers (except the join key)
         if (header === rightKey && header === leftKey) {
             // Skip the right key if it's the same as left key
             return;
         }
-        if (leftHeaders.includes(header)) {
+        if (leftHeadersSet.has(header)) {
             resultHeaders.push(`right_${header}`);
         } else {
             resultHeaders.push(header);
@@ -4325,12 +4354,13 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
                 const joinedRow = { ...leftRow };
                 
                 // Add right columns
+                // Optimization: use Set lookup instead of .includes()
                 rightHeaders.forEach(header => {
                     if (header === rightKey && header === leftKey) {
                         // Skip duplicate key column
                         return;
                     }
-                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    const targetHeader = leftHeadersSet.has(header) && header !== rightKey ? `right_${header}` : header;
                     joinedRow[targetHeader] = rightRow[header];
                 });
                 
@@ -4345,7 +4375,7 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
                     if (header === rightKey && header === leftKey) {
                         return;
                     }
-                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    const targetHeader = leftHeadersSet.has(header) && header !== rightKey ? `right_${header}` : header;
                     joinedRow[targetHeader] = '';
                 });
                 resultRows.push(joinedRow);
@@ -4371,7 +4401,7 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
                         joinedRow[leftKey] = rightRow[rightKey];
                         return;
                     }
-                    const targetHeader = leftHeaders.includes(header) && header !== rightKey ? `right_${header}` : header;
+                    const targetHeader = leftHeadersSet.has(header) && header !== rightKey ? `right_${header}` : header;
                     joinedRow[targetHeader] = rightRow[header];
                 });
                 
