@@ -200,13 +200,18 @@
     <!-- Modal for Automapper -->
     <div id="automapperModal" class="modal">
         <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Automapper</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Automatically generated column mappings</p>
-            <div id="automapperInterface"></div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button id="applyAutomapper" style="padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Auto-Mappings</button>
-                <button id="sendToMapping" style="padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Send to Mapping Block</button>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Automapper</h2>
+                <button id="applyAutomapperTop" class="modal-action-top" title="Apply Auto-Mappings">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Automatically generated column mappings</p>
+                <div id="automapperInterface"></div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button id="applyAutomapper" style="padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Auto-Mappings</button>
+                    <button id="sendToMapping" style="padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">Send to Mapping Block</button>
+                </div>
             </div>
         </div>
     </div>
@@ -214,11 +219,16 @@
     <!-- Modal for Mapping -->
     <div id="mappingModal" class="modal">
         <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Column Mapping</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Map input columns to output columns</p>
-            <div id="mappingInterface"></div>
-            <button id="applyMapping" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Mapping</button>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Column Mapping</h2>
+                <button id="applyMappingTop" class="modal-action-top" title="Apply Mapping">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Map input columns to output columns</p>
+                <div id="mappingInterface"></div>
+                <button id="applyMapping" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Mapping</button>
+            </div>
         </div>
     </div>
     
@@ -277,11 +287,16 @@
     <!-- Modal for Value Mapper -->
     <div id="valueMapperModal" class="modal">
         <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Value Mapper</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Define value mappings for data columns</p>
-            <div id="valueMapperInterface"></div>
-            <button id="applyValueMapper" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Value Mappings</button>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Value Mapper</h2>
+                <button id="applyValueMapperTop" class="modal-action-top" title="Apply Value Mappings">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Define value mappings for data columns</p>
+                <div id="valueMapperInterface"></div>
+                <button id="applyValueMapper" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Value Mappings</button>
+            </div>
         </div>
     </div>
     
@@ -376,11 +391,16 @@
     <!-- Modal for Join -->
     <div id="joinModal" class="modal">
         <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Join</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Join two datasets on matching keys</p>
-            <div id="joinInterface"></div>
-            <button id="applyJoin" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Join</h2>
+                <button id="applyJoinTop" class="modal-action-top" title="Apply Join">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Join two datasets on matching keys</p>
+                <div id="joinInterface"></div>
+                <button id="applyJoin" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+            </div>
         </div>
     </div>
     
