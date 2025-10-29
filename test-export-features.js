@@ -138,13 +138,15 @@ test('Export functions exist in app.js', () => {
 
 // Test 10: Test generateFilename function
 test('generateFilename function works correctly', () => {
-    // Mock generateFilename function
+    // Mock generateFilename function - matching actual implementation from app.js
     function generateFilename(pattern, defaultName, extension) {
         if (!pattern || pattern.trim() === '') {
             return `${defaultName}.${extension}`;
         }
         
-        const now = new Date('2024-03-15T10:30:45');
+        // Use fixed date for consistent testing
+        const FIXED_TEST_DATE = new Date('2024-03-15T10:30:45'); // Fixed date for test reproducibility
+        const now = FIXED_TEST_DATE;
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
@@ -154,12 +156,12 @@ test('generateFilename function works correctly', () => {
         
         let filename = pattern;
         
-        // Replace date tokens
+        // Replace date tokens (order matters - longest first to avoid partial replacements)
         filename = filename.replace(/YYYYMMDD_HHMMSS/g, `${year}${month}${day}_${hours}${minutes}${seconds}`);
         filename = filename.replace(/YYYYMMDD/g, `${year}${month}${day}`);
         filename = filename.replace(/YYYY-MM-DD/g, `${year}-${month}-${day}`);
         
-        // Handle # separator
+        // Handle # separator for prefix/postfix (removes # after token replacement)
         if (filename.includes('#')) {
             filename = filename.replace(/#/g, '');
         }
