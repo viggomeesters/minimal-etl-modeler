@@ -19,16 +19,16 @@ function test(name, fn) {
     }
 }
 
-// Test 1: Check if logging component exists in HTML
-test('Logging component exists in toolbox', () => {
+// Test 1: Check if logging button exists in flow controls
+test('Logging button exists in flow controls', () => {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
     
-    if (!html.includes('data-type="logging"')) {
-        throw new Error('Logging component not found in toolbox');
+    if (!html.includes('id="logFlowBtn"')) {
+        throw new Error('Logging button not found in flow controls');
     }
     
     if (!html.includes('Data Flow Log')) {
-        throw new Error('Data Flow Log label not found');
+        throw new Error('Data Flow Log title not found');
     }
 });
 
@@ -95,25 +95,20 @@ test('Logging is integrated in data operations', () => {
     });
 });
 
-// Test 6: Check if logging block type is handled in renderBlock
-test('Logging block type is rendered correctly', () => {
+// Test 6: Check if log flow button handler is initialized
+test('Log flow button handler is initialized', () => {
     const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
     
-    if (!js.includes("block.type === 'logging'")) {
-        throw new Error('Logging block type not handled in renderBlock');
+    if (!js.includes("getElementById('logFlowBtn')")) {
+        throw new Error('Log flow button not initialized');
+    }
+    
+    if (!js.includes("openLoggingModal()")) {
+        throw new Error('Log flow button does not call openLoggingModal');
     }
 });
 
-// Test 7: Check if logging modal is opened in openBlockModal
-test('Logging modal opens on block click', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
-    
-    if (!js.includes("openLoggingModal(block)")) {
-        throw new Error('Logging modal not opened in openBlockModal');
-    }
-});
-
-// Test 8: Check clear log button initialization
+// Test 7: Check clear log button initialization
 test('Clear log button is initialized', () => {
     const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
     

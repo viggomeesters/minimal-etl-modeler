@@ -107,9 +107,6 @@ function addLogEntry(blockId, operation, details) {
     if (dataFlowLog.length > 1000) {
         dataFlowLog.shift();
     }
-    
-    // Update all logging blocks
-    updateLoggingBlocks();
 }
 
 /**
@@ -366,10 +363,6 @@ function renderBlock(block) {
         icon = '🔀';
         title = 'Join';
         content = block.content || 'Klik om datasets samen te voegen';
-    } else if (block.type === 'logging') {
-        icon = '📋';
-        title = 'Data Flow Log';
-        content = block.content || 'Klik om data flow log te bekijken';
     }
     
     blockEl.innerHTML = `
@@ -778,12 +771,16 @@ function initModals() {
     // Clear log button handler
     document.getElementById('clearLog').addEventListener('click', () => {
         dataFlowLog = [];
-        updateLoggingBlocks();
         // Re-render if modal is open
         const loggingInterface = document.getElementById('loggingInterface');
         if (loggingInterface && loggingInterface.innerHTML !== '') {
             loggingInterface.innerHTML = '<div style="color: #999; font-style: italic;">Log cleared. No entries yet.</div>';
         }
+    });
+    
+    // Log flow button handler
+    document.getElementById('logFlowBtn').addEventListener('click', () => {
+        openLoggingModal();
     });
 }
 
@@ -830,8 +827,6 @@ function openBlockModal(block) {
         openCopyRenameModal(block);
     } else if (block.type === 'join') {
         openJoinModal(block);
-    } else if (block.type === 'logging') {
-        openLoggingModal(block);
     }
 }
 
@@ -4403,9 +4398,7 @@ function performJoin(leftData, rightData, leftKey, rightKey, joinType) {
  * Opens the logging modal and displays current log
  * @param {Object} block - The logging block
  */
-function openLoggingModal(block) {
-    selectedBlock = block;
-    
+function openLoggingModal() {
     const loggingInterface = document.getElementById('loggingInterface');
     
     if (dataFlowLog.length === 0) {

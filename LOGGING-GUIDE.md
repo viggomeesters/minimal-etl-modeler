@@ -14,15 +14,9 @@ The Data Flow Log component provides a textual representation of the data flow a
 
 ## Using the Data Flow Log
 
-### Adding a Log Block
+### Accessing the Log
 
-1. Locate the **Data Flow Log** component in the toolbox (📋 icon)
-2. Drag it onto the canvas
-3. The block will display the number of log entries
-
-### Viewing the Log
-
-1. Double-click on the Data Flow Log block
+1. Click the **Data Flow Log** button (📋 icon) in the top-right corner of the canvas, next to the save and load buttons
 2. A modal will open showing all logged operations
 3. Each entry shows:
    - Timestamp (HH:MM:SS format)
@@ -121,11 +115,8 @@ Formats a log entry for display in the modal.
 
 **Returns:** Formatted string with timestamp, operation, and details
 
-#### `updateLoggingBlocks()`
-Updates all logging blocks on the canvas to show current entry count.
-
-#### `openLoggingModal(block)`
-Opens the logging modal and displays all current log entries.
+#### `openLoggingModal()`
+Opens the logging modal and displays all current log entries. Called when the log button is clicked.
 
 ## Technical Notes
 
@@ -135,15 +126,14 @@ Opens the logging modal and displays all current log entries.
   - Data transfer (`transferData`)
   - Mapping operations (`applyMapping`)
   - Transform operations (transform block)
-- All logging blocks automatically update when new entries are added
+- The log button is accessible from anywhere on the canvas via the floating controls
 - The log display uses monospace font for better readability
 
 ## Best Practices
 
-1. **Regular Monitoring**: Check the log periodically during workflow development
+1. **Regular Monitoring**: Check the log periodically during workflow development by clicking the log button
 2. **Clear When Needed**: Clear the log when testing new configurations to avoid confusion
-3. **Multiple Blocks**: You can add multiple Data Flow Log blocks to different parts of your canvas
-4. **Debugging**: Use the log to identify where data transformations might be going wrong
+3. **Debugging**: Use the log to identify where data transformations might be going wrong
 
 ## Limitations
 
