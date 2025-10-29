@@ -163,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDragAndDrop();
     initModals();
     initCanvasPanning();
+    initToolGroups();
 });
 
 // Drag and Drop functionality
@@ -265,6 +266,22 @@ function initCanvasPanning() {
         scrollTimeout = setTimeout(() => {
             renderConnections();
         }, 16); // ~60fps throttle
+    });
+}
+
+// Tool Groups expand/collapse functionality
+function initToolGroups() {
+    const groupHeaders = document.querySelectorAll('.tool-group-header');
+    
+    groupHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const groupName = header.dataset.group;
+            const groupItems = document.querySelector(`[data-group-items="${groupName}"]`);
+            
+            // Toggle collapsed class
+            header.classList.toggle('collapsed');
+            groupItems.classList.toggle('collapsed');
+        });
     });
 }
 
