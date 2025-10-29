@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if valuemapper block is in index.html
 test('Value Mapper block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="valuemapper"')) {
         throw new Error('Value Mapper block not found in toolbox');
@@ -36,7 +36,7 @@ test('Value Mapper block exists in toolbox', () => {
 
 // Test 2: Check if valuemapper modal exists
 test('Value Mapper modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('valueMapperModal')) {
         throw new Error('Value Mapper modal not found');
@@ -49,7 +49,7 @@ test('Value Mapper modal exists in HTML', () => {
 
 // Test 3: Check if value mapper functions exist in app.js
 test('Value Mapper functions exist in app.js', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     const requiredFunctions = [
         'openValueMapperModal',
@@ -371,7 +371,7 @@ test('Multiple column mappings work correctly', () => {
 
 // Test 8: Check if valuemapper block type is handled in renderBlock
 test('Value Mapper block type is rendered correctly', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if valuemapper type is handled
     if (!js.includes("block.type === 'valuemapper'")) {
@@ -381,7 +381,7 @@ test('Value Mapper block type is rendered correctly', () => {
 
 // Test 9: Check if valueMap property is saved
 test('valueMap property is serialized in saveFlow', () => {
-    const js = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const js = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if valueMap is included in saveFlow
     if (!js.includes('valueMap: block.valueMap')) {

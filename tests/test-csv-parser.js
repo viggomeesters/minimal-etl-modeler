@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Read the sample CSV file
-const csvPath = path.join(__dirname, 'sample-data.csv');
+const csvPath = path.join(__dirname, path.join(__dirname, '..', 'examples', 'sample-data.csv'));
 const csvContent = fs.readFileSync(csvPath, 'utf8');
 
 console.log('📊 Testing CSV Parser\n');

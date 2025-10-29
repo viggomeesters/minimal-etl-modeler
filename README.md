@@ -2,7 +2,7 @@
 
 Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alteryx Designer, speciaal voor SAP data transformatie.
 
-![Example ETL Flow](screenshot-example-flow.png)
+![Example ETL Flow](assets/screenshot-example-flow.png)
 
 ## ✨ Features
 
@@ -33,7 +33,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 ### Optie 1: Direct in browser (aanbevolen voor lokale bestanden)
 1. Open `index.html` in je browser
 2. Sleep een **Data Input** block naar het canvas
-3. Dubbelklik op het block en laad een CSV bestand (bijv. `sample-data.csv`)
+3. Dubbelklik op het block en laad een CSV bestand (bijv. `examples/sample-data.csv`)
 4. Sleep een **Output Data** block naar het canvas
 5. Verbind de blocks door te klikken op de output connector (⚪ onderaan) van Data Input en sleep naar de input connector (⚪ bovenaan) van Output Data
 6. Dubbelklik op Output Data om te exporteren (CSV of XLSX)
@@ -58,15 +58,28 @@ Open vervolgens: `http://localhost:8000`
 
 ```
 minimal-etl-modeler/
-├── index.html                    # Hoofd HTML bestand
-├── style.css                     # Minimalistisch styling
-├── app.js                        # Core functionaliteit
-├── sample-data.csv               # Voorbeeld SAP data
-├── README.md                     # Deze file
-├── QUICKSTART.md                 # Snelle start gids
-├── GEBRUIKERSHANDLEIDING.md      # Uitgebreide handleiding
-├── ARCHITECTURE.md               # Technische architectuur
-└── demo.html                     # Demo pagina
+├── index.html           # 🎯 START HIER - Open dit bestand om de applicatie te starten
+├── app.js               # Core applicatie logica
+├── style.css            # Styling
+├── README.md            # Deze file
+├── examples/            # Sample data en voorbeeld flows
+│   ├── sample-data.csv
+│   ├── sample-template.csv
+│   ├── large-test-data.csv
+│   ├── example-etl-flow.json
+│   ├── demo.html
+│   └── example-flow.html
+├── output/              # 📤 Sla hier je geëxporteerde bestanden op
+├── docs/                # Documentatie en handleidingen
+│   ├── QUICKSTART.md
+│   ├── GEBRUIKERSHANDLEIDING.md
+│   ├── ARCHITECTURE.md
+│   └── ... (meer guides)
+├── tests/               # Test files en test data
+│   ├── test-*.js
+│   └── test-*.csv
+└── assets/              # Screenshots en afbeeldingen
+    └── screenshot-*.png
 ```
 
 ## 🎨 Design Filosofie
@@ -168,17 +181,17 @@ Zie [SPLIT-TRANSFORM-BLOCKS-GUIDE.md](SPLIT-TRANSFORM-BLOCKS-GUIDE.md) voor uitg
 
 ## 🧪 Tests
 
-Het project bevat uitgebreide tests voor alle functionaliteiten:
+Het project bevat uitgebreide tests voor alle functionaliteiten. Alle tests bevinden zich in de `tests/` directory:
 
 ```bash
-node test-mapping.js                   # Test mapping functionaliteit (9 tests)
-node test-automapper.js                # Test automapper functionaliteit (12 tests)
-node test-automapper-integration.js    # Test complete data flow (10 tests)
-node test-advanced-transform.js        # Test transformatie operaties (20 tests)
-node test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
-node test-join.js                      # Test join functionaliteit (10 tests)
-node test-validation.js                # Test validation functionaliteit (13 tests)
-node test-export-features.js           # Test export en rejected output (16 tests) ✨ NIEUW
+node tests/test-mapping.js                   # Test mapping functionaliteit (9 tests)
+node tests/test-automapper.js                # Test automapper functionaliteit (12 tests)
+node tests/test-automapper-integration.js    # Test complete data flow (10 tests)
+node tests/test-advanced-transform.js        # Test transformatie operaties (20 tests)
+node tests/test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
+node tests/test-join.js                      # Test join functionaliteit (10 tests)
+node tests/test-validation.js                # Test validation functionaliteit (13 tests)
+node tests/test-export-features.js           # Test export en rejected output (16 tests) ✨ NIEUW
 ```
 
 ## 🔄 Aanbevolen Workflows
@@ -263,11 +276,15 @@ De applicatie is geoptimaliseerd voor datasets met **10,000+ rijen**:
 
 ## 📚 Documentatie
 
-- **[CSV Format Guide](CSV-GUIDE.md)** - CSV bestand vereisten en best practices
-- **[Logging Guide](LOGGING-GUIDE.md)** - Data Flow Log functionaliteit en gebruik
-- **[Architecture](ARCHITECTURE.md)** - Technische architectuur en design patterns
-- **[Quick Start](QUICKSTART.md)** - Snelle start gids
-- **[User Guide](GEBRUIKERSHANDLEIDING.md)** - Uitgebreide gebruikershandleiding
+Alle documentatie is beschikbaar in de `docs/` directory:
+
+- **[Quick Start](docs/QUICKSTART.md)** - Snelle start gids
+- **[User Guide](docs/GEBRUIKERSHANDLEIDING.md)** - Uitgebreide gebruikershandleiding
+- **[Architecture](docs/ARCHITECTURE.md)** - Technische architectuur en design patterns
+- **[CSV Format Guide](docs/CSV-GUIDE.md)** - CSV bestand vereisten en best practices
+- **[Logging Guide](docs/LOGGING-GUIDE.md)** - Data Flow Log functionaliteit en gebruik
+- **[Transform Guide](docs/TRANSFORM-GUIDE.md)** - Transformatie blocks handleiding
+- **[Performance](docs/PERFORMANCE-OPTIMIZATIONS.md)** - Performance optimalisaties
 
 ## 🐛 Bekende Beperkingen
 

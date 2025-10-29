@@ -24,3 +24,7 @@ build/
 
 # Test coverage
 coverage/
+
+# Output data - user generated files
+/output/*
+!/output/README.md

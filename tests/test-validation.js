@@ -23,7 +23,7 @@ function test(name, fn) {
 
 // Test 1: Check if validation block is in index.html
 test('Validation block exists in toolbox', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('data-type="validation"')) {
         throw new Error('Validation block not found in toolbox');
@@ -36,7 +36,7 @@ test('Validation block exists in toolbox', () => {
 
 // Test 2: Check if validation modal exists
 test('Validation modal exists in HTML', () => {
-    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     
     if (!html.includes('validationModal')) {
         throw new Error('Validation modal not found');
@@ -49,7 +49,7 @@ test('Validation modal exists in HTML', () => {
 
 // Test 3: Check if validation functions exist in app.js
 test('Validation functions exist in app.js', () => {
-    const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!appJs.includes('function openValidationModal')) {
         throw new Error('openValidationModal function not found');
@@ -321,7 +321,7 @@ test('applyValidation processes data correctly', () => {
 
 // Test 11: Test validation block type is rendered correctly
 test('Validation block type is rendered correctly', () => {
-    const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     // Check if validation block type is handled in renderBlock
     if (!appJs.includes("block.type === 'validation'")) {
@@ -336,7 +336,7 @@ test('Validation block type is rendered correctly', () => {
 
 // Test 12: Test validation modal routing in openBlockModal
 test('Validation modal routing exists', () => {
-    const appJs = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+    const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     
     if (!appJs.includes("block.type === 'validation'")) {
         throw new Error('Validation type check not found in openBlockModal');
