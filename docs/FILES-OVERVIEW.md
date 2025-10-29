@@ -2,52 +2,77 @@
 
 Complete list of all files in the Minimal ETL Modeler project with descriptions.
 
-## Core Application Files (3)
+## Project Structure
 
-| File | Size | Purpose |
-|------|------|---------|
-| `index.html` | 1.9KB | Main application interface with toolbox, canvas, and modals |
-| `style.css` | 4.5KB | Minimalistic styling with clean design |
-| `app.js` | 12KB | Core JavaScript functionality for ETL operations |
+The project is organized into clear directories:
+- Root: Core application files only
+- `docs/`: All documentation
+- `examples/`: Sample data and demo files
+- `tests/`: Test files and test data
+- `assets/`: Screenshots and images
+- `output/`: Directory for exported data (user files not tracked in git)
 
-## Demo & Example Files (2)
+## Core Application Files (5)
 
-| File | Size | Purpose |
-|------|------|---------|
-| `demo.html` | 3.4KB | Interactive demo page with screenshots and instructions |
-| `example-flow.html` | 4.6KB | Pre-configured example showing connected blocks |
+| File | Purpose |
+|------|---------|
+| `index.html` | 🎯 Main application file - OPEN THIS TO START |
+| `app.js` | Core JavaScript functionality for ETL operations |
+| `style.css` | Minimalistic styling with clean design |
+| `README.md` | Project overview and main documentation |
+| `START-HERE.md` | Quick start guide - clear entry point |
 
-## Documentation Files (8)
+## Documentation Files (docs/) - 26 files
 
-| File | Size | Purpose |
-|------|------|---------|
-| `README.md` | 2.1KB | Main project documentation and quick start guide |
-| `QUICKSTART.md` | 1.7KB | 30-second getting started guide |
-| `GEBRUIKERSHANDLEIDING.md` | 2.4KB | Comprehensive user manual in Dutch |
-| `ARCHITECTURE.md` | 7.8KB | Technical architecture with diagrams |
-| `DELIVERABLES.md` | 4.8KB | Complete deliverables summary |
-| `CHANGELOG.md` | 2.6KB | Version history and release notes |
-| `VISUAL-REFERENCE.md` | 7.7KB | Visual component reference guide |
-| `FILES-OVERVIEW.md` | This file | Complete files listing |
+Key documentation:
+| File | Purpose |
+|------|---------|
+| `QUICKSTART.md` | Get started in 30 seconds |
+| `GEBRUIKERSHANDLEIDING.md` | Comprehensive user manual (Dutch) |
+| `ARCHITECTURE.md` | Technical architecture with diagrams |
+| `CSV-GUIDE.md` | CSV format requirements |
+| `TRANSFORM-GUIDE.md` | Transform operations guide |
+| `LOGGING-GUIDE.md` | Data flow logging |
+| `CHANGELOG.md` | Version history and release notes |
+| ... and 19 more documentation files |
 
-## Test Files (2)
+## Examples Directory (examples/)
 
-| File | Size | Purpose |
-|------|------|---------|
-| `test-csv-parser.js` | 1.5KB | Unit test for CSV parsing functionality |
-| `test-integration.js` | 6.4KB | Integration test suite (10 tests) |
+| File | Purpose |
+|------|---------|
+| `sample-data.csv` | Sample SAP material data with 10 records |
+| `sample-template.csv` | Example template structure |
+| `large-test-data.csv` | Large dataset for performance testing (10,000+ rows) |
+| `example-etl-flow.json` | Pre-configured ETL flow |
+| `demo.html` | Interactive demo page |
+| `example-flow.html` | Example flow demonstration |
+| `README.md` | Examples directory guide |
 
-## Data Files (1)
+## Tests Directory (tests/) - 20+ test files
 
-| File | Size | Purpose |
-|------|------|---------|
-| `sample-data.csv` | 541B | Sample SAP material data with 10 records |
+| File | Purpose |
+|------|---------|
+| `test-mapping.js` | Mapping functionality tests (9 tests) |
+| `test-automapper.js` | Automapper tests (12 tests) |
+| `test-transform.js` | Transform tests |
+| `test-join.js` | Join functionality tests (10 tests) |
+| `test-validation.js` | Validation tests (13 tests) |
+| `test-export-features.js` | Export and rejected output tests (16 tests) |
+| ... and 14 more test files |
+| `test-*.csv` | Test data files |
+| `README.md` | Tests directory guide |
 
-## Media Files (2)
+## Assets Directory (assets/)
 
-| File | Size | Purpose |
-|------|------|---------|
-| `screenshot-initial.png` | 23KB | Screenshot of empty canvas interface |
+| File | Purpose |
+|------|---------|
+| `screenshot-initial.png` | Screenshot of empty canvas interface |
+| `screenshot-example-flow.png` | Example ETL flow screenshot |
+| `README.md` | Assets directory guide |
+
+## Output Directory (output/)
+
+User-generated export files are saved here. This directory is ignored by git to keep exported data private.
 | `screenshot-example-flow.png` | 46KB | Screenshot of working ETL flow |
 
 ## Configuration Files (2)
@@ -83,25 +108,29 @@ Total:            19 files (184KB)
 ## Quick Access
 
 **To run the app:**
-- Open `index.html`
+- Open `index.html` in the root directory
+- Or read `START-HERE.md` for quick instructions
 
 **To see a demo:**
-- Open `demo.html` or `example-flow.html`
+- Open `examples/demo.html` or `examples/example-flow.html`
 
 **To understand the code:**
-- Read `ARCHITECTURE.md`
+- Read `docs/ARCHITECTURE.md`
 
 **To get started quickly:**
-- Read `QUICKSTART.md`
+- Read `docs/QUICKSTART.md`
 
 **To see all features:**
-- Read `DELIVERABLES.md`
+- Read `docs/DELIVERABLES.md`
 
 **To understand components:**
-- Read `VISUAL-REFERENCE.md`
+- Read `docs/VISUAL-REFERENCE.md`
 
 **For Dutch users:**
-- Read `GEBRUIKERSHANDLEIDING.md`
+- Read `docs/GEBRUIKERSHANDLEIDING.md`
+
+**To run tests:**
+- See `tests/README.md`
 
 ## File Dependencies
 
@@ -109,10 +138,11 @@ Total:            19 files (184KB)
 index.html
   └── style.css (styling)
   └── app.js (functionality)
+  └── assets/ (images for documentation)
 
-example-flow.html
-  └── style.css (styling)
-  └── app.js (functionality)
+examples/example-flow.html
+  └── ../style.css (styling)
+  └── ../app.js (functionality)
 
 demo.html
   └── screenshot-initial.png (image)

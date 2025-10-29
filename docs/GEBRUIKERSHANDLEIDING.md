@@ -32,7 +32,7 @@ Open vervolgens `http://localhost:8000` in je browser.
 1. Sleep een **Data Input** block (📥) van de toolbox naar het canvas
 2. Dubbelklik op het Data Input block
 3. Klik op "Choose File" en selecteer een CSV bestand
-   - Je kunt `sample-data.csv` gebruiken om te testen
+   - Je kunt `examples/sample-data.csv` gebruiken om te testen
 4. Het block toont nu het aantal geladen rijen
 
 #### Stap 2: Data bekijken
@@ -102,8 +102,8 @@ Open vervolgens `http://localhost:8000` in je browser.
 ### Workflow 1: Snelle mapping met Automapper
 **Ideaal voor**: Datasets met vergelijkbare kolomnamen
 
-1. Sleep **Data Input** naar canvas → Laad source CSV (bijv. `sample-data.csv`)
-2. Sleep **Target Structure** naar canvas → Laad template CSV (bijv. `sample-template.csv`)
+1. Sleep **Data Input** naar canvas → Laad source CSV (bijv. `examples/sample-data.csv`)
+2. Sleep **Target Structure** naar canvas → Laad template CSV (bijv. `examples/sample-template.csv`)
 3. Sleep **Automapper** naar canvas
 4. Verbind **Data Input** → **Automapper**
 5. Verbind **Target Structure** → **Automapper** (of andersom)
