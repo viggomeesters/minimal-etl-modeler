@@ -81,7 +81,7 @@ With these files in place, GitHub Copilot will now:
 
 ## Key Project Characteristics (for Copilot)
 
-�� **No External Dependencies**
+🚫 **No External Dependencies**
 - Pure vanilla JavaScript, HTML5, CSS3
 - No npm packages, no frameworks
 - Browser-native APIs only
