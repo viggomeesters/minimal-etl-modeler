@@ -381,6 +381,10 @@ function renderBlock(block) {
         icon = '🚫';
         title = 'Rejected Output';
         content = block.content || 'Klik om rejected data te exporteren';
+    } else if (block.type === 'dataview') {
+        icon = '👁️';
+        title = 'Data View';
+        content = block.content || 'Klik om data te bekijken';
     }
     
     blockEl.innerHTML = `
@@ -422,7 +426,8 @@ function renderBlock(block) {
                 'expression': 'Expression Output',
                 'copyrename': 'Copy/Rename Output',
                 'join': 'Join Output',
-                'rejectedoutput': 'Rejected Data'
+                'rejectedoutput': 'Rejected Data',
+                'dataview': 'Data View'
             };
             showDataPreview(block, titles[block.type] || 'Data Preview');
         } else {
@@ -885,6 +890,8 @@ function openBlockModal(block) {
         openJoinModal(block);
     } else if (block.type === 'rejectedoutput') {
         openRejectedOutputModal(block);
+    } else if (block.type === 'dataview') {
+        openDataViewModal(block);
     }
 }
 
@@ -2947,6 +2954,90 @@ function openRejectedOutputModal(block) {
         const filename = generateFilename(pattern, 'rejected', 'xlsx');
         exportToXLSX(allRejectedRows, rejectedHeaders, filename);
     };
+}
+
+// Data View functionality - pass-through component for viewing data
+function openDataViewModal(block) {
+    selectedBlock = block;
+    
+    // Get input data from connected blocks
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('dataViewInterface').innerHTML = '<p style="color: #e44;">Verbind eerst een block met data aan deze Data View block.</p>';
+        document.getElementById('dataViewModal').style.display = 'block';
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    const inputRows = inputData.data || [];
+    
+    // Store the data as-is (pass-through)
+    dataStore[block.id] = {
+        headers: inputHeaders,
+        data: inputRows
+    };
+    
+    // Update block content
+    updateBlockContent(block.id, `${inputRows.length} rijen, ${inputHeaders.length} kolommen`);
+    
+    // Build data view interface with full table
+    let html = '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px; background: #f9f9f9;">';
+    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Data Overview</h3>';
+    html += `<p style="color: #666; font-size: 13px; margin-bottom: 10px;">Viewing: ${inputRows.length} rijen en ${inputHeaders.length} kolommen</p>`;
+    
+    // Show column names
+    html += '<div style="margin-top: 15px;">';
+    html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Kolommen:</h4>';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+    inputHeaders.forEach(header => {
+        html += `<span style="padding: 6px 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">${escapeHtml(header)}</span>`;
+    });
+    html += '</div></div>';
+    
+    // Show data table with scrollable container
+    if (inputRows.length > 0) {
+        html += '<div style="margin-top: 15px;">';
+        html += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Data Preview:</h4>';
+        html += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px;">';
+        html += '<table style="width: 100%; border-collapse: collapse; background: white; font-size: 12px;">';
+        html += '<thead style="position: sticky; top: 0; background: #f5f5f5; z-index: 10;"><tr>';
+        inputHeaders.forEach(header => {
+            html += `<th style="padding: 8px; border: 1px solid #e0e0e0; text-align: left; font-weight: 600;">${escapeHtml(header)}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        
+        // Display first 100 rows for performance
+        const displayRows = inputRows.slice(0, 100);
+        displayRows.forEach(row => {
+            html += '<tr>';
+            inputHeaders.forEach(header => {
+                html += `<td style="padding: 8px; border: 1px solid #e0e0e0;">${escapeHtml(row[header] || '')}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        html += '</div>';
+        
+        if (inputRows.length > 100) {
+            html += `<p style="margin-top: 10px; color: #888; font-size: 12px;">Toon eerste 100 van ${inputRows.length} rijen</p>`;
+        }
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    document.getElementById('dataViewInterface').innerHTML = html;
+    document.getElementById('dataViewModal').style.display = 'block';
+    
+    // Log the data view
+    addLogEntry(block.id, 'DATA_VIEW', {
+        rowCount: inputRows.length,
+        columns: inputHeaders
+    });
+    
+    // Propagate data to connected blocks
+    propagateData(block.id);
 }
 
 function exportRejectedCSV(rows, headers, filename) {
