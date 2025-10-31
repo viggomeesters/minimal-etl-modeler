@@ -1727,6 +1727,11 @@ function openAutomapperModal(block) {
         applyAutomapper(block, inputHeaders);
     };
     
+    // Apply automapper button (top right) - same handler
+    document.getElementById('applyAutomapperTop').onclick = () => {
+        applyAutomapper(block, inputHeaders);
+    };
+    
     // Send to mapping button
     document.getElementById('sendToMapping').onclick = () => {
         sendToMappingBlock(block);
@@ -1900,6 +1905,11 @@ function openMappingModal(block) {
     
     // Apply mapping button
     document.getElementById('applyMapping').onclick = () => {
+        applyMapping(block, inputHeaders, outputHeaders);
+    };
+    
+    // Apply mapping button (top right) - same handler
+    document.getElementById('applyMappingTop').onclick = () => {
         applyMapping(block, inputHeaders, outputHeaders);
     };
 }
@@ -3395,6 +3405,11 @@ function openValueMapperModal(block) {
         applyValueMapping(block);
     };
     
+    // Apply value mapper button (top right) - same handler
+    document.getElementById('applyValueMapperTop').onclick = () => {
+        applyValueMapping(block);
+    };
+    
     // Show initial preview
     updateValueMapperPreview(inputRows.slice(0, 5), inputHeaders, existingValueMap);
 }
@@ -4658,6 +4673,11 @@ function openJoinModal(block) {
     showModal('joinModal');
     
     document.getElementById('applyJoin').onclick = () => {
+        applyJoin(block, leftInput, rightInput);
+    };
+    
+    // Apply join button (top right) - same handler
+    document.getElementById('applyJoinTop').onclick = () => {
         applyJoin(block, leftInput, rightInput);
     };
 }
