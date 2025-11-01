@@ -28,6 +28,28 @@ let performanceMetrics = {
     operationCount: 0
 };
 
+// Block data preview titles
+const BLOCK_DATA_PREVIEW_TITLES = {
+    'input': 'Input Source Data',
+    'output': 'Target Structure',
+    'automapper': 'Automapper Output',
+    'mapping': 'Mapping Output',
+    'transform': 'Transform Output',
+    'outputdata': 'Output Data',
+    'validation': 'Validation Output',
+    'valuemapper': 'Value Mapper Output',
+    'concatenate': 'Concatenate Output',
+    'split': 'Split Output',
+    'casechange': 'Case Change Output',
+    'math': 'Math Output',
+    'regexreplace': 'Regex Replace Output',
+    'dateformat': 'Date Format Output',
+    'expression': 'Expression Output',
+    'copyrename': 'Copy/Rename Output',
+    'join': 'Join Output',
+    'rejectedoutput': 'Rejected Data'
+};
+
 /**
  * Measures execution time of a function and logs if it exceeds threshold
  * @param {string} operationName - Name of the operation being measured
@@ -286,6 +308,22 @@ function initToolGroups() {
     });
 }
 
+/**
+ * Updates the visibility of the eye icon for a block based on data availability
+ * @param {string} blockId - ID of the block to update
+ */
+function updateEyeIconVisibility(blockId) {
+    const eyeIcon = document.getElementById(`${blockId}-eye`);
+    if (eyeIcon) {
+        // Show eye icon if block has data in dataStore
+        if (dataStore[blockId]) {
+            eyeIcon.style.display = 'inline';
+        } else {
+            eyeIcon.style.display = 'none';
+        }
+    }
+}
+
 function createBlock(type, x, y) {
     const blockId = `block-${blockCounter++}`;
     const block = {
@@ -387,6 +425,7 @@ function renderBlock(block) {
         <div class="block-header">
             <span class="block-icon">${icon}</span>
             <span class="block-title">${title}</span>
+            <span class="block-eye" id="${block.id}-eye" style="display: none;" title="Bekijk data">👁️</span>
             <span class="block-delete" onclick="deleteBlock('${block.id}')">✕</span>
         </div>
         <div class="block-content" id="${block.id}-content">
@@ -404,31 +443,23 @@ function renderBlock(block) {
         e.stopPropagation();
         // Shift+DoubleClick shows data preview if block has data
         if (e.shiftKey && dataStore[block.id]) {
-            const titles = {
-                'input': 'Input Source Data',
-                'output': 'Target Structure',
-                'automapper': 'Automapper Output',
-                'mapping': 'Mapping Output',
-                'transform': 'Transform Output',
-                'outputdata': 'Output Data',
-                'validation': 'Validation Output',
-                'valuemapper': 'Value Mapper Output',
-                'concatenate': 'Concatenate Output',
-                'split': 'Split Output',
-                'casechange': 'Case Change Output',
-                'math': 'Math Output',
-                'regexreplace': 'Regex Replace Output',
-                'dateformat': 'Date Format Output',
-                'expression': 'Expression Output',
-                'copyrename': 'Copy/Rename Output',
-                'join': 'Join Output',
-                'rejectedoutput': 'Rejected Data'
-            };
-            showDataPreview(block, titles[block.type] || 'Data Preview');
+            showDataPreview(block, BLOCK_DATA_PREVIEW_TITLES[block.type] || 'Data Preview');
         } else {
             openBlockModal(block);
         }
     });
+    
+    // Add click handler for the eye icon
+    const eyeIcon = blockEl.querySelector('.block-eye');
+    if (eyeIcon) {
+        eyeIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showDataPreview(block, BLOCK_DATA_PREVIEW_TITLES[block.type] || 'Data Preview');
+        });
+    }
+    
+    // Update eye icon visibility based on data availability
+    updateEyeIconVisibility(block.id);
     
     canvas.appendChild(blockEl);
     initConnectors(block.id);
@@ -924,6 +955,9 @@ function handleFileSelect(e) {
             headers: parsed.headers
         };
         
+        // Update eye icon visibility for this block
+        updateEyeIconVisibility(selectedBlock.id);
+        
         // Log the data loading
         addLogEntry(selectedBlock.id, 'DATA_LOADED', {
             rowCount: parsed.data.length,
@@ -992,6 +1026,9 @@ function handleTemplateSelect(e) {
             isTemplate: true,
             fileName: file.name
         };
+        
+        // Update eye icon visibility for this block
+        updateEyeIconVisibility(selectedBlock.id);
         
         // Update block UI
         let statusText = `${escapeHtml(file.name)} (${parsed.data.length} rijen)`;
@@ -1165,6 +1202,9 @@ function transferData(fromId, toId) {
     }
     
     dataStore[toId] = clonedData;
+    
+    // Update eye icon visibility for the target block
+    updateEyeIconVisibility(toId);
     
     console.debug('transferData', {
         from: fromId,
@@ -1756,6 +1796,9 @@ function applyAutomapper(block, inputHeaders) {
         // Store mapped data
         dataStore[block.id] = mappedData;
         
+        // Update eye icon visibility
+        updateEyeIconVisibility(block.id);
+        
         // Update block content
         const mappingCount = Object.keys(mappings).length;
         const unmappedCount = mappedData.unmappedColumns ? mappedData.unmappedColumns.length : 0;
@@ -1972,6 +2015,9 @@ function applyMapping(block, inputHeaders, outputHeaders) {
         
         // Store mapped data
         dataStore[block.id] = mappedData;
+        
+        // Update eye icon visibility
+        updateEyeIconVisibility(block.id);
         
         // Log the mapping operation
         addLogEntry(block.id, 'MAPPING_APPLIED', {
@@ -2389,6 +2435,9 @@ function applyAdvancedTransform(block, inputHeaders, inputRows) {
         
         // Store transformed data
         dataStore[block.id] = transformedData;
+        
+        // Update eye icon visibility
+        updateEyeIconVisibility(block.id);
         
         // Log the transformation
         addLogEntry(block.id, 'TRANSFORM_APPLIED', {
@@ -3311,6 +3360,9 @@ function applyValidationConfig(block, inputHeaders) {
         // Store validation result in dataStore (only valid rows)
         dataStore[block.id] = validationResult;
         
+        // Update eye icon visibility
+        updateEyeIconVisibility(block.id);
+        
         // Store rejected data separately
         if (validationResult.rejectedData && validationResult.rejectedData.data.length > 0) {
             rejectedDataStore[block.id] = validationResult.rejectedData;
@@ -3683,6 +3735,9 @@ function applyValueMapping(block) {
         // Store mapped data
         dataStore[block.id] = mappedData;
         
+        // Update eye icon visibility
+        updateEyeIconVisibility(block.id);
+        
         // Update block content
         const totalMappings = Object.keys(valueMap).reduce((sum, col) => {
             return sum + Object.keys(valueMap[col]).length;
@@ -3984,6 +4039,9 @@ function applyConcatenate(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('concatenateModal');
@@ -4127,6 +4185,9 @@ function applySplit(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
     updateBlockContent(block.id, `${maxParts} kolommen aangemaakt (${outputColumnPrefix}_1 t/m ${outputColumnPrefix}_${maxParts})`);
     propagateData(block.id);
     hideModal('splitModal');
@@ -4218,6 +4279,9 @@ function applyCaseChange(block, inputData) {
     
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
     
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
@@ -4325,6 +4389,9 @@ function applyMath(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('mathModal');
@@ -4422,6 +4489,9 @@ function applyRegexReplace(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('regexReplaceModal');
@@ -4518,6 +4588,9 @@ function applyDateFormat(block, inputData) {
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
     
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('dateFormatModal');
@@ -4593,6 +4666,9 @@ function applyExpression(block, inputData) {
     
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
     
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
@@ -4675,6 +4751,9 @@ function applyCopyRename(block, inputData) {
     
     const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
     dataStore[block.id] = transformedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
     
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
@@ -4826,6 +4905,9 @@ function applyJoin(block, leftInput, rightInput) {
     
     // Store result
     dataStore[block.id] = joinedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
     
     // Update block content
     const joinTypeLabel = {
