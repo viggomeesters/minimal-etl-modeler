@@ -75,6 +75,10 @@
                         <span class="group-title">Data Operations</span>
                     </div>
                     <div class="tool-group-items" data-group-items="data-ops">
+                        <div class="tool-item" draggable="true" data-type="dataview">
+                            <span class="icon">👁️</span>
+                            <span>Data View</span>
+                        </div>
                         <div class="tool-item" draggable="true" data-type="join">
                             <span class="icon">🔀</span>
                             <span>Join</span>
@@ -281,6 +285,16 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Configure validation rules for data columns</p>
             <div id="validationInterface"></div>
             <button id="applyValidation" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply Validation</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Data View -->
+    <div id="dataViewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2>Data View</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">View data flowing through this block</p>
+            <div id="dataViewInterface"></div>
         </div>
     </div>
     

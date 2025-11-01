@@ -7,9 +7,10 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 ## ✨ Features
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
-- 👁️ **Inline Data Preview**: ✨ **NIEUW** - Dubbelklik op elk block om data te bekijken (Shift+Dubbelklik voor preview)
-- 💾 **Multi-format Export**: ✨ **NIEUW** - Exporteer naar CSV en XLSX met custom filename patterns
-- 🚫 **Rejected Output**: ✨ **NIEUW** - Verzamel en exporteer records die validatie falen
+- 👁️ **Data View**: ✨ **NIEUW** - Bekijk data op elk punt in je ETL flow met een dedicated viewing component
+- 👁️ **Inline Data Preview**: Dubbelklik op elk block om data te bekijken (Shift+Dubbelklik voor preview)
+- 💾 **Multi-format Export**: Exporteer naar CSV en XLSX met custom filename patterns
+- 🚫 **Rejected Output**: Verzamel en exporteer records die validatie falen
 - 🤖 **Automapper**: Automatische kolom mapping met smart matching algoritme
 - 🔗 **Mapping**: Map kolommen tussen input en output formaten (handmatig of vanuit Automapper)
 - ✓ **Validation**: Valideer data met regels en verzamel rejected records
@@ -104,7 +105,16 @@ minimal-etl-modeler/
 - Preview toont eerste 100 rijen voor snelle controle
 - Werkt voor alle transformatie blocks, validation, joins, etc.
 
-### Output Data Block ✨ NIEUW
+### Data View Block 👁️ NIEUW
+- **Dedicated viewing component** om data te inspecteren op elk punt in je ETL flow
+- **Pass-through functionaliteit**: Data wordt ongewijzigd doorgegeven aan volgende blocks
+- **Full data preview**: Bekijk alle kolommen en eerste 100 rijen in een scrollbare tabel
+- **Data overview**: Zie het aantal rijen en kolommen in één oogopslag
+- **Gebruik**: Sleep naar canvas, verbind met een data block, dubbelklik om te openen
+- **Perfect voor debugging**: Controleer data tussen transformatie stappen
+- **Geen impact op performance**: Gebruikt dezelfde optimalisaties als andere blocks
+
+### Output Data Block
 - Export data naar **CSV** of **XLSX** formaat
 - Custom filename patterns met datum tokens:
   - `YYYYMMDD`: bijv. "20240315"
@@ -191,12 +201,22 @@ node tests/test-advanced-transform.js        # Test transformatie operaties (20 
 node tests/test-split-transform-blocks.js    # Test individuele transformatie blocks (12 tests)
 node tests/test-join.js                      # Test join functionaliteit (10 tests)
 node tests/test-validation.js                # Test validation functionaliteit (13 tests)
-node tests/test-export-features.js           # Test export en rejected output (16 tests) ✨ NIEUW
+node tests/test-export-features.js           # Test export en rejected output (16 tests)
+node tests/test-dataview.js                  # Test data view component (10 tests) 👁️ NIEUW
 ```
 
 ## 🔄 Aanbevolen Workflows
 
-**Met data quality en rejected output:** ✨ NIEUW
+**Met Data View voor pipeline debugging:** 👁️ NIEUW
+1. Data Input → Laad bron CSV
+2. Data View → Bekijk ruwe input data
+3. Transform/Split/Concatenate → Pas transformaties toe
+4. Data View → Controleer getransformeerde data
+5. Validation → Valideer data
+6. Data View → Bekijk finale data voor export
+7. Output Data → Exporteer resultaat
+
+**Met data quality en rejected output:**
 1. Data Input → Laad bron CSV
 2. Validation → Configureer validatie regels
 3. Output Data → Exporteer valid records naar XLSX met custom filename
@@ -207,7 +227,8 @@ node tests/test-export-features.js           # Test export en rejected output (1
 1. Data Input 1 → Laad eerste dataset (bijv. employees.csv)
 2. Data Input 2 → Laad tweede dataset (bijv. departments.csv)
 3. Join → Verbind beide inputs, selecteer join type en keys
-4. Output Data → Exporteer gecombineerde dataset als XLSX
+4. Data View → Controleer gecombineerde data 👁️ NIEUW
+5. Output Data → Exporteer gecombineerde dataset als XLSX
 
 **Met visuele transformatie blocks:**
 1. Data Input → Laad bron CSV
@@ -215,7 +236,7 @@ node tests/test-export-features.js           # Test export en rejected output (1
 3. Split → Extraheer domein uit email
 4. Case Change → Normaliseer tekst
 5. Math → Bereken totalen
-6. **Shift+Dubbelklik** op elk block om data te inspecteren ✨ NIEUW
+6. **Data View** op elk punt om data te inspecteren 👁️ NIEUW
 7. Output Data → Exporteer resultaat als XLSX met custom filename
 
 **Snelle mapping met Automapper:**
