@@ -15,18 +15,15 @@ python3 -m http.server 8080
 1. **Drag** a 📥 Data Input block to the canvas
 2. **Double-click** the block
 3. **Select** `../examples/sample-data.csv` (or your own CSV)
-4. **Drag** a 👁️ Data View block to the canvas
-5. **Connect** them:
-   - Click the bottom ⚪ of Data Input
-   - Drag to the top ⚪ of Data View
-6. **Double-click** Data View to see your data!
+4. **Click** the 👁️ Data View button in the top-right corner to see your data!
+5. **Alternative**: Use **Shift+Double-click** on the Data Input block for quick preview
 
 ### That's It! 🎉
 
-You now have a working ETL flow that:
+You now have data loaded and can view it:
 - ✅ Loads CSV data
-- ✅ Displays it in a clean table
-- ✅ Shows the data flow visually
+- ✅ View with the Data View button (top-right)
+- ✅ Or use Shift+Double-click for quick preview
 
 ## Common Tasks
 

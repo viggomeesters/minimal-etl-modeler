@@ -7,7 +7,7 @@ Een lightweight, schaalbare en minimalistische ETL modeler geïnspireerd op Alte
 ## ✨ Features
 
 - 📥 **Data Input**: Laad CSV bestanden met SAP data
-- 👁️ **Data View**: ✨ **NIEUW** - Bekijk data op elk punt in je ETL flow met een dedicated viewing component
+- 👁️ **Data View Button**: Klik op de Data View button (👁️) in de rechterbovenhoek om data van alle blocks te bekijken
 - 👁️ **Inline Data Preview**: Dubbelklik op elk block om data te bekijken (Shift+Dubbelklik voor preview)
 - 💾 **Multi-format Export**: Exporteer naar CSV en XLSX met custom filename patterns
 - 🚫 **Rejected Output**: Verzamel en exporteer records die validatie falen
