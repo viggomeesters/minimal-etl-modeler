@@ -2959,7 +2959,7 @@ function openDataViewModal() {
     // Find all blocks that have data
     const blocksWithData = [];
     for (const blockId in dataStore) {
-        if (dataStore[blockId] && dataStore[blockId].headers && dataStore[blockId].data) {
+        if (dataStore[blockId] && dataStore[blockId].headers && dataStore[blockId].data && dataStore[blockId].data.length > 0) {
             const block = document.querySelector(`[data-id="${blockId}"]`);
             if (block) {
                 blocksWithData.push({
@@ -3074,7 +3074,7 @@ function openDataViewModal() {
     
     // Set up selector change handler
     const selector = document.getElementById('dataViewBlockSelector');
-    if (selector) {
+    if (selector && blocksWithData.length > 0) {
         selector.addEventListener('change', (e) => {
             displayBlockData(parseInt(e.target.value));
         });

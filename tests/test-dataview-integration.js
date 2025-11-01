@@ -160,8 +160,8 @@ test('Data View limits display to first 100 rows',
 // Test 11: Data View no longer propagates (it's now a viewer, not a flow component)
 // The new openDataViewModal function doesn't take a block parameter
 test('Data View is now a viewer tool (not a flow component)', 
-    appJsContent.includes('function openDataViewModal()') &&
-    !appJsContent.includes('function openDataViewModal(block)')
+    /function openDataViewModal\(\s*\)/.test(appJsContent) &&
+    !/function openDataViewModal\(\s*block\s*\)/.test(appJsContent)
 );
 
 // Test 12: Data View button opens modal with block selector

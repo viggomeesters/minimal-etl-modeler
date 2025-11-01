@@ -61,10 +61,10 @@ test('Data View button event listener exists',
     appJsContent.includes('openDataViewModal')
 );
 
-// Test 7: Data View block type is NOT in createBlock (removed as per requirement)
+// Test 7: Data View block rendering logic removed
 test('Data View block rendering logic removed', 
-    !appJsContent.includes("block.type === 'dataview'") ||
-    !appJsContent.includes("title = 'Data View'")
+    !(appJsContent.includes("block.type === 'dataview'") &&
+    appJsContent.includes("title = 'Data View'"))
 );
 
 // Test 8: Data View is NOT in openBlockModal switch (removed as per requirement)
