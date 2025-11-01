@@ -4905,9 +4905,9 @@ function applyJoin(block, leftInput, rightInput) {
     
     // Store result
     dataStore[block.id] = joinedData;
-        
-        // Update eye icon visibility
-        updateEyeIconVisibility(block.id);
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
     
     // Update block content
     const joinTypeLabel = {
