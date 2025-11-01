@@ -1,6 +1,6 @@
 /**
  * Test suite for Data View component
- * Tests the Data View block functionality
+ * Tests the Data View button-based functionality
  */
 
 const fs = require('fs');
@@ -28,50 +28,48 @@ function test(name, condition) {
     }
 }
 
-// Test 1: Data View block exists in toolbox
-test('Data View block exists in toolbox', 
-    htmlContent.includes('data-type="dataview"') && 
+// Test 1: Data View block does NOT exist in toolbox (removed as per requirement)
+test('Data View block removed from toolbox', 
+    !htmlContent.includes('data-type="dataview"')
+);
+
+// Test 2: Data View button exists in flow controls
+test('Data View button exists in flow controls', 
+    htmlContent.includes('id="dataViewBtn"') &&
     htmlContent.includes('Data View')
 );
 
-// Test 2: Data View modal exists in HTML
+// Test 3: Data View button has accessibility attributes
+test('Data View button has aria-label for accessibility', 
+    htmlContent.includes('aria-label="Open Data View"')
+);
+
+// Test 4: Data View modal exists in HTML
 test('Data View modal exists in HTML', 
     htmlContent.includes('id="dataViewModal"') &&
     htmlContent.includes('id="dataViewInterface"')
 );
 
-// Test 3: Data View functions exist in app.js
+// Test 5: Data View functions exist in app.js
 test('openDataViewModal function exists', 
     appJsContent.includes('function openDataViewModal')
 );
 
-// Test 4: Data View block type is rendered correctly
-test('Data View block rendering logic exists', 
-    appJsContent.includes("block.type === 'dataview'") &&
-    appJsContent.includes("title = 'Data View'")
+// Test 6: Data View button event listener exists
+test('Data View button event listener exists', 
+    appJsContent.includes("getElementById('dataViewBtn')") &&
+    appJsContent.includes('openDataViewModal')
 );
 
-// Test 5: Data View is in openBlockModal switch
-test('Data View is handled in openBlockModal', 
-    appJsContent.includes("block.type === 'dataview'") &&
-    appJsContent.includes('openDataViewModal(block)')
+// Test 7: Data View block rendering logic removed
+test('Data View block rendering logic removed', 
+    !(appJsContent.includes("block.type === 'dataview'") &&
+    appJsContent.includes("title = 'Data View'"))
 );
 
-// Test 6: Data View preview title exists
-test('Data View has preview title', 
-    appJsContent.includes("'dataview': 'Data View'")
-);
-
-// Test 7: Data View icon is correct
-test('Data View has correct icon', 
-    htmlContent.includes('👁️') && 
-    appJsContent.includes("icon = '👁️'")
-);
-
-// Test 8: Data View is pass-through (stores data)
-test('Data View stores and propagates data', 
-    appJsContent.includes('dataStore[block.id] = {') &&
-    appJsContent.includes('propagateData(block.id)')
+// Test 8: Data View is NOT in openBlockModal switch (removed as per requirement)
+test('Data View removed from openBlockModal', 
+    !appJsContent.includes('openDataViewModal(block)')
 );
 
 // Test 9: Data View shows data overview
@@ -80,9 +78,20 @@ test('Data View shows data overview',
     appJsContent.includes('Viewing:')
 );
 
-// Test 10: Data View handles no input connection
-test('Data View handles missing input connection', 
-    appJsContent.includes('Verbind eerst een block met data aan deze Data View block')
+// Test 10: Data View handles no data scenario
+test('Data View handles missing data', 
+    appJsContent.includes('Geen blocks met data gevonden')
+);
+
+// Test 11: Data View icon is in button
+test('Data View button has correct icon', 
+    htmlContent.includes('👁️')
+);
+
+// Test 12: Shift+double-click still works for all blocks
+test('Shift+double-click functionality preserved', 
+    appJsContent.includes('e.shiftKey') &&
+    appJsContent.includes('showDataPreview')
 );
 
 console.log('\n==================================================');

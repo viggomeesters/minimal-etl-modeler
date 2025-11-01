@@ -157,15 +157,17 @@ test('Data View limits display to first 100 rows',
     appJsContent.includes('Toon eerste 100 van')
 );
 
-// Test 11: Data View calls propagateData
-test('Data View propagates data to connected blocks', 
-    appJsContent.includes('propagateData(block.id)') &&
-    appJsContent.match(/function openDataViewModal[\s\S]*?propagateData\(block\.id\)/)
+// Test 11: Data View no longer propagates (it's now a viewer, not a flow component)
+// The new openDataViewModal function doesn't take a block parameter
+test('Data View is now a viewer tool (not a flow component)', 
+    /function openDataViewModal\(\s*\)/.test(appJsContent) &&
+    !/function openDataViewModal\(\s*block\s*\)/.test(appJsContent)
 );
 
-// Test 12: Data View adds log entry
-test('Data View adds log entry', 
-    appJsContent.includes("addLogEntry(block.id, 'DATA_VIEW'")
+// Test 12: Data View button opens modal with block selector
+test('Data View modal has block selector functionality', 
+    appJsContent.includes('dataViewBlockSelector') &&
+    appJsContent.includes('Selecteer block')
 );
 
 console.log('\n==================================================');

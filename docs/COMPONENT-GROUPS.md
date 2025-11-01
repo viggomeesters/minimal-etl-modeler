@@ -10,11 +10,13 @@ The Minimal ETL Modeler components are organized into **6 logical groups** for i
 **Purpose:** Core data input and output operations  
 **Components:**
 - **📥 Input Source Data** - Load CSV files into the workflow
-- **👁️ Data View** - Preview and inspect data at any point
 - **📤 Target Structure** - Define output template structure
 - **💾 Output Data** - Export transformed data to CSV
+- **🚫 Rejected Output** - Export validation-rejected records
 
 **When to use:** Start and end of your ETL workflow
+
+**Note:** Use the 👁️ Data View button (top-right corner) to preview data from any block at any time.
 
 ---
 
@@ -93,8 +95,9 @@ The Minimal ETL Modeler components are organized into **6 logical groups** for i
 
 ### Start with Input/Output
 1. Always begin with **Input Source Data** to load your data
-2. Use **Data View** frequently to verify transformations
-3. End with **Output Data** to export results
+2. Click the **👁️ Data View button** (top-right) to verify data at any time
+3. Use **Shift+Double-click** on any block for quick data preview
+4. End with **Output Data** to export results
 
 ### Common Workflows
 
