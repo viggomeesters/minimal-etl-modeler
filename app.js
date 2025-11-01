@@ -28,6 +28,28 @@ let performanceMetrics = {
     operationCount: 0
 };
 
+// Block data preview titles
+const BLOCK_DATA_PREVIEW_TITLES = {
+    'input': 'Input Source Data',
+    'output': 'Target Structure',
+    'automapper': 'Automapper Output',
+    'mapping': 'Mapping Output',
+    'transform': 'Transform Output',
+    'outputdata': 'Output Data',
+    'validation': 'Validation Output',
+    'valuemapper': 'Value Mapper Output',
+    'concatenate': 'Concatenate Output',
+    'split': 'Split Output',
+    'casechange': 'Case Change Output',
+    'math': 'Math Output',
+    'regexreplace': 'Regex Replace Output',
+    'dateformat': 'Date Format Output',
+    'expression': 'Expression Output',
+    'copyrename': 'Copy/Rename Output',
+    'join': 'Join Output',
+    'rejectedoutput': 'Rejected Data'
+};
+
 /**
  * Measures execution time of a function and logs if it exceeds threshold
  * @param {string} operationName - Name of the operation being measured
@@ -421,27 +443,7 @@ function renderBlock(block) {
         e.stopPropagation();
         // Shift+DoubleClick shows data preview if block has data
         if (e.shiftKey && dataStore[block.id]) {
-            const titles = {
-                'input': 'Input Source Data',
-                'output': 'Target Structure',
-                'automapper': 'Automapper Output',
-                'mapping': 'Mapping Output',
-                'transform': 'Transform Output',
-                'outputdata': 'Output Data',
-                'validation': 'Validation Output',
-                'valuemapper': 'Value Mapper Output',
-                'concatenate': 'Concatenate Output',
-                'split': 'Split Output',
-                'casechange': 'Case Change Output',
-                'math': 'Math Output',
-                'regexreplace': 'Regex Replace Output',
-                'dateformat': 'Date Format Output',
-                'expression': 'Expression Output',
-                'copyrename': 'Copy/Rename Output',
-                'join': 'Join Output',
-                'rejectedoutput': 'Rejected Data'
-            };
-            showDataPreview(block, titles[block.type] || 'Data Preview');
+            showDataPreview(block, BLOCK_DATA_PREVIEW_TITLES[block.type] || 'Data Preview');
         } else {
             openBlockModal(block);
         }
@@ -452,27 +454,7 @@ function renderBlock(block) {
     if (eyeIcon) {
         eyeIcon.addEventListener('click', (e) => {
             e.stopPropagation();
-            const titles = {
-                'input': 'Input Source Data',
-                'output': 'Target Structure',
-                'automapper': 'Automapper Output',
-                'mapping': 'Mapping Output',
-                'transform': 'Transform Output',
-                'outputdata': 'Output Data',
-                'validation': 'Validation Output',
-                'valuemapper': 'Value Mapper Output',
-                'concatenate': 'Concatenate Output',
-                'split': 'Split Output',
-                'casechange': 'Case Change Output',
-                'math': 'Math Output',
-                'regexreplace': 'Regex Replace Output',
-                'dateformat': 'Date Format Output',
-                'expression': 'Expression Output',
-                'copyrename': 'Copy/Rename Output',
-                'join': 'Join Output',
-                'rejectedoutput': 'Rejected Data'
-            };
-            showDataPreview(block, titles[block.type] || 'Data Preview');
+            showDataPreview(block, BLOCK_DATA_PREVIEW_TITLES[block.type] || 'Data Preview');
         });
     }
     
@@ -2033,9 +2015,6 @@ function applyMapping(block, inputHeaders, outputHeaders) {
         
         // Store mapped data
         dataStore[block.id] = mappedData;
-        
-        // Update eye icon visibility
-        updateEyeIconVisibility(block.id);
         
         // Update eye icon visibility
         updateEyeIconVisibility(block.id);
