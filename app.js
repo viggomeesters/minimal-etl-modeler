@@ -46,6 +46,7 @@ const BLOCK_DATA_PREVIEW_TITLES = {
     'dateformat': 'Date Format Output',
     'expression': 'Expression Output',
     'copyrename': 'Copy/Rename Output',
+    'select': 'Select Output',
     'join': 'Join Output',
     'rejectedoutput': 'Rejected Data'
 };
@@ -411,6 +412,10 @@ function renderBlock(block) {
         icon = '📋';
         title = 'Copy/Rename';
         content = block.content || 'Klik om kolom te kopiëren/hernoemen';
+    } else if (block.type === 'select') {
+        icon = '☑️';
+        title = 'Select';
+        content = block.content || 'Klik om kolommen te selecteren';
     } else if (block.type === 'join') {
         icon = '🔀';
         title = 'Join';
@@ -917,6 +922,8 @@ function openBlockModal(block) {
         openExpressionModal(block);
     } else if (block.type === 'copyrename') {
         openCopyRenameModal(block);
+    } else if (block.type === 'select') {
+        openSelectModal(block);
     } else if (block.type === 'join') {
         openJoinModal(block);
     } else if (block.type === 'rejectedoutput') {
@@ -4758,6 +4765,149 @@ function applyCopyRename(block, inputData) {
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('copyRenameModal');
+}
+
+/**
+ * Opens Select block modal
+ * Allows user to select which columns to include and set their data types
+ */
+function openSelectModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('selectInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('selectModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Load existing configuration
+    const config = block.config || { 
+        selectedColumns: inputHeaders.map(h => ({ name: h, type: 'string', enabled: true }))
+    };
+    
+    // Ensure all columns are in config (in case input data changed)
+    const configMap = new Map(config.selectedColumns.map(col => [col.name, col]));
+    const allColumns = inputHeaders.map(header => {
+        if (configMap.has(header)) {
+            return configMap.get(header);
+        }
+        return { name: header, type: 'string', enabled: true };
+    });
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<p style="font-size: 13px; color: #666; margin-bottom: 10px;">Selecteer kolommen om te behouden en stel hun data types in:</p>';
+    html += '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: white; max-height: 400px; overflow-y: auto;">';
+    
+    // Create table header
+    html += '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr>';
+    html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #e0e0e0; font-weight: 600;">Enabled</th>';
+    html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #e0e0e0; font-weight: 600;">Column Name</th>';
+    html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #e0e0e0; font-weight: 600;">Data Type</th>';
+    html += '</tr></thead><tbody>';
+    
+    allColumns.forEach((col, index) => {
+        html += '<tr>';
+        html += `<td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">`;
+        html += `<input type="checkbox" class="select-column-enabled" data-index="${index}" ${col.enabled ? 'checked' : ''} style="cursor: pointer;" />`;
+        html += '</td>';
+        html += `<td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${escapeHtml(col.name)}</td>`;
+        html += `<td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">`;
+        html += `<select class="select-column-type" data-index="${index}" style="width: 100%; padding: 6px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+        html += `<option value="string" ${col.type === 'string' ? 'selected' : ''}>String</option>`;
+        html += `<option value="int" ${col.type === 'int' ? 'selected' : ''}>Integer</option>`;
+        html += `<option value="double" ${col.type === 'double' ? 'selected' : ''}>Double</option>`;
+        html += `<option value="date" ${col.type === 'date' ? 'selected' : ''}>Date</option>`;
+        html += `<option value="boolean" ${col.type === 'boolean' ? 'selected' : ''}>Boolean</option>`;
+        html += `</select>`;
+        html += '</td>';
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    html += '</div></div>';
+    
+    // Store allColumns in a temporary place so applySelect can access it
+    block._tempColumns = allColumns;
+    
+    document.getElementById('selectInterface').innerHTML = html;
+    showModal('selectModal');
+    
+    // Setup click handlers for both buttons
+    const applyHandler = () => {
+        applySelect(block, inputData);
+    };
+    document.getElementById('applySelect').onclick = applyHandler;
+    document.getElementById('applySelectTop').onclick = applyHandler;
+}
+
+function applySelect(block, inputData) {
+    const allColumns = block._tempColumns || [];
+    const enabledCheckboxes = document.querySelectorAll('.select-column-enabled');
+    const typeSelects = document.querySelectorAll('.select-column-type');
+    
+    // Build configuration from UI
+    const selectedColumns = [];
+    enabledCheckboxes.forEach((checkbox, index) => {
+        const column = allColumns[index];
+        const typeSelect = typeSelects[index];
+        selectedColumns.push({
+            name: column.name,
+            type: typeSelect.value,
+            enabled: checkbox.checked
+        });
+    });
+    
+    // Store configuration
+    block.config = { selectedColumns };
+    
+    // Filter data to only include enabled columns
+    const enabledColumns = selectedColumns.filter(col => col.enabled);
+    const enabledColumnNames = enabledColumns.map(col => col.name);
+    
+    if (enabledColumnNames.length === 0) {
+        alert('Selecteer minstens één kolom.');
+        return;
+    }
+    
+    // Create filtered data
+    const filteredData = {
+        headers: enabledColumnNames,
+        data: inputData.data.map(row => {
+            const newRow = {};
+            enabledColumnNames.forEach(colName => {
+                newRow[colName] = row[colName];
+            });
+            return newRow;
+        }),
+        // Store type information for potential use by downstream blocks
+        columnTypes: Object.fromEntries(enabledColumns.map(col => [col.name, col.type]))
+    };
+    
+    dataStore[block.id] = filteredData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
+    // Log the selection
+    addLogEntry(block.id, 'SELECT_APPLIED', {
+        selectedColumns: enabledColumnNames,
+        columnTypes: filteredData.columnTypes
+    });
+    
+    const enabledCount = enabledColumnNames.length;
+    const totalCount = selectedColumns.length;
+    updateBlockContent(block.id, `${enabledCount}/${totalCount} kolommen geselecteerd`);
+    propagateData(block.id);
+    hideModal('selectModal');
+    
+    // Clean up temporary storage
+    delete block._tempColumns;
 }
 
 /**
