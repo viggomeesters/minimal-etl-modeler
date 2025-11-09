@@ -75,6 +75,10 @@
                         <span class="group-title">Data Operations</span>
                     </div>
                     <div class="tool-group-items" data-group-items="data-ops">
+                        <div class="tool-item" draggable="true" data-type="select">
+                            <span class="icon">☑️</span>
+                            <span>Select</span>
+                        </div>
                         <div class="tool-item" draggable="true" data-type="join">
                             <span class="icon">🔀</span>
                             <span>Join</span>
@@ -396,6 +400,22 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Copy or rename a column</p>
             <div id="copyRenameInterface"></div>
             <button id="applyCopyRename" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Select -->
+    <div id="selectModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Select</h2>
+                <button id="applySelectTop" class="modal-action-top" title="Apply Select">Apply</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Select columns to include and configure data types</p>
+                <div id="selectInterface"></div>
+                <button id="applySelect" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+            </div>
         </div>
     </div>
     
