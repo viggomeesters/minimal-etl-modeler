@@ -79,6 +79,10 @@
                             <span class="icon">☑️</span>
                             <span>Select</span>
                         </div>
+                        <div class="tool-item" draggable="true" data-type="sample">
+                            <span class="icon">🎲</span>
+                            <span>Sample</span>
+                        </div>
                         <div class="tool-item" draggable="true" data-type="sort">
                             <span class="icon">🔢</span>
                             <span>Sort</span>
@@ -446,6 +450,17 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Sort dataset by one or more columns</p>
             <div id="sortInterface"></div>
             <button id="applySort" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Sample -->
+    <div id="sampleModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sample</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Sample a subset of records from the dataset</p>
+            <div id="sampleInterface"></div>
+            <button id="applySample" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
         </div>
     </div>
     
