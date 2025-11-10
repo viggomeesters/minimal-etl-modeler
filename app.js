@@ -48,7 +48,8 @@ const BLOCK_DATA_PREVIEW_TITLES = {
     'copyrename': 'Copy/Rename Output',
     'select': 'Select Output',
     'join': 'Join Output',
-    'rejectedoutput': 'Rejected Data'
+    'rejectedoutput': 'Rejected Data',
+    'datacleanse': 'Data Cleanse Output'
 };
 
 /**
@@ -424,6 +425,10 @@ function renderBlock(block) {
         icon = '🚫';
         title = 'Rejected Output';
         content = block.content || 'Klik om rejected data te exporteren';
+    } else if (block.type === 'datacleanse') {
+        icon = '🧹';
+        title = 'Data Cleanse';
+        content = block.content || 'Klik om data te reinigen';
     }
     
     blockEl.innerHTML = `
@@ -928,6 +933,8 @@ function openBlockModal(block) {
         openJoinModal(block);
     } else if (block.type === 'rejectedoutput') {
         openRejectedOutputModal(block);
+    } else if (block.type === 'datacleanse') {
+        openDataCleanseModal(block);
     }
 }
 
@@ -2612,6 +2619,47 @@ function applyAdvancedTransformationLogic(inputData, transformations, preserveUn
                     case 'expression':
                         // Safe expression evaluation
                         result = evaluateSafeExpression(params.expression || '', row);
+                        break;
+                        
+                    case 'cleanse':
+                        // Data cleansing operations
+                        if (inputs.length > 0) {
+                            let value = row[inputs[0]] || '';
+                            
+                            // Replace nulls/empty values
+                            if (params.replaceNulls && (value === '' || value === null || value === undefined)) {
+                                value = params.nullReplacement || '';
+                            }
+                            
+                            // Remove unwanted characters using regex
+                            if (params.removePattern && params.removePattern.trim() !== '') {
+                                try {
+                                    const regex = new RegExp(params.removePattern, 'g');
+                                    value = value.replace(regex, '');
+                                } catch(e) {
+                                    // Invalid regex, skip removal
+                                    console.error('Invalid regex pattern:', e);
+                                }
+                            }
+                            
+                            // Apply case transformation
+                            if (params.caseType) {
+                                switch(params.caseType) {
+                                    case 'upper':
+                                        value = value.toUpperCase();
+                                        break;
+                                    case 'lower':
+                                        value = value.toLowerCase();
+                                        break;
+                                    case 'title':
+                                        // Title case: capitalize first letter of each word
+                                        value = value.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+                                        break;
+                                }
+                            }
+                            
+                            result = value;
+                        }
                         break;
                         
                     default:
@@ -4765,6 +4813,153 @@ function applyCopyRename(block, inputData) {
     updateBlockContent(block.id, `${outputColumn} aangemaakt`);
     propagateData(block.id);
     hideModal('copyRenameModal');
+}
+
+/**
+ * Opens Data Cleanse block modal
+ * Allows user to cleanse data by replacing nulls, removing unwanted characters, and changing case
+ */
+function openDataCleanseModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('dataCleanseInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('dataCleanseModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    const config = block.config || { 
+        outputColumn: '', 
+        inputColumn: '',
+        replaceNulls: false,
+        nullReplacement: '',
+        removePattern: '',
+        caseType: 'none',
+        keepOriginal: false
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Output Kolom Naam:</label>';
+    html += `<input type="text" id="cleanseOutputCol" value="${escapeHtml(config.outputColumn)}" placeholder="bijv. CleanedData" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: block; margin-bottom: 5px; font-weight: 600;">Input Kolom:</label>';
+    html += `<select id="cleanseInputCol" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += '<option value="">-- Selecteer kolom --</option>';
+    inputHeaders.forEach(header => {
+        const selected = config.inputColumn === header ? 'selected' : '';
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
+    });
+    html += '</select></div>';
+    
+    html += '<div style="margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    html += '<h4 style="margin: 0 0 10px 0;">Replace Nulls/Empty Values</h4>';
+    html += '<label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 8px;">';
+    html += `<input type="checkbox" id="cleanseReplaceNulls" ${config.replaceNulls ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span>Replace null/empty values</span>';
+    html += '</label>';
+    html += `<input type="text" id="cleanseNullReplacement" value="${escapeHtml(config.nullReplacement)}" placeholder="Replacement value (bijv. 'N/A')" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    html += '<h4 style="margin: 0 0 10px 0;">Remove Unwanted Characters</h4>';
+    html += `<input type="text" id="cleanseRemovePattern" value="${escapeHtml(config.removePattern)}" placeholder="Regex pattern (bijv. '[^a-zA-Z0-9 ]' voor alleen alphanumeric)" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;" />`;
+    html += '<p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Use regex to remove characters. Common patterns:</p>';
+    html += '<ul style="font-size: 12px; color: #666; margin: 5px 0 0 0; padding-left: 20px;">';
+    html += '<li><code>[^a-zA-Z0-9 ]</code> - Keep only alphanumeric and spaces</li>';
+    html += '<li><code>[0-9]</code> - Remove all digits</li>';
+    html += '<li><code>[^a-zA-Z]</code> - Keep only letters</li>';
+    html += '</ul>';
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; background: #f9f9f9;">';
+    html += '<h4 style="margin: 0 0 10px 0;">Case Transformation</h4>';
+    html += `<select id="cleanseCaseType" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="none" ${config.caseType === 'none' ? 'selected' : ''}>No change</option>`;
+    html += `<option value="upper" ${config.caseType === 'upper' ? 'selected' : ''}>UPPERCASE</option>`;
+    html += `<option value="lower" ${config.caseType === 'lower' ? 'selected' : ''}>lowercase</option>`;
+    html += `<option value="title" ${config.caseType === 'title' ? 'selected' : ''}>Title Case</option>`;
+    html += '</select>';
+    html += '</div>';
+    
+    html += '<div style="margin-bottom: 15px;">';
+    html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+    html += `<input type="checkbox" id="cleanseKeepOriginal" ${config.keepOriginal ? 'checked' : ''} style="margin-right: 8px;" />`;
+    html += '<span style="font-weight: 600;">Keep Original Column</span>';
+    html += '</label>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 5px;">When checked, the original input column will be preserved in the output.</p>';
+    html += '</div>';
+    
+    document.getElementById('dataCleanseInterface').innerHTML = html;
+    showModal('dataCleanseModal');
+    
+    document.getElementById('applyDataCleanse').onclick = () => {
+        applyDataCleanse(block, inputData);
+    };
+}
+
+function applyDataCleanse(block, inputData) {
+    const outputColumn = document.getElementById('cleanseOutputCol').value.trim();
+    const inputColumn = document.getElementById('cleanseInputCol').value;
+    const replaceNulls = document.getElementById('cleanseReplaceNulls').checked;
+    const nullReplacement = document.getElementById('cleanseNullReplacement').value;
+    const removePattern = document.getElementById('cleanseRemovePattern').value.trim();
+    const caseType = document.getElementById('cleanseCaseType').value;
+    const keepOriginal = document.getElementById('cleanseKeepOriginal').checked;
+    
+    if (!outputColumn || !inputColumn) {
+        alert('Vul een output kolom naam in en selecteer een input kolom.');
+        return;
+    }
+    
+    // Store configuration
+    block.config = { 
+        outputColumn, 
+        inputColumn, 
+        replaceNulls, 
+        nullReplacement,
+        removePattern,
+        caseType,
+        keepOriginal 
+    };
+    
+    // Transform data
+    const transformation = {
+        [outputColumn]: {
+            op: 'cleanse',
+            inputs: [inputColumn],
+            params: { 
+                replaceNulls,
+                nullReplacement,
+                removePattern,
+                caseType,
+                keepOriginal 
+            }
+        }
+    };
+    
+    const transformedData = applyAdvancedTransformationLogic(inputData, transformation, true);
+    dataStore[block.id] = transformedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
+    // Create a summary of what was applied
+    const operations = [];
+    if (replaceNulls) operations.push('nulls replaced');
+    if (removePattern) operations.push('chars removed');
+    if (caseType !== 'none') operations.push(`${caseType} case`);
+    const summary = operations.length > 0 ? operations.join(', ') : 'cleansed';
+    
+    updateBlockContent(block.id, `${outputColumn}: ${summary}`);
+    propagateData(block.id);
+    hideModal('dataCleanseModal');
 }
 
 /**

@@ -1,0 +1,6 @@
+Name,Email,Phone,Status,Price
+john doe,john@test.com,(123) 456-7890,,99.99
+JANE SMITH,jane@test.com,456-7890-123,,
+Bob Jones,bob@TEST.com,789#012#345,active,149.50
+alice brown,ALICE@Company.com,111-222-3333,pending,75.00
+Charlie Green,charlie@example.COM,(555) 123-4567,,200.00

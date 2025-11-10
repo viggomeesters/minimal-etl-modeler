@@ -113,6 +113,10 @@
                             <span class="icon">🔍</span>
                             <span>Regex Replace</span>
                         </div>
+                        <div class="tool-item" draggable="true" data-type="datacleanse">
+                            <span class="icon">🧹</span>
+                            <span>Data Cleanse</span>
+                        </div>
                         <div class="tool-item" draggable="true" data-type="copyrename">
                             <span class="icon">📋</span>
                             <span>Copy/Rename</span>
@@ -400,6 +404,17 @@
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Copy or rename a column</p>
             <div id="copyRenameInterface"></div>
             <button id="applyCopyRename" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+    </div>
+    
+    <!-- Modal for Data Cleanse -->
+    <div id="dataCleanseModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Data Cleanse</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Clean data by replacing nulls, removing unwanted characters, and changing case</p>
+            <div id="dataCleanseInterface"></div>
+            <button id="applyDataCleanse" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
         </div>
     </div>
     
