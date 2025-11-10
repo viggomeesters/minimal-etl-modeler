@@ -47,6 +47,7 @@ const BLOCK_DATA_PREVIEW_TITLES = {
     'expression': 'Expression Output',
     'copyrename': 'Copy/Rename Output',
     'select': 'Select Output',
+    'sort': 'Sort Output',
     'join': 'Join Output',
     'rejectedoutput': 'Rejected Data',
     'datacleanse': 'Data Cleanse Output'
@@ -417,6 +418,10 @@ function renderBlock(block) {
         icon = '☑️';
         title = 'Select';
         content = block.content || 'Klik om kolommen te selecteren';
+    } else if (block.type === 'sort') {
+        icon = '🔢';
+        title = 'Sort';
+        content = block.content || 'Klik om data te sorteren';
     } else if (block.type === 'join') {
         icon = '🔀';
         title = 'Join';
@@ -929,6 +934,8 @@ function openBlockModal(block) {
         openCopyRenameModal(block);
     } else if (block.type === 'select') {
         openSelectModal(block);
+    } else if (block.type === 'sort') {
+        openSortModal(block);
     } else if (block.type === 'join') {
         openJoinModal(block);
     } else if (block.type === 'rejectedoutput') {
@@ -5103,6 +5110,182 @@ function applySelect(block, inputData) {
     
     // Clean up temporary storage
     delete block._tempColumns;
+}
+
+/**
+ * Opens Sort block modal
+ */
+function openSortModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('sortInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('sortModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const inputHeaders = inputData.headers || [];
+    
+    // Load existing configuration
+    const config = block.config || { 
+        sortColumns: [{ column: inputHeaders[0] || '', order: 'asc' }]
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<p style="font-size: 13px; color: #666; margin-bottom: 10px;">Selecteer kolommen om op te sorteren (bovenaan = eerste sort priority):</p>';
+    html += '<div id="sortColumnsContainer" style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: white;">';
+    
+    // Render existing sort columns
+    config.sortColumns.forEach((sortCol, index) => {
+        html += renderSortColumnRow(index, sortCol, inputHeaders);
+    });
+    
+    html += '</div>';
+    html += '<button id="addSortColumn" style="margin-top: 10px; padding: 8px 15px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">+ Voeg Sorteer Kolom Toe</button>';
+    html += '</div>';
+    
+    document.getElementById('sortInterface').innerHTML = html;
+    showModal('sortModal');
+    
+    // Store current config and headers for access
+    block._tempConfig = config;
+    block._tempHeaders = inputHeaders;
+    
+    // Setup event handlers
+    document.getElementById('applySort').onclick = () => {
+        applySort(block, inputData);
+    };
+    
+    document.getElementById('addSortColumn').onclick = () => {
+        const container = document.getElementById('sortColumnsContainer');
+        const newIndex = container.children.length;
+        const newRowHtml = renderSortColumnRow(newIndex, { column: inputHeaders[0] || '', order: 'asc' }, inputHeaders);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newRowHtml;
+        container.appendChild(tempDiv.firstChild);
+        
+        // Attach remove handler to the new row
+        const removeBtn = container.lastChild.querySelector('.remove-sort-column');
+        if (removeBtn) {
+            removeBtn.onclick = function() {
+                this.closest('.sort-column-row').remove();
+            };
+        }
+    };
+    
+    // Attach remove handlers to existing rows
+    document.querySelectorAll('.remove-sort-column').forEach(btn => {
+        btn.onclick = function() {
+            this.closest('.sort-column-row').remove();
+        };
+    });
+}
+
+function renderSortColumnRow(index, sortCol, inputHeaders) {
+    let html = `<div class="sort-column-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">`;
+    html += `<select class="sort-column-select" data-index="${index}" style="flex: 2; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    inputHeaders.forEach(header => {
+        const selected = header === sortCol.column ? 'selected' : '';
+        html += `<option value="${escapeHtml(header)}" ${selected}>${escapeHtml(header)}</option>`;
+    });
+    html += `</select>`;
+    html += `<select class="sort-order-select" data-index="${index}" style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px;">`;
+    html += `<option value="asc" ${sortCol.order === 'asc' ? 'selected' : ''}>Oplopend (A→Z)</option>`;
+    html += `<option value="desc" ${sortCol.order === 'desc' ? 'selected' : ''}>Aflopend (Z→A)</option>`;
+    html += `</select>`;
+    html += `<button class="remove-sort-column" style="padding: 8px 12px; background: #e44; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>`;
+    html += `</div>`;
+    return html;
+}
+
+function applySort(block, inputData) {
+    const columnSelects = document.querySelectorAll('.sort-column-select');
+    const orderSelects = document.querySelectorAll('.sort-order-select');
+    
+    if (columnSelects.length === 0) {
+        alert('Voeg minstens één sorteer kolom toe.');
+        return;
+    }
+    
+    // Build sort configuration from UI
+    const sortColumns = [];
+    columnSelects.forEach((select, index) => {
+        sortColumns.push({
+            column: select.value,
+            order: orderSelects[index].value
+        });
+    });
+    
+    // Store configuration
+    block.config = { sortColumns };
+    
+    // Sort the data
+    const sortedData = {
+        headers: inputData.headers,
+        data: [...inputData.data] // Create a copy to avoid mutating input
+    };
+    
+    // Perform multi-column sort
+    sortedData.data.sort((a, b) => {
+        for (const sortCol of sortColumns) {
+            const columnName = sortCol.column;
+            const order = sortCol.order;
+            
+            const aVal = a[columnName];
+            const bVal = b[columnName];
+            
+            // Handle null/undefined values
+            if (aVal == null && bVal == null) continue;
+            if (aVal == null) return order === 'asc' ? 1 : -1;
+            if (bVal == null) return order === 'asc' ? -1 : 1;
+            
+            // Try numeric comparison first
+            const aNum = parseFloat(aVal);
+            const bNum = parseFloat(bVal);
+            
+            let comparison = 0;
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                // Both are numbers
+                comparison = aNum - bNum;
+            } else {
+                // String comparison
+                comparison = String(aVal).localeCompare(String(bVal));
+            }
+            
+            if (comparison !== 0) {
+                return order === 'asc' ? comparison : -comparison;
+            }
+        }
+        return 0;
+    });
+    
+    // Preserve column types if they exist
+    if (inputData.columnTypes) {
+        sortedData.columnTypes = inputData.columnTypes;
+    }
+    
+    dataStore[block.id] = sortedData;
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
+    // Log the sort operation
+    addLogEntry(block.id, 'SORT_APPLIED', {
+        sortColumns: sortColumns,
+        rowCount: sortedData.data.length
+    });
+    
+    const sortDesc = sortColumns.map(sc => `${sc.column} (${sc.order})`).join(', ');
+    updateBlockContent(block.id, `Gesorteerd op: ${sortDesc}`);
+    propagateData(block.id);
+    hideModal('sortModal');
+    
+    // Clean up temporary storage
+    delete block._tempConfig;
+    delete block._tempHeaders;
 }
 
 /**
