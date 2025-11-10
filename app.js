@@ -47,6 +47,7 @@ const BLOCK_DATA_PREVIEW_TITLES = {
     'expression': 'Expression Output',
     'copyrename': 'Copy/Rename Output',
     'select': 'Select Output',
+    'sample': 'Sample Output',
     'sort': 'Sort Output',
     'join': 'Join Output',
     'rejectedoutput': 'Rejected Data',
@@ -418,6 +419,10 @@ function renderBlock(block) {
         icon = '☑️';
         title = 'Select';
         content = block.content || 'Klik om kolommen te selecteren';
+    } else if (block.type === 'sample') {
+        icon = '🎲';
+        title = 'Sample';
+        content = block.content || 'Klik om data te samplen';
     } else if (block.type === 'sort') {
         icon = '🔢';
         title = 'Sort';
@@ -934,6 +939,8 @@ function openBlockModal(block) {
         openCopyRenameModal(block);
     } else if (block.type === 'select') {
         openSelectModal(block);
+    } else if (block.type === 'sample') {
+        openSampleModal(block);
     } else if (block.type === 'sort') {
         openSortModal(block);
     } else if (block.type === 'join') {
@@ -5110,6 +5117,205 @@ function applySelect(block, inputData) {
     
     // Clean up temporary storage
     delete block._tempColumns;
+}
+
+/**
+ * Opens Sample block modal
+ */
+function openSampleModal(block) {
+    selectedBlock = block;
+    
+    const inputConnection = connections.find(c => c.to === block.id);
+    if (!inputConnection || !dataStore[inputConnection.from]) {
+        document.getElementById('sampleInterface').innerHTML = 
+            '<p style="color: #e44;">Verbind eerst een Data Input block.</p>';
+        showModal('sampleModal');
+        return;
+    }
+    
+    const inputData = dataStore[inputConnection.from];
+    const totalRows = inputData.data.length;
+    
+    // Load existing configuration
+    const config = block.config || { 
+        mode: 'first',
+        count: Math.min(100, totalRows),
+        rangeStart: 1,
+        rangeEnd: Math.min(100, totalRows)
+    };
+    
+    let html = '<div style="margin-bottom: 15px;">';
+    html += '<p style="font-size: 13px; color: #666; margin-bottom: 10px;">Total records in dataset: <strong>' + totalRows + '</strong></p>';
+    
+    // Sampling mode selection
+    html += '<div style="margin-bottom: 20px;">';
+    html += '<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Sampling Mode:</label>';
+    html += '<select id="sampleMode" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;">';
+    html += `<option value="first" ${config.mode === 'first' ? 'selected' : ''}>First N Records</option>`;
+    html += `<option value="random" ${config.mode === 'random' ? 'selected' : ''}>Random N Records</option>`;
+    html += `<option value="range" ${config.mode === 'range' ? 'selected' : ''}>Range (from X to Y)</option>`;
+    html += '</select>';
+    html += '</div>';
+    
+    // First N / Random N configuration
+    html += '<div id="sampleCountConfig" style="margin-bottom: 20px; display: ' + (config.mode === 'range' ? 'none' : 'block') + ';">';
+    html += '<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Number of Records:</label>';
+    html += `<input type="number" id="sampleCount" min="1" max="${totalRows}" value="${config.count}" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;" />`;
+    html += '</div>';
+    
+    // Range configuration
+    html += '<div id="sampleRangeConfig" style="margin-bottom: 20px; display: ' + (config.mode === 'range' ? 'block' : 'none') + ';">';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
+    html += '<div>';
+    html += '<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Start Position:</label>';
+    html += `<input type="number" id="sampleRangeStart" min="1" max="${totalRows}" value="${config.rangeStart}" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;" />`;
+    html += '</div>';
+    html += '<div>';
+    html += '<label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">End Position:</label>';
+    html += `<input type="number" id="sampleRangeEnd" min="1" max="${totalRows}" value="${config.rangeEnd}" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px;" />`;
+    html += '</div>';
+    html += '</div>';
+    html += '<p style="font-size: 12px; color: #666; margin-top: 8px;">Position is 1-indexed (first record = 1)</p>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    document.getElementById('sampleInterface').innerHTML = html;
+    showModal('sampleModal');
+    
+    // Add event listener to toggle between count and range inputs
+    document.getElementById('sampleMode').addEventListener('change', (e) => {
+        const mode = e.target.value;
+        const countConfig = document.getElementById('sampleCountConfig');
+        const rangeConfig = document.getElementById('sampleRangeConfig');
+        
+        if (mode === 'range') {
+            countConfig.style.display = 'none';
+            rangeConfig.style.display = 'block';
+        } else {
+            countConfig.style.display = 'block';
+            rangeConfig.style.display = 'none';
+        }
+    });
+    
+    // Setup apply button handler
+    document.getElementById('applySample').onclick = () => {
+        applySample(block, inputData);
+    };
+}
+
+function applySample(block, inputData) {
+    const mode = document.getElementById('sampleMode').value;
+    const totalRows = inputData.data.length;
+    
+    let sampledData = [];
+    let config = { mode };
+    
+    if (mode === 'first') {
+        const count = parseInt(document.getElementById('sampleCount').value);
+        if (isNaN(count) || count < 1) {
+            alert('Geef een geldig aantal records op (minimaal 1).');
+            return;
+        }
+        if (count > totalRows) {
+            alert(`Aantal records (${count}) is groter dan totaal aantal records (${totalRows}).`);
+            return;
+        }
+        
+        config.count = count;
+        sampledData = inputData.data.slice(0, count);
+        
+        addLogEntry(block.id, 'SAMPLE_APPLIED', {
+            mode: 'first',
+            count: count,
+            totalRows: totalRows
+        });
+        
+        updateBlockContent(block.id, `First ${count} of ${totalRows} records`);
+        
+    } else if (mode === 'random') {
+        const count = parseInt(document.getElementById('sampleCount').value);
+        if (isNaN(count) || count < 1) {
+            alert('Geef een geldig aantal records op (minimaal 1).');
+            return;
+        }
+        if (count > totalRows) {
+            alert(`Aantal records (${count}) is groter dan totaal aantal records (${totalRows}).`);
+            return;
+        }
+        
+        config.count = count;
+        
+        // Create array of indices and shuffle using Fisher-Yates algorithm
+        const indices = Array.from({length: totalRows}, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        
+        // Take first N indices and sort them to maintain some order
+        const selectedIndices = indices.slice(0, count).sort((a, b) => a - b);
+        sampledData = selectedIndices.map(i => inputData.data[i]);
+        
+        addLogEntry(block.id, 'SAMPLE_APPLIED', {
+            mode: 'random',
+            count: count,
+            totalRows: totalRows
+        });
+        
+        updateBlockContent(block.id, `Random ${count} of ${totalRows} records`);
+        
+    } else if (mode === 'range') {
+        const rangeStart = parseInt(document.getElementById('sampleRangeStart').value);
+        const rangeEnd = parseInt(document.getElementById('sampleRangeEnd').value);
+        
+        if (isNaN(rangeStart) || isNaN(rangeEnd)) {
+            alert('Geef geldige start en eind posities op.');
+            return;
+        }
+        if (rangeStart < 1 || rangeEnd < 1) {
+            alert('Start en eind posities moeten minimaal 1 zijn.');
+            return;
+        }
+        if (rangeStart > totalRows || rangeEnd > totalRows) {
+            alert(`Posities kunnen niet groter zijn dan ${totalRows}.`);
+            return;
+        }
+        if (rangeStart > rangeEnd) {
+            alert('Start positie moet kleiner of gelijk zijn aan eind positie.');
+            return;
+        }
+        
+        config.rangeStart = rangeStart;
+        config.rangeEnd = rangeEnd;
+        
+        // Convert to 0-indexed for array slicing
+        sampledData = inputData.data.slice(rangeStart - 1, rangeEnd);
+        
+        addLogEntry(block.id, 'SAMPLE_APPLIED', {
+            mode: 'range',
+            rangeStart: rangeStart,
+            rangeEnd: rangeEnd,
+            totalRows: totalRows
+        });
+        
+        updateBlockContent(block.id, `Records ${rangeStart}-${rangeEnd} of ${totalRows}`);
+    }
+    
+    // Store configuration
+    block.config = config;
+    
+    // Store sampled data
+    dataStore[block.id] = {
+        headers: inputData.headers,
+        data: sampledData
+    };
+    
+    // Update eye icon visibility
+    updateEyeIconVisibility(block.id);
+    
+    propagateData(block.id);
+    hideModal('sampleModal');
 }
 
 /**

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Tool Demo - Minimal ETL Modeler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .feature-example {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4a90e2;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .usage-section {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .usage-section h2 {
+            color: #cc8800;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .usage-steps {
+            list-style-position: inside;
+            color: #666;
+            line-height: 2;
+        }
+        
+        .usage-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.5);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Sample Tool</h1>
+        <p class="subtitle">Flexibel data samplen voor testing, development en analysis</p>
+        
+        <div class="usage-section">
+            <h2>🚀 Hoe te gebruiken</h2>
+            <ol class="usage-steps">
+                <li>Open <strong>index.html</strong> in je browser</li>
+                <li>Sleep een <strong>Input Source Data</strong> block naar het canvas</li>
+                <li>Laad je CSV bestand met data</li>
+                <li>Sleep een <strong>Sample</strong> block naar het canvas</li>
+                <li>Verbind de output van Input naar de input van Sample</li>
+                <li>Dubbelklik op Sample en configureer je sampling strategie</li>
+                <li>Bekijk de gesamplde data en exporteer indien nodig</li>
+            </ol>
+        </div>
+        
+        <h2 style="margin-bottom: 20px; color: #333;">Sampling Modes</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔝</div>
+                <h3 class="feature-title">First N Records</h3>
+                <p class="feature-description">
+                    Selecteer de eerste N records van je dataset. Perfect voor quick preview 
+                    of wanneer je alleen de meest recente data nodig hebt.
+                </p>
+                <div class="feature-example">
+                    <strong>Voorbeeld:</strong><br>
+                    Dataset: 10,000 records<br>
+                    Sample: First 100 records<br>
+                    → Records 1-100
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎲</div>
+                <h3 class="feature-title">Random N Records</h3>
+                <p class="feature-description">
+                    Selecteer N willekeurige records met het Fisher-Yates shuffle algoritme. 
+                    Ideaal voor statistische sampling en onbevooroordeelde tests.
+                </p>
+                <div class="feature-example">
+                    <strong>Voorbeeld:</strong><br>
+                    Dataset: 10,000 records<br>
+                    Sample: Random 500 records<br>
+                    → 500 willekeurige records
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📏</div>
+                <h3 class="feature-title">Range (X to Y)</h3>
+                <p class="feature-description">
+                    Selecteer een specifieke range van records op basis van positie. 
+                    Handig voor paginering of analyse van specifieke data segmenten.
+                </p>
+                <div class="feature-example">
+                    <strong>Voorbeeld:</strong><br>
+                    Dataset: 10,000 records<br>
+                    Sample: Range 1000-1500<br>
+                    → Records 1000-1500
+                </div>
+            </div>
+        </div>
+        
+        <h2 style="margin: 40px 0 20px; color: #333;">Use Cases</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3 class="feature-title">🧪 Testing & Development</h3>
+                <p class="feature-description">
+                    Sample een kleine subset van productie data voor lokale tests zonder 
+                    performance issues of lange laadtijden.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">📊 Statistical Analysis</h3>
+                <p class="feature-description">
+                    Gebruik random sampling voor representatieve steekproeven uit grote datasets 
+                    voor betrouwbare statistische analyse.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">⚡ Performance Optimization</h3>
+                <p class="feature-description">
+                    Reduceer dataset grootte voor snellere transformaties en debugging tijdens 
+                    ETL flow development.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">🎯 Data Exploration</h3>
+                <p class="feature-description">
+                    Quick preview van data zonder hele dataset te laden. Perfect voor 
+                    initiële data verkenning.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">📑 Pagination</h3>
+                <p class="feature-description">
+                    Gebruik range sampling om data in chunks te verwerken voor batch processing 
+                    of gecontroleerde exports.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <h3 class="feature-title">🔬 Quality Assurance</h3>
+                <p class="feature-description">
+                    Sample specifieke records ranges voor targeted quality checks en 
+                    data validation tests.
+                </p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="../index.html" class="cta-button">Open ETL Modeler</a>
+        </div>
+        
+        <div class="footer">
+            <p>Minimal ETL Modeler • Lightweight • Scalable • Minimalistic</p>
+        </div>
+    </div>
+</body>
+</html>
