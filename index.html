@@ -79,6 +79,10 @@
                             <span class="icon">☑️</span>
                             <span>Select</span>
                         </div>
+                        <div class="tool-item" draggable="true" data-type="sort">
+                            <span class="icon">🔢</span>
+                            <span>Sort</span>
+                        </div>
                         <div class="tool-item" draggable="true" data-type="join">
                             <span class="icon">🔀</span>
                             <span>Join</span>
@@ -431,6 +435,17 @@
                 <div id="selectInterface"></div>
                 <button id="applySelect" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Sort -->
+    <div id="sortModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sort</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Sort dataset by one or more columns</p>
+            <div id="sortInterface"></div>
+            <button id="applySort" style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
         </div>
     </div>
     
