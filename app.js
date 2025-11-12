@@ -458,11 +458,11 @@ function renderBlock(block) {
     // Make block draggable
     blockEl.addEventListener('mousedown', startDragBlock);
     
-    // Double click to open or preview
+    // Double click to open preview or configuration modal
     blockEl.addEventListener('dblclick', (e) => {
         e.stopPropagation();
-        // Shift+DoubleClick shows data preview if block has data
-        if (e.shiftKey && dataStore[block.id]) {
+        // If block has data, show preview (unless Shift+DoubleClick to force config modal)
+        if (dataStore[block.id] && !e.shiftKey) {
             showDataPreview(block, BLOCK_DATA_PREVIEW_TITLES[block.type] || 'Data Preview');
         } else {
             openBlockModal(block);
@@ -880,11 +880,6 @@ function initModals() {
     // Log flow button handler
     document.getElementById('logFlowBtn').addEventListener('click', () => {
         openLoggingModal();
-    });
-    
-    // Data View button handler
-    document.getElementById('dataViewBtn').addEventListener('click', () => {
-        openDataViewModal();
     });
 }
 
@@ -3072,134 +3067,7 @@ function openRejectedOutputModal(block) {
     };
 }
 
-// Data View functionality - shows all data from all blocks
-function openDataViewModal() {
-    // Find all blocks that have data
-    const blocksWithData = [];
-    for (const blockId in dataStore) {
-        if (dataStore[blockId] && dataStore[blockId].headers && dataStore[blockId].data && dataStore[blockId].data.length > 0) {
-            const block = document.querySelector(`[data-id="${blockId}"]`);
-            if (block) {
-                blocksWithData.push({
-                    id: blockId,
-                    type: block.dataset.type,
-                    data: dataStore[blockId]
-                });
-            }
-        }
-    }
-    
-    if (blocksWithData.length === 0) {
-        document.getElementById('dataViewInterface').innerHTML = '<p style="color: #e44;">Geen blocks met data gevonden. Sleep eerst een Data Input block naar het canvas en laad een CSV bestand.</p>';
-        document.getElementById('dataViewModal').style.display = 'block';
-        return;
-    }
-    
-    // Build data view interface showing all blocks with data
-    let html = '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px; background: #f9f9f9;">';
-    html += '<h3 style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">Data Overview - All Blocks</h3>';
-    html += `<p style="color: #666; font-size: 13px; margin-bottom: 15px;">Totaal ${blocksWithData.length} block(s) met data</p>`;
-    
-    // Create a selector for choosing which block to view
-    html += '<div style="margin-bottom: 20px;">';
-    html += '<label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">Selecteer block:</label>';
-    html += '<select id="dataViewBlockSelector" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">';
-    blocksWithData.forEach((blockInfo, index) => {
-        const blockTypeLabels = {
-            'input': 'Input Source Data',
-            'output': 'Target Structure',
-            'automapper': 'Automapper',
-            'mapping': 'Mapping',
-            'transform': 'Transform',
-            'outputdata': 'Output Data',
-            'validation': 'Validation',
-            'valuemapper': 'Value Mapper',
-            'concatenate': 'Concatenate',
-            'split': 'Split',
-            'casechange': 'Case Change',
-            'math': 'Math',
-            'regexreplace': 'Regex Replace',
-            'dateformat': 'Date Format',
-            'expression': 'Expression',
-            'copyrename': 'Copy/Rename',
-            'join': 'Join',
-            'rejectedoutput': 'Rejected Output'
-        };
-        const label = blockTypeLabels[blockInfo.type] || blockInfo.type;
-        html += `<option value="${index}">${label} (${blockInfo.data.data.length} rijen, ${blockInfo.data.headers.length} kolommen)</option>`;
-    });
-    html += '</select>';
-    html += '</div>';
-    
-    // Container for displaying the selected block's data
-    html += '<div id="dataViewContent"></div>';
-    html += '</div>';
-    
-    document.getElementById('dataViewInterface').innerHTML = html;
-    document.getElementById('dataViewModal').style.display = 'block';
-    
-    // Function to display data for selected block
-    const displayBlockData = (index) => {
-        const blockInfo = blocksWithData[index];
-        const inputHeaders = blockInfo.data.headers || [];
-        const inputRows = blockInfo.data.data || [];
-        
-        let contentHtml = '<div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; background: white;">';
-        contentHtml += `<p style="color: #666; font-size: 13px; margin-bottom: 10px;">Viewing: ${inputRows.length} rijen en ${inputHeaders.length} kolommen</p>`;
-        
-        // Show column names
-        contentHtml += '<div style="margin-top: 15px;">';
-        contentHtml += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Kolommen:</h4>';
-        contentHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
-        inputHeaders.forEach(header => {
-            contentHtml += `<span style="padding: 6px 12px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">${escapeHtml(header)}</span>`;
-        });
-        contentHtml += '</div></div>';
-        
-        // Show data table with scrollable container
-        if (inputRows.length > 0) {
-            contentHtml += '<div style="margin-top: 15px;">';
-            contentHtml += '<h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 600;">Data Preview:</h4>';
-            contentHtml += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px;">';
-            contentHtml += '<table style="width: 100%; border-collapse: collapse; background: white; font-size: 12px;">';
-            contentHtml += '<thead style="position: sticky; top: 0; background: #f5f5f5; z-index: 10;"><tr>';
-            inputHeaders.forEach(header => {
-                contentHtml += `<th style="padding: 8px; border: 1px solid #e0e0e0; text-align: left; font-weight: 600;">${escapeHtml(header)}</th>`;
-            });
-            contentHtml += '</tr></thead><tbody>';
-            
-            // Display first 100 rows for performance
-            const displayRows = inputRows.slice(0, 100);
-            displayRows.forEach(row => {
-                contentHtml += '<tr>';
-                inputHeaders.forEach(header => {
-                    contentHtml += `<td style="padding: 8px; border: 1px solid #e0e0e0;">${escapeHtml(row[header] || '')}</td>`;
-                });
-                contentHtml += '</tr>';
-            });
-            contentHtml += '</tbody></table>';
-            contentHtml += '</div>';
-            
-            if (inputRows.length > 100) {
-                contentHtml += `<p style="margin-top: 10px; color: #888; font-size: 12px;">Toon eerste 100 van ${inputRows.length} rijen</p>`;
-            }
-            contentHtml += '</div>';
-        }
-        
-        contentHtml += '</div>';
-        document.getElementById('dataViewContent').innerHTML = contentHtml;
-    };
-    
-    // Set up selector change handler
-    const selector = document.getElementById('dataViewBlockSelector');
-    if (selector && blocksWithData.length > 0) {
-        selector.addEventListener('change', (e) => {
-            displayBlockData(parseInt(e.target.value));
-        });
-        // Display the first block's data by default
-        displayBlockData(0);
-    }
-}
+
 
 function exportRejectedCSV(rows, headers, filename) {
     if (!rows || rows.length === 0) {

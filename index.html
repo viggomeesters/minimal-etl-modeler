@@ -178,7 +178,6 @@
                     <button id="saveFlowBtn" class="flow-btn" title="Opslaan Flow">💾</button>
                     <button id="loadFlowBtn" class="flow-btn" title="Openen Flow">📂</button>
                     <button id="logFlowBtn" class="flow-btn" title="Data Flow Log">📋</button>
-                    <button id="dataViewBtn" class="flow-btn" title="Data View - Bekijk alle data" aria-label="Open Data View">👁️</button>
                     <input type="file" id="loadFlowInput" accept=".json" style="display: none;" />
                 </div>
             </main>
@@ -301,16 +300,7 @@
         </div>
     </div>
     
-    <!-- Modal for Data View -->
-    <div id="dataViewModal" class="modal">
-        <div class="modal-content large">
-            <span class="close">&times;</span>
-            <h2>Data View</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">View data flowing through this block</p>
-            <div id="dataViewInterface"></div>
-        </div>
-    </div>
-    
+
     <!-- Modal for Value Mapper -->
     <div id="valueMapperModal" class="modal">
         <div class="modal-content large">
