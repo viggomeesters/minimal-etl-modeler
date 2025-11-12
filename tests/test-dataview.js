@@ -1,12 +1,12 @@
 /**
- * Test suite for Data View component
- * Tests the Data View button-based functionality
+ * Test suite for Per-Block Data Preview
+ * Tests that global View Data is removed and per-block preview works via double-click
  */
 
 const fs = require('fs');
 const path = require('path');
 
-console.log('🧪 Running Data View Component Tests\n');
+console.log('🧪 Running Per-Block Data Preview Tests\n');
 
 // Read the necessary files
 const htmlPath = path.join(__dirname, '..', 'index.html');
@@ -28,70 +28,69 @@ function test(name, condition) {
     }
 }
 
-// Test 1: Data View block does NOT exist in toolbox (removed as per requirement)
-test('Data View block removed from toolbox', 
-    !htmlContent.includes('data-type="dataview"')
+// Test 1: Global Data View button removed from flow controls
+test('Global Data View button removed from flow controls', 
+    !htmlContent.includes('id="dataViewBtn"')
 );
 
-// Test 2: Data View button exists in flow controls
-test('Data View button exists in flow controls', 
-    htmlContent.includes('id="dataViewBtn"') &&
-    htmlContent.includes('Data View')
+// Test 2: Global Data View modal removed from HTML
+test('Global Data View modal removed from HTML', 
+    !htmlContent.includes('id="dataViewModal"')
 );
 
-// Test 3: Data View button has accessibility attributes
-test('Data View button has aria-label for accessibility', 
-    htmlContent.includes('aria-label="Open Data View"')
+// Test 3: openDataViewModal function removed from app.js
+test('openDataViewModal function removed', 
+    !appJsContent.includes('function openDataViewModal')
 );
 
-// Test 4: Data View modal exists in HTML
-test('Data View modal exists in HTML', 
-    htmlContent.includes('id="dataViewModal"') &&
-    htmlContent.includes('id="dataViewInterface"')
+// Test 4: Data View button event listener removed
+test('Data View button event listener removed', 
+    !appJsContent.includes("getElementById('dataViewBtn')")
 );
 
-// Test 5: Data View functions exist in app.js
-test('openDataViewModal function exists', 
-    appJsContent.includes('function openDataViewModal')
+// Test 5: showDataPreview function still exists (reused for per-block preview)
+test('showDataPreview function exists for per-block preview', 
+    appJsContent.includes('function showDataPreview')
 );
 
-// Test 6: Data View button event listener exists
-test('Data View button event listener exists', 
-    appJsContent.includes("getElementById('dataViewBtn')") &&
-    appJsContent.includes('openDataViewModal')
+// Test 6: Double-click shows preview when block has data
+test('Double-click shows preview when block has data', 
+    appJsContent.includes('dataStore[block.id]') &&
+    appJsContent.includes('showDataPreview') &&
+    appJsContent.includes('dblclick')
 );
 
-// Test 7: Data View block rendering logic removed
-test('Data View block rendering logic removed', 
-    !(appJsContent.includes("block.type === 'dataview'") &&
-    appJsContent.includes("title = 'Data View'"))
-);
-
-// Test 8: Data View is NOT in openBlockModal switch (removed as per requirement)
-test('Data View removed from openBlockModal', 
-    !appJsContent.includes('openDataViewModal(block)')
-);
-
-// Test 9: Data View shows data overview
-test('Data View shows data overview', 
-    appJsContent.includes('Data Overview') &&
-    appJsContent.includes('Viewing:')
-);
-
-// Test 10: Data View handles no data scenario
-test('Data View handles missing data', 
-    appJsContent.includes('Geen blocks met data gevonden')
-);
-
-// Test 11: Data View icon is in button
-test('Data View button has correct icon', 
-    htmlContent.includes('👁️')
-);
-
-// Test 12: Shift+double-click still works for all blocks
-test('Shift+double-click functionality preserved', 
+// Test 7: Shift+double-click opens config modal when block has data
+test('Shift+double-click opens config modal', 
     appJsContent.includes('e.shiftKey') &&
+    appJsContent.includes('openBlockModal')
+);
+
+// Test 8: Eye icon functionality still exists
+test('Eye icon click handler preserved', 
+    appJsContent.includes("querySelector('.block-eye')") &&
     appJsContent.includes('showDataPreview')
+);
+
+// Test 9: BLOCK_DATA_PREVIEW_TITLES constant exists
+test('BLOCK_DATA_PREVIEW_TITLES constant exists', 
+    appJsContent.includes('BLOCK_DATA_PREVIEW_TITLES')
+);
+
+// Test 10: dataPreviewModal still exists in HTML (used for per-block preview)
+test('dataPreviewModal exists for per-block preview', 
+    htmlContent.includes('id="dataPreviewModal"')
+);
+
+// Test 11: Max display rows constant exists
+test('MAX_DISPLAY_ROWS constant exists', 
+    appJsContent.includes('MAX_DISPLAY_ROWS')
+);
+
+// Test 12: showDataPreview displays up to 100 rows
+test('showDataPreview limits to 100 rows', 
+    appJsContent.includes('MAX_DISPLAY_ROWS') &&
+    appJsContent.includes('slice(0, MAX_DISPLAY_ROWS)')
 );
 
 console.log('\n==================================================');

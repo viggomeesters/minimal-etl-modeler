@@ -138,36 +138,35 @@ function testDataViewWithLargeDataset() {
 
 test('Data View handles large datasets (1000 rows)', testDataViewWithLargeDataset());
 
-// Test 8: Data View displays correct row count info
-test('Data View shows row count in modal', 
-    appJsContent.includes('Viewing:') &&
-    appJsContent.includes('rijen en') &&
-    appJsContent.includes('kolommen')
+// Test 8: Per-block preview displays correct row count info
+test('Per-block preview shows row count info', 
+    appJsContent.includes('Toon eerste') &&
+    appJsContent.includes('van') &&
+    appJsContent.includes('rijen')
 );
 
-// Test 9: Data View has scrollable table
-test('Data View has scrollable table for large data', 
-    appJsContent.includes('max-height: 400px') &&
-    appJsContent.includes('overflow-y: auto')
+// Test 9: Per-block preview has data display capability
+test('Per-block preview has data display capability', 
+    appJsContent.includes('showDataPreview') &&
+    appJsContent.includes('dataStore[block.id]')
 );
 
-// Test 10: Data View limits display to 100 rows
-test('Data View limits display to first 100 rows', 
-    appJsContent.includes('slice(0, 100)') &&
-    appJsContent.includes('Toon eerste 100 van')
+// Test 10: Per-block preview limits display to 100 rows
+test('Per-block preview limits display to MAX_DISPLAY_ROWS', 
+    appJsContent.includes('slice(0, MAX_DISPLAY_ROWS)') &&
+    appJsContent.includes('MAX_DISPLAY_ROWS')
 );
 
-// Test 11: Data View no longer propagates (it's now a viewer, not a flow component)
-// The new openDataViewModal function doesn't take a block parameter
-test('Data View is now a viewer tool (not a flow component)', 
-    /function openDataViewModal\(\s*\)/.test(appJsContent) &&
-    !/function openDataViewModal\(\s*block\s*\)/.test(appJsContent)
+// Test 11: Global Data View function is removed
+test('Global openDataViewModal function is removed', 
+    !appJsContent.includes('function openDataViewModal')
 );
 
-// Test 12: Data View button opens modal with block selector
-test('Data View modal has block selector functionality', 
-    appJsContent.includes('dataViewBlockSelector') &&
-    appJsContent.includes('Selecteer block')
+// Test 12: Double-click on blocks with data shows preview
+test('Double-click on blocks with data shows preview', 
+    appJsContent.includes('dblclick') &&
+    appJsContent.includes('dataStore[block.id]') &&
+    appJsContent.includes('showDataPreview')
 );
 
 console.log('\n==================================================');
